@@ -1,0 +1,84 @@
+Un test 100% graphique en 10 questions
+
+Chaque question = 3 images sans texte.
+Chaque choix augmente un “poids” pour certains philosophes / courants.
+
+🔹 Q1 — Ton monde intérieur ressemble à…
+
+mer calme (Stoïcisme / Sénèque)
+
+feu (Existentialisme / Sartre)
+
+ciel étoilé (Métaphysique / Platon)
+
+🔹 Q2 — Ton énergie dominante ?
+
+ligne continue fluide → Épicurisme
+
+carré / structure → Rationalisme
+
+forme éclatée → Surréalisme
+
+🔹 Q3 — Quand tu doutes, tu…
+
+te recentres → Stoïcisme
+
+explores → Existentialisme
+
+observes → Phénoménologie
+
+🔹 Q4 — Création intellectuelle ?
+
+formes géométriques → Platon / Kant
+
+organicité → Bergson / Vitalisme
+
+objets déformés → Surréalisme
+
+🔹 Q5 — Rapport aux autres ?
+
+grande main ouverte → Humanisme
+
+silhouette seule → Existentialisme
+
+cercle autour de soi → Cynisme
+
+🔹 Q6 — Rapport aux émotions ?
+
+pulsation douce → Rousseau
+
+mécanique/rouages → Empirisme (Hume)
+
+symbole de résistance → Stoïcisme
+
+🔹 Q7 — Style artistique ?
+
+encre noire → Symbolisme
+
+couleurs éclatées → Surréalisme
+
+lignes droites → Classicisme
+
+🔹 Q8 — Face à un problème ?
+
+“zoom” en avant → Pragmatism
+
+distance / recul → Stoïcisme
+
+éclatement → Absurdisme (Camus)
+
+🔹 Q9 — Rapport à la vérité ?
+
+lumière unique → Rationalisme
+
+puzzle → Structuralisme
+
+horizon multiple → Postmodernisme
+
+🔹 Q10 — Ta sensation de liberté ?
+
+porte ouverte → Existentialisme
+
+fenêtre vers nature → Rousseau
+
+structure stable → Aristote / classicisme
