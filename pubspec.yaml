@@ -67,6 +67,7 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   hive_generator: ^2.0.1
   build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.14.3
   
   # Pour la generation de code JSON
   json_serializable: ^6.7.1
@@ -77,9 +78,15 @@ flutter:
   assets:
     # Dossiers principaux
     - assets/images/
-    - assets/icons/
+    - assets/icon/
     - assets/animations/
     
     # Univers visuel - TOUS les sous-dossiers doivent etre declares
     - assets/univers_visuel/
     - assets/univers_visuel/orientation/
+    
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  remove_alpha_ios: true
