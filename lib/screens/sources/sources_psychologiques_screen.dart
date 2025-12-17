@@ -36,7 +36,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
     PsychologicalSource(
       id: 'act',
       name: 'ACT (Acceptance & Commitment)',
-      iconPath: 'assets/univers_visuel/pleine_conscience.png',
+      iconPath: 'assets/univers_visuel/act.png',
       description: 'Thérapie basée sur l\'acceptation et l\'action alignée avec les valeurs.',
       modeOfThought: 'Acceptation, défusion cognitive, actions guidées par les valeurs.',
       worldView: 'La souffrance fait partie de la vie, mais l\'engagement donne du sens.',
@@ -84,7 +84,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
     PsychologicalSource(
       id: 'humaniste_rogers',
       name: 'Approche Humaniste (Rogers)',
-      iconPath: 'assets/univers_visuel/humanisme_philo.png',
+      iconPath: 'assets/univers_visuel/approche_humaniste.png',
       description: 'Approche centrée sur la personne et la bienveillance.',
       modeOfThought: 'Empathie, authenticité, non-jugement.',
       worldView: 'Chaque individu a une tendance naturelle à croître.',
@@ -108,7 +108,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
     PsychologicalSource(
       id: 'systemique',
       name: 'Approche Systémique',
-      iconPath: 'assets/univers_visuel/systemique.png',
+      iconPath: 'assets/univers_visuel/approche_systemique.png',
       description: 'Vision des problèmes dans le contexte des systèmes relationnels.',
       modeOfThought: 'Analyse des interactions, boucles de rétroaction, recadrage.',
       worldView: 'L\'individu fait partie d\'un système ; changer un élément change le tout.',

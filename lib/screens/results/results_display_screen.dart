@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../config/approach_config.dart';
+import '../../widgets/app_scaffold.dart'; // ✅ AJOUT IMPORT APPSCAFFOLD
 
-/// 🎯 RESPONSABILITÉ : AFFICHAGE DES RÉSULTATS UNIQUEMENT
-/// Ce widget affiche les réponses IA déjà générées.
-/// Il NE GÉNÈRE PAS les réponses (c'est le rôle de results_generation_step.dart)
+/// ECRAN D'AFFICHAGE DES RESULTATS - VERSION APPSCAFFOLD
+/// 
+/// Modifications:
+/// 1. Utilise AppScaffold pour en-tête standard
+/// 2. Bouton retour en bas via AppScaffold
+/// 3. Fond bleu marbre conservé dans le body
+/// 4. Numéros colorés et stylisés pour chaque perspective
 class ResultsDisplayScreen extends StatelessWidget {
   final Map<String, String> aiResponses;
   final List<String> selectedApproaches;
@@ -22,107 +27,49 @@ class ResultsDisplayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('🎨 AFFICHAGE DES RÉSULTATS');
-    print('   Nombre de réponses: ${aiResponses.length}');
-    print('   Approches sélectionnées: ${selectedApproaches.length}');
+    print('AFFICHAGE DES RESULTATS');
+    print('   Nombre de reponses: ${aiResponses.length}');
+    print('   Approches selectionnees: ${selectedApproaches.length}');
     
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: onBack != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
-                onPressed: onBack,
-              )
-            : null,
-        title: Text(
-          'Vos perspectives',
-          style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF0F172A),
+    // ✅ UTILISATION DE APPSCAFFOLD
+    return AppScaffold(
+      title: 'Tes perspectives',
+      headerIconPath: 'assets/univers_visuel/perspectives.png',
+      showTitle: false,
+      showBackButton: false, // On utilise bottomAction à la place
+      bottomAction: _buildNavigationButtons(context),
+      body: Container(
+        // FOND BLEU MARBRE
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8F4F8),  // Bleu tres clair
+              Color(0xFFD0E8F0),  // Bleu clair
+              Color(0xFFB8DCE8),  // Bleu moyen clair
+              Color(0xFFD8EEF5),  // Retour bleu clair
+              Color(0xFFE0F0F5),  // Bleu pale
+            ],
+            stops: [0.0, 0.25, 0.5, 0.75, 1.0],
           ),
         ),
-        actions: [
-          // Icône menu pour accéder à l'historique, profil, etc.
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Color(0xFF0F172A)),
-            onSelected: (value) {
-              switch (value) {
-                case 'history':
-                  Navigator.of(context).pushNamed('/history');
-                  break;
-                case 'profile':
-                  Navigator.of(context).pushNamed('/profile');
-                  break;
-                case 'home':
-                  Navigator.of(context).pushNamed('/home');
-                  break;
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              PopupMenuItem<String>(
-                value: 'history',
-                child: Row(
-                  children: [
-                    const Icon(Icons.history, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Historique',
-                      style: GoogleFonts.inter(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'profile',
-                child: Row(
-                  children: [
-                    const Icon(Icons.person, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Profil',
-                      style: GoogleFonts.inter(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'home',
-                child: Row(
-                  children: [
-                    const Icon(Icons.home, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Accueil',
-                      style: GoogleFonts.inter(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               
-              // Afficher les cartes de résultats
-              ...selectedApproaches.map((approachKey) {
-                return _buildResultCard(approachKey);
+              // Afficher les cartes de resultats avec numeros
+              ...selectedApproaches.asMap().entries.map((entry) {
+                final index = entry.key;
+                final approachKey = entry.value;
+                return _buildResultCard(approachKey, index + 1);
               }).toList(),
               
-              const SizedBox(height: 32),
-              
-              _buildNavigationButtons(context),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -134,181 +81,347 @@ class ResultsDisplayScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '✨ Tes perspectives IA',
-          style: GoogleFonts.inter(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF0F172A),
+        // Badge avec nombre de perspectives
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF2E8B7B), Color(0xFF3A9D8C)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2E8B7B).withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.3, end: 0),
-        
-        const SizedBox(height: 8),
-        
-        Text(
-          '${aiResponses.length} perspective${aiResponses.length > 1 ? 's' : ''} générée${aiResponses.length > 1 ? 's' : ''} par intelligence artificielle',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            color: const Color(0xFF64748B),
-            height: 1.5,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                '${selectedApproaches.length} perspectives generees',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-        ).animate().fadeIn(delay: 400.ms),
+        ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.3, end: 0),
+        
+        const SizedBox(height: 16),
+        
+        // Titre
+        Text(
+          'Voici differents regards sur ta pensee',
+          style: GoogleFonts.cormorantGaramond(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E293B),
+            height: 1.3,
+          ),
+        ).animate().fadeIn(delay: 200.ms),
       ],
     );
   }
 
-  Widget _buildResultCard(String approachNameOrKey) {
+  Widget _buildResultCard(String approachNameOrKey, int numero) {
     // Chercher l'approche par son NOM ou KEY
     ApproachConfig? approach;
     try {
       approach = ApproachCategories.allApproaches
           .firstWhere((a) => a.name == approachNameOrKey || a.key == approachNameOrKey);
     } catch (e) {
-      print('❌ Approche introuvable: $approachNameOrKey');
+      print('Approche introuvable: $approachNameOrKey');
       return const SizedBox();
     }
     
     final response = aiResponses[approachNameOrKey];
     
-    // Ne pas afficher si pas de réponse
     if (response == null || response.isEmpty) {
-      print('⚠️ Pas de réponse pour: $approachNameOrKey');
-      print('   Clés disponibles: ${aiResponses.keys.toList()}');
+      print('Pas de reponse pour: $approachNameOrKey');
+      print('   Cles disponibles: ${aiResponses.keys.toList()}');
       return const SizedBox();
     }
     
-    print('✅ Affichage carte pour: ${approach.name}');
+    print('Affichage carte #$numero pour: ${approach.name}');
     
+    // Couleurs pour les numeros (palette harmonieuse)
+    final numeroColors = [
+      const Color(0xFF2E8B7B),  // Vert-bleu
+      const Color(0xFFD4AF37),  // Or
+      const Color(0xFF6B5B95),  // Violet
+      const Color(0xFFE67E22),  // Orange
+      const Color(0xFF3498DB),  // Bleu
+      const Color(0xFFE74C3C),  // Rouge
+      const Color(0xFF1ABC9C),  // Turquoise
+      const Color(0xFF9B59B6),  // Mauve
+      const Color(0xFF27AE60),  // Vert
+      const Color(0xFFF39C12),  // Jaune-orange
+    ];
+    final numeroColor = numeroColors[(numero - 1) % numeroColors.length];
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: approach.color.withOpacity(0.3),
-        ),
         boxShadow: [
           BoxShadow(
-            color: approach.color.withOpacity(0.1),
+            color: approach.color.withOpacity(0.15),
             blurRadius: 20,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // En-tête avec icône et nom
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: approach.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+          // EN-TETE DE LA CARTE avec numero stylise
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: approach.color.withOpacity(0.08),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                // NUMERO STYLISE
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        numeroColor,
+                        numeroColor.withOpacity(0.7),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: numeroColor.withOpacity(0.4),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$numero',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-                child: Icon(
-                  approach.icon,
-                  size: 20,
-                  color: approach.color,
-                ),
-              ),
-              
-              const SizedBox(width: 12),
-              
-              Expanded(
-                child: Text(
-                  approach.name,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                
+                const SizedBox(width: 12),
+                
+                // Icone de l'approche
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: approach.color.withOpacity(0.2),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    approach.icon,
+                    size: 20,
                     color: approach.color,
                   ),
                 ),
-              ),
-              
-              // Badge IA
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: approach.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'OpenAI',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: approach.color,
+                
+                const SizedBox(width: 12),
+                
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        approach.name,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: approach.color,
+                        ),
+                      ),
+                      Text(
+                        'Eclairage IA',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                
+                // Badge OpenAI
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: approach.color.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.psychology, size: 12, color: approach.color),
+                      const SizedBox(width: 4),
+                      Text(
+                        'OpenAI',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: approach.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           
-          const SizedBox(height: 16),
+          // CONTENU DE LA REPONSE
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              response,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: const Color(0xFF1E293B),
+                height: 1.7,
+              ),
+            ),
+          ),
           
-          // Contenu de la réponse IA
-          Text(
-            response,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: const Color(0xFF0F172A),
-              height: 1.6,
+          // BARRE D'ACTIONS
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // Bouton feedback negatif
+                IconButton(
+                  icon: Icon(Icons.thumb_down_outlined, 
+                    color: const Color(0xFF64748B).withOpacity(0.7),
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // TODO: Implementer feedback
+                  },
+                  tooltip: 'Pas utile',
+                ),
+                // Bouton feedback positif
+                IconButton(
+                  icon: Icon(Icons.thumb_up_outlined, 
+                    color: const Color(0xFF64748B).withOpacity(0.7),
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // TODO: Implementer feedback
+                  },
+                  tooltip: 'Utile',
+                ),
+                const SizedBox(width: 8),
+                // Bouton partager
+                IconButton(
+                  icon: Icon(Icons.share_outlined, 
+                    color: approach.color.withOpacity(0.7),
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    // TODO: Implementer partage
+                  },
+                  tooltip: 'Partager',
+                ),
+              ],
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.3, end: 0);
+    ).animate().fadeIn(delay: (200 + numero * 100).ms).slideY(begin: 0.2, end: 0);
   }
 
   Widget _buildNavigationButtons(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Bouton retour (optionnel)
-        if (onBack != null) ...[
-          OutlinedButton.icon(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back),
-            label: Text(
-              'Retour',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF6366F1),
-              side: const BorderSide(color: Color(0xFF6366F1)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(
-                vertical: 16,
-                horizontal: 24,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-        ],
-        
-        // Bouton nouvelle réflexion
-        Expanded(
+        // Bouton nouvelle reflexion
+        SizedBox(
+          width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: onNewReflection,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: Text(
-              'Nouvelle réflexion',
+              'Nouvelle reflexion',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
+              backgroundColor: const Color(0xFF2E8B7B),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: 3,
+              shadowColor: const Color(0xFF2E8B7B).withOpacity(0.4),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Bouton retour accueil
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+            icon: Image.asset(
+              'assets/univers_visuel/menu_principal.png',
+              width: 18,
+              height: 18,
+              errorBuilder: (_, __, ___) => const Icon(Icons.home, size: 18),
+            ),
+            label: Text(
+              'Retour au menu',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF2E8B7B),
+              side: const BorderSide(color: Color(0xFF2E8B7B), width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),

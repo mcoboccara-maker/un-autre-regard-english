@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../config/orientation_config.dart';
 import '../../services/complete_auth_service.dart';
+import '../../widgets/app_scaffold.dart'; // ✅ AJOUT IMPORT APPSCAFFOLD
 import 'orientation_validation_screen.dart';
 
 class OrientationResultScreen extends StatefulWidget {
@@ -40,11 +41,11 @@ class _OrientationResultScreenState extends State<OrientationResultScreen> {
     _sortedScores = widget.scores.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Séparer par catégorie
-    _topPhilosophes = _getTopByCategory('philosophe', 3);
-    _topCourantsPhilo = _getTopByCategory('philosophique', 2);
-    _topLitteraires = _getTopByCategory('litteraire', 2);
-    _topPsychologiques = _getTopByCategory('psychologique', 2);
+    // Séparer par catégorie - RÈGLE: 1 source par type = 4 sources max
+    _topPhilosophes = _getTopByCategory('philosophe', 1);
+    _topCourantsPhilo = _getTopByCategory('philosophique', 1);
+    _topLitteraires = _getTopByCategory('litteraire', 1);
+    _topPsychologiques = _getTopByCategory('psychologique', 1);
   }
 
   List<SourceInfo> _getTopByCategory(String category, int count) {
@@ -127,7 +128,20 @@ Découvre ton profil sur l'app Un Autre Regard ✨
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    // ✅ UTILISATION DE APPSCAFFOLD
+    return AppScaffold(
+      title: 'Résultats',
+      headerIconPath: 'assets/univers_visuel/orientation.png',
+      showTitle: false,
+      showBackButton: false, // On utilise bottomAction à la place
+      additionalActions: [
+        // Bouton partage dans l'AppBar
+        IconButton(
+          onPressed: _shareResults,
+          icon: const Icon(Icons.share, color: Color(0xFF64748B)),
+        ),
+      ],
+      bottomAction: _buildActionButtons(),
       body: Container(
         // Fond bleu pastel comme le reste de l'application
         decoration: const BoxDecoration(
@@ -142,53 +156,46 @@ Découvre ton profil sur l'app Un Autre Regard ✨
             stops: [0.0, 0.5, 1.0],
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Header
-                _buildHeader(),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header
+              _buildHeader(),
 
-                // Carte principale
-                _buildMainCard(),
+              // Carte principale
+              _buildMainCard(),
 
-                // Détails par catégorie
-                _buildCategorySection(
-                  icon: '👤',
-                  title: 'Tes philosophes',
-                  sources: _topPhilosophes,
-                  color: const Color(0xFF6366F1),
-                ),
+              // Détails par catégorie
+              _buildCategorySection(
+                icon: '👤',
+                title: 'Tes philosophes',
+                sources: _topPhilosophes,
+                color: const Color(0xFF6366F1),
+              ),
 
-                _buildCategorySection(
-                  icon: '🏛️',
-                  title: 'Tes courants philosophiques',
-                  sources: _topCourantsPhilo,
-                  color: const Color(0xFF8B5CF6),
-                ),
+              _buildCategorySection(
+                icon: '🏛️',
+                title: 'Tes courants philosophiques',
+                sources: _topCourantsPhilo,
+                color: const Color(0xFF8B5CF6),
+              ),
 
-                _buildCategorySection(
-                  icon: '📚',
-                  title: 'Tes courants littéraires',
-                  sources: _topLitteraires,
-                  color: const Color(0xFFEC4899),
-                ),
+              _buildCategorySection(
+                icon: '📚',
+                title: 'Tes courants littéraires',
+                sources: _topLitteraires,
+                color: const Color(0xFFEC4899),
+              ),
 
-                _buildCategorySection(
-                  icon: '🧠',
-                  title: 'Tes approches psychologiques',
-                  sources: _topPsychologiques,
-                  color: const Color(0xFF10B981),
-                ),
+              _buildCategorySection(
+                icon: '🧠',
+                title: 'Tes approches psychologiques',
+                sources: _topPsychologiques,
+                color: const Color(0xFF10B981),
+              ),
 
-                const SizedBox(height: 24),
-
-                // Boutons d'action
-                _buildActionButtons(),
-
-                const SizedBox(height: 32),
-              ],
-            ),
+              const SizedBox(height: 24),
+            ],
           ),
         ),
       ),
@@ -200,31 +207,6 @@ Découvre ton profil sur l'app Un Autre Regard ✨
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Color(0xFF6366F1),
-                    size: 20,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: _shareResults,
-                icon: const Icon(Icons.share, color: Color(0xFF64748B)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           Text(
             '✨ Ton univers philosophique',
             style: GoogleFonts.poppins(
@@ -407,79 +389,77 @@ Découvre ton profil sur l'app Un Autre Regard ✨
   }
 
   Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          // Bouton principal : Valider et personnaliser
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => OrientationValidationScreen(scores: widget.scores),
-                ),
-              );
-            },
-            icon: const Icon(Icons.tune),
-            label: Text(
-              'Valider et personnaliser',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Bouton principal : Valider et personnaliser
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => OrientationValidationScreen(scores: widget.scores),
               ),
-              minimumSize: const Size(double.infinity, 56),
-            ),
+            );
+          },
+          icon: const Icon(Icons.tune),
+          label: Text(
+            'Valider et personnaliser',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
-
-          const SizedBox(height: 12),
-
-          // Bouton secondaire : Retour au menu
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/home',
-                (route) => false,
-              );
-            },
-            icon: const Icon(Icons.home),
-            label: Text(
-              'Retour au menu',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6366F1),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF64748B),
-              side: const BorderSide(color: Color(0xFFE2E8F0)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              minimumSize: const Size(double.infinity, 56),
-            ),
+            minimumSize: const Size(double.infinity, 56),
           ),
+        ),
 
-          const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-          // Bouton tertiaire : Recommencer
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pushReplacementNamed('/orientation');
-            },
-            icon: const Icon(Icons.refresh, size: 18),
-            label: Text(
-              'Recommencer le quiz',
-              style: GoogleFonts.poppins(fontSize: 13),
-            ),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF64748B),
-            ),
+        // Bouton secondaire : Retour au menu
+        OutlinedButton.icon(
+          onPressed: () {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/home',
+              (route) => false,
+            );
+          },
+          icon: const Icon(Icons.home),
+          label: Text(
+            'Retour au menu',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
           ),
-        ],
-      ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF64748B),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            minimumSize: const Size(double.infinity, 56),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Bouton tertiaire : Recommencer
+        TextButton.icon(
+          onPressed: () {
+            Navigator.of(context).pushReplacementNamed('/orientation');
+          },
+          icon: const Icon(Icons.refresh, size: 18),
+          label: Text(
+            'Recommencer le quiz',
+            style: GoogleFonts.poppins(fontSize: 13),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF64748B),
+          ),
+        ),
+      ],
     ).animate()
       .fadeIn(delay: 600.ms, duration: 400.ms);
   }

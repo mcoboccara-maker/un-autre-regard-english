@@ -3,12 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/reflection.dart';
 import '../../models/emotional_state.dart';
+import '../../models/user_profile.dart';
 import '../../config/approach_config.dart';
 import '../../services/ai_service.dart';
+import '../../services/persistent_storage_service.dart';
 
-/// RESPONSABILITÉ : GÉNÉRATION IA UNIQUEMENT
-/// Ce widget orchestre la génération des réponses IA et affiche la progression.
-/// Il N'AFFICHE PAS les résultats finaux (c'est le rôle de results_display_screen.dart)
+/// RESPONSABILITE : GENERATION IA UNIQUEMENT
+/// Ce widget orchestre la generation des reponses IA et affiche la progression.
+/// Il N'AFFICHE PAS les resultats finaux (c'est le role de results_display_screen.dart)
+/// 
+/// CORRECTION: Charge maintenant le userProfile pour transmettre les sources du profil
 class ResultsGenerationStep extends StatefulWidget {
   final String reflectionText;
   final String? declencheur;
@@ -47,6 +51,11 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
   String? _errorMessage;
   bool _isGenerating = false;
   
+  // =========================================================================
+  // CORRECTION: Variable pour stocker le profil utilisateur
+  // =========================================================================
+  UserProfile? _userProfile;
+  
   @override
   void initState() {
     super.initState();
@@ -61,7 +70,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
       _approachStatus[approach] = 'pending';
     }
     
-    // Démarrer la génération automatiquement
+    // Demarrer la generation automatiquement
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startGeneration();
     });
@@ -86,10 +95,27 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
     print('🚀 DEBUT GENERATION IA');
     
     try {
+      // =========================================================================
+      // CORRECTION: Charger le profil utilisateur AVANT la generation
+      // =========================================================================
+      try {
+        _userProfile = await PersistentStorageService.instance.getUserProfile();
+        print('✅ Profil utilisateur charge:');
+        print('   - Religions: ${_userProfile?.religionsSelectionnees}');
+        print('   - Litteratures: ${_userProfile?.courantsLitteraires}');
+        print('   - Psychologies: ${_userProfile?.approchesPsychologiques}');
+        print('   - Philosophies: ${_userProfile?.courantsPhilosophiques}');
+        print('   - Philosophes: ${_userProfile?.philosophesSelectionnes}');
+      } catch (e) {
+        print('⚠️ Impossible de charger le profil utilisateur: $e');
+        _userProfile = null;
+      }
+      
       final responses = <String, String>{};
       final intensiteEmotionnelle = _calculateEmotionalIntensity();
       
       print('😊 Intensite emotionnelle: $intensiteEmotionnelle');
+      print('📋 Approches selectionnees: ${widget.selectedApproaches}');
       
       for (final approachNameOrKey in widget.selectedApproaches) {
         // Convertir le nom en key
@@ -111,11 +137,15 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
         try {
           print('🔄 Generation pour: ${approach.name}');
           
+          // =========================================================================
+          // CORRECTION: Passer le userProfile a generateApproachSpecificResponse
+          // =========================================================================
           final response = await AIService.instance.generateApproachSpecificResponse(
             approach: approachKey,
             reflectionText: widget.reflectionText,
             reflectionType: widget.reflectionType,
             emotionalState: widget.emotionalState,
+            userProfile: _userProfile,  // ← CORRECTION: Ajout du profil
             declencheur: widget.declencheur,
             souhait: widget.souhait,
             petitPas: widget.petitPas,
@@ -222,15 +252,15 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // IMAGE GÉNÉRATION IA - TAILLE UNIFORME 180x180
+        // IMAGE GENERATION IA - TAILLE UNIFORME 180x180
         Center(
           child: Image.asset(
             'assets/univers_visuel/generationiaencours.png',
-            width: 180,   // CORRIGÉ: même taille que perspectives
-            height: 180,  // CORRIGÉ: même taille que perspectives
+            width: 180,
+            height: 180,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              // Fallback si l'image n'est pas trouvée
+              // Fallback si l'image n'est pas trouvee
               return Column(
                 children: [
                   Container(
@@ -332,11 +362,11 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
         Center(
           child: Image.asset(
             'assets/univers_visuel/perspectives.png',
-            width: 180,   // CORRIGÉ: même taille que génération
-            height: 180,  // CORRIGÉ: même taille que génération
+            width: 180,
+            height: 180,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              // Fallback si l'image n'est pas trouvée
+              // Fallback si l'image n'est pas trouvee
               return RotationTransition(
                 turns: _controller,
                 child: const Icon(
@@ -353,7 +383,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
         
         const SizedBox(height: 24),
         
-        // TEXTE SIMPLE SANS CARACTÈRES SPÉCIAUX
+        // TEXTE SIMPLE
         Text(
           'Generation des perspectives...',
           style: GoogleFonts.poppins(
@@ -380,7 +410,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
       approach = ApproachCategories.allApproaches
           .firstWhere((a) => a.name == approachNameOrKey || a.key == approachNameOrKey);
     } catch (e) {
-      // Si l'approche n'est pas trouvée, créer une carte par défaut
+      // Si l'approche n'est pas trouvee, creer une carte par defaut
       return Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -456,7 +486,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
       ),
       child: Row(
         children: [
-          // Icône de l'approche
+          // Icone de l'approche
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(

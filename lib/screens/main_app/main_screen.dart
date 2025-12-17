@@ -8,12 +8,12 @@ import '../../models/reflection.dart';
 import '../../models/emotional_state.dart';               
 import '../../models/user_profile.dart';                  
 import '../../services/persistent_storage_service.dart';  
-import '../../services/ai_service.dart';                  
-import '../../widgets/global_app_bar.dart';               
+import '../../services/ai_service.dart';
+import '../../widgets/app_scaffold.dart';
 import '../reflection/reflection_input_step.dart';        
 import '../emotions/emotions_selection_step.dart';        
-import '../results/results_generation_step.dart';
-import '../results/results_display_screen.dart';     
+// ✅ CHANGEMENT: Import du nouvel écran fusionné
+import '../results/streaming_results_screen.dart';
 import '../../config/approach_config.dart';               
 import '../../services/complete_auth_service.dart';  
 
@@ -37,12 +37,25 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   EmotionalState _emotionalState = EmotionalState.empty();
   List<String> _selectedApproaches = [];
   
+  // =========================================================================
+  // NOUVEAU: Variables pour arguments de navigation
+  // =========================================================================
+  List<String>? _randomSources;  // Sources de la roue du hasard
+  bool _skipEmotions = false;     // Mode génération directe
+  bool _argumentsProcessed = false;  // Éviter double traitement
+  
   // Champs supplementaires
   String _declencheur = '';
   String _souhait = '';
   String _petitPas = '';
   int _intensiteEmotionnelle = 5;
   String _emotionPrincipale = '';
+
+  // =========================================================================
+  // NOUVEAU: Flag pour savoir si on affiche le streaming screen
+  // =========================================================================
+  bool _showStreamingResults = false;
+  Map<String, String> _generatedResponses = {};
 
   @override
   void initState() {
@@ -51,7 +64,117 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _loadUserApproaches();
+    // Note: Les approches sont chargées dans didChangeDependencies
+    // après récupération des arguments de navigation
+  }
+
+  // =========================================================================
+  // NOUVEAU: Récupérer les arguments de navigation
+  // =========================================================================
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    if (_argumentsProcessed) return;
+    _argumentsProcessed = true;
+    
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    
+    if (args != null) {
+      print('📥 Arguments reçus: $args');
+      
+      // Pensée initiale
+      if (args['initialThought'] != null) {
+        _reflectionText = args['initialThought'] as String;
+        print('✅ Pensée pré-remplie: $_reflectionText');
+      }
+      
+      // Type d'entrée
+      if (args['entryType'] != null) {
+        final typeStr = args['entryType'] as String;
+        switch (typeStr) {
+          case 'pensee':
+            _reflectionType = ReflectionType.thought;
+            break;
+          case 'situation':
+            _reflectionType = ReflectionType.situation;
+            break;
+          case 'question':
+            _reflectionType = ReflectionType.existential;
+            break;
+          case 'dilemme':
+            _reflectionType = ReflectionType.dilemma;
+            break;
+        }
+        print('✅ Type d\'entrée: $_reflectionType');
+      }
+      
+      // Sources aléatoires de la roue
+      if (args['randomSources'] != null) {
+        _randomSources = List<String>.from(args['randomSources']);
+        print('✅ Sources aléatoires: $_randomSources');
+      }
+      
+      // Mode skip emotions
+      _skipEmotions = args['skipEmotions'] == true;
+      
+      // Si pensée fournie, naviguer automatiquement
+      if (_reflectionText.isNotEmpty) {
+        print('🚀 Pensée fournie depuis HOME - navigation automatique');
+        
+        if (_skipEmotions) {
+          print('⚡ Mode direct (sans émotions) - Génération immédiate');
+          // Charger les approches puis naviguer vers génération
+          _loadUserApproachesAndNavigate();
+        } else {
+          // Charger les approches puis passer à l'étape des émotions
+          _loadUserApproaches().then((_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _nextStep();
+            });
+          });
+        }
+      } else {
+        // Pas de pensée fournie, juste charger les approches
+        _loadUserApproaches();
+      }
+    } else {
+      // Pas d'arguments, charger les approches normalement
+      _loadUserApproaches();
+    }
+  }
+
+  // =========================================================================
+  // NOUVEAU: Charger les approches puis naviguer vers génération
+  // =========================================================================
+  Future<void> _loadUserApproachesAndNavigate() async {
+    await _loadUserApproaches();
+    // Note: _combineApproaches() est déjà appelé dans _loadUserApproaches()
+    
+    // Naviguer vers l'étape de génération (streaming)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _currentStep = 2;  // Étape génération
+        _showStreamingResults = true;  // ✅ NOUVEAU: Afficher l'écran streaming
+      });
+    });
+  }
+
+  // =========================================================================
+  // NOUVEAU: Combiner sources profil + roue (RÈGLE 3)
+  // =========================================================================
+  void _combineApproaches() {
+    if (_randomSources != null && _randomSources!.isNotEmpty) {
+      // Créer un Set pour éviter les doublons
+      final combinedSet = <String>{
+        ..._selectedApproaches,  // Sources du profil
+        ..._randomSources!,       // Sources de la roue
+      };
+      
+      _selectedApproaches = combinedSet.toList();
+      
+      print('🔀 Sources combinées (profil + roue): $_selectedApproaches');
+    }
   }
 
   Future<void> _loadUserApproaches() async {
@@ -76,27 +199,26 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         // 5. Philosophes individuels (NOUVEAU)
         allApproaches.addAll(List<String>.from(profileData['philosophesSelectionnes'] ?? []));
 
-        print('Approches du profil: $allApproaches');
-        print('  Religions: ${(profileData['religionsSelectionnees'] as List?)?.length ?? 0}');
-        print('  Litterature: ${(profileData['courantsLitteraires'] as List?)?.length ?? 0}');
-        print('  Psychologie: ${(profileData['approchesPsychologiques'] as List?)?.length ?? 0}');
-        print('  Philosophie: ${(profileData['courantsPhilosophiques'] as List?)?.length ?? 0}');
-        print('  Philosophes: ${(profileData['philosophesSelectionnes'] as List?)?.length ?? 0}');
-        print('  TOTAL: ${allApproaches.length}');
+        print('🔍 Approches du profil: ${allApproaches.length} total');
 
         setState(() {
           _selectedApproaches = allApproaches;
         });
 
         if (allApproaches.isEmpty) {
-          print('Aucune approche trouvee dans le profil');
+          print('⚠️ Aucune approche trouvee dans le profil');
         }
       } else {
-        print('Aucun profil utilisateur trouve');
+        print('⚠️ Aucun profil utilisateur trouve');
         setState(() {
           _selectedApproaches = [];
         });
       }
+      
+      // =========================================================================
+      // NOUVEAU: Combiner avec sources de la roue si présentes (RÈGLE 3)
+      // =========================================================================
+      _combineApproaches();
     } catch (e) {
       print('Erreur chargement approches: $e');
       setState(() {
@@ -121,112 +243,90 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      // MODIFIÉ: Passer headerIconPath au lieu du titre texte
-      appBar: GlobalAppBar(
-        title: '',  // Pas de titre texte
-        showTitle: false,  // Désactiver le titre texte
-        showBackButton: false,  // Pas de flèche retour
-        headerIconPath: _getTypeIconPath(_reflectionType),  // NOUVEAU: icône du type
-        additionalActions: const [],  // Pas d'actions supplémentaires
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildProgressIndicator(),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  //  Etape 1: VRAIS CONSTRUCTEURS
-                  ReflectionInputStep(
-                    initialText: _reflectionText,
-                    initialType: _reflectionType,
-                    onTextChanged: (text) {
-                      setState(() {
-                        _reflectionText = text;
-                      });
-                    },
-                    onTypeChanged: (type) {
-                      setState(() {
-                        _reflectionType = type;
-                      });
-                    },
-                    onNext: _nextStep,
-                    // Callbacks pour les champs Byron Katie
-                    onDeclencheurChanged: (declencheur) {
-                      setState(() {
-                        _declencheur = declencheur;
-                      });
-                    },
-                    onSouhaitChanged: (souhait) {
-                      setState(() {
-                        _souhait = souhait;
-                      });
-                    },
-                    onPetitPasChanged: (petitPas) {
-                      setState(() {
-                        _petitPas = petitPas;
-                      });
-                    },
-                  ),
+    // =========================================================================
+    // NOUVEAU: Si on doit afficher l'écran streaming, on le fait directement
+    // =========================================================================
+    if (_showStreamingResults) {
+      return StreamingResultsScreen(
+        reflectionText: _reflectionText,
+        declencheur: _declencheur.isNotEmpty ? _declencheur : null,
+        souhait: _souhait.isNotEmpty ? _souhait : null,
+        petitPas: _petitPas.isNotEmpty ? _petitPas : null,
+        reflectionType: _reflectionType,
+        emotionalState: _emotionalState,
+        selectedApproaches: _selectedApproaches,
+        onNewReflection: () {
+          _resetReflection();
+        },
+        onBack: () {
+          setState(() {
+            _showStreamingResults = false;
+            _currentStep = 1;  // Retour aux émotions
+          });
+        },
+      );
+    }
 
-                  //  Etape 2: VRAIS CONSTRUCTEURS d'EmotionsSelectionStep
-                  EmotionsSelectionStep(
-                    initialState: _emotionalState,
-                    onStateChanged: (newState) {
-                      setState(() {
-                        _emotionalState = newState;
-                      });
-                    },
-                    onNext: _nextStep,
-                    onBack: _previousStep,
-                  ),
+    // ✅ UTILISATION DE APPSCAFFOLD au lieu de Scaffold + GlobalAppBar
+    return AppScaffold(
+      title: '',
+      showTitle: false,
+      headerIconPath: _getTypeIconPath(_reflectionType),
+      showBackButton: false, // Pas de bouton retour standard en bas
+      body: Column(
+        children: [
+          _buildProgressIndicator(),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                //  Etape 1: Saisie de la réflexion
+                ReflectionInputStep(
+                  initialText: _reflectionText,
+                  initialType: _reflectionType,
+                  onTextChanged: (text) {
+                    setState(() {
+                      _reflectionText = text;
+                    });
+                  },
+                  onTypeChanged: (type) {
+                    setState(() {
+                      _reflectionType = type;
+                    });
+                  },
+                  onNext: _nextStep,
+                ),
 
-                  //  Etape 3: VRAIS CONSTRUCTEURS de ResultsGenerationStep
-                  ResultsGenerationStep(
-                    reflectionText: _reflectionText,
-                    declencheur: _declencheur,
-                    souhait: _souhait,
-                    petitPas: _petitPas,
-                    reflectionType: _reflectionType,
-                    emotionalState: _emotionalState,
-                    selectedApproaches: _selectedApproaches,
-                    onBack: () => setState(() => _currentStep = 2),
-                    onGenerationComplete: (responses) async {
-                      print(' Generation terminee - Navigation vers affichage');
-                    
-                      // Sauvegarder la reflexion
-                      await _saveReflection(responses);
-                    
-                      // Naviguer vers l'ecran d'affichage
-                      if (mounted) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => ResultsDisplayScreen(
-                              aiResponses: responses,
-                              selectedApproaches: _selectedApproaches,
-                              onNewReflection: () {
-                                Navigator.of(context).pop();
-                                _resetReflection();
-                              },
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    onGenerationError: () {
-                      print('Erreur de generation');
-                      // L'utilisateur peut reessayer depuis l'ecran de generation
-                    },
+                //  Etape 2: Sélection des émotions
+                EmotionsSelectionStep(
+                  initialState: _emotionalState,
+                  onStateChanged: (newState) {
+                    setState(() {
+                      _emotionalState = newState;
+                    });
+                  },
+                  onNext: () {
+                    // ✅ CHANGEMENT: Au lieu de _nextStep(), on affiche le streaming
+                    setState(() {
+                      _currentStep = 2;
+                      _showStreamingResults = true;
+                    });
+                  },
+                  onBack: _previousStep,
+                ),
+
+                //  Etape 3: Placeholder (l'écran streaming est géré séparément)
+                Container(
+                  // Ce container ne sera jamais visible car on utilise _showStreamingResults
+                  child: const Center(
+                    child: CircularProgressIndicator(),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -344,6 +444,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _progressController.animateTo(progress);
   }
 
+  // =========================================================================
+  // NOTE: _saveReflection n'est plus appelé ici
+  // La sauvegarde est gérée par StreamingResultsScreen via les évaluations
+  // Tu peux garder cette méthode si tu veux aussi sauvegarder la réflexion
+  // =========================================================================
   Future<void> _saveReflection(Map<String, String> aiResponses) async {
     try {
       final currentUser = await CompleteAuthService.instance.getCurrentUser();
@@ -414,6 +519,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       _petitPas = '';
       _intensiteEmotionnelle = 5;
       _emotionPrincipale = '';
+      _showStreamingResults = false;  // ✅ NOUVEAU: Reset du flag
     });
     
     _pageController.animateToPage(
@@ -437,6 +543,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       _petitPas = '';
       _intensiteEmotionnelle = 5;
       _emotionPrincipale = '';
+      _showStreamingResults = false;  // ✅ NOUVEAU: Reset du flag
     });
     
     _pageController.jumpToPage(0);

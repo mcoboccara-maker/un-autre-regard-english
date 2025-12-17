@@ -16,25 +16,26 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   final List<WelcomePage> _pages = [
     WelcomePage(
-      title: 'Un Autre Regard',
+      title: 'Bienvenue dans\nUn Autre Regard',
       subtitle: 'Parce qu\'une autre vie est possible',
       content: 'Bienvenue dans votre espace de réflexion personnelle. Découvrez de nouvelles perspectives sur vos pensées et émotions.',
-      icon: Icons.visibility,
-      gradient: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+      icon: Icons.visibility, // Fallback
+      iconPath: 'assets/univers_visuel/icone.png',
+      gradient: [Color(0xFF8B7FC7), Color(0xFFA89ED8)],  // Violet pastel
     ),
     WelcomePage(
       title: 'Explorez vos émotions',
       subtitle: 'Avec bienveillance et profondeur',
-      content: 'Apprenez à identifier et comprendre vos émotions grâce à notre interface intuitive basée sur les travaux de Byron Katie.',
+      content: 'Apprenez à identifier et comprendre vos émotions grâce à notre interface intuitive et nos outils de réflexion personnelle.',
       icon: Icons.favorite_outline,
-      gradient: [Color(0xFF10B981), Color(0xFF059669)],
+      gradient: [Color(0xFF6BB89D), Color(0xFF8ECFB8)],  // Vert pastel
     ),
     WelcomePage(
       title: 'Perspectives multiples',
       subtitle: 'Sagesses anciennes et approches modernes',
       content: 'Découvrez différentes approches : méditation, philosophie antique, psychologie moderne et bien d\'autres.',
       icon: Icons.psychology_outlined,
-      gradient: [Color(0xFFF59E0B), Color(0xFFD97706)],
+      gradient: [Color(0xFFE8B86D), Color(0xFFF0CFA0)],  // Jaune-orange pastel
     ),
   ];
 
@@ -49,10 +50,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (mounted && !_isPaused) {
         if (_currentPage < _pages.length - 1) {
           _nextPage();
-        } else {
-          // Dernière page atteinte, aller vers login
-          Navigator.pushReplacementNamed(context, '/login');
         }
+        // Ne redirige plus automatiquement vers login
       }
     });
   }
@@ -253,7 +252,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             // Instructions d'interaction (première page seulement)
             if (_currentPage == 0)
               Positioned(
-                top: MediaQuery.of(context).size.height * 0.7,
+                top: MediaQuery.of(context).size.height * 0.72,
                 left: 24,
                 right: 24,
                 child: Container(
@@ -295,18 +294,30 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             children: [
               const Spacer(),
               
-              // Icon
+              // Icon ou Image de l'application
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  page.icon,
-                  size: 64,
-                  color: Colors.white,
-                ),
+                child: page.iconPath != null
+                    ? Image.asset(
+                        page.iconPath!,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                          page.icon,
+                          size: 64,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(
+                        page.icon,
+                        size: 64,
+                        color: Colors.white,
+                      ),
               ).animate().scale(delay: 300.ms),
               
               const SizedBox(height: 32),
@@ -349,6 +360,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ).animate().fadeIn(delay: 900.ms),
               
               const Spacer(),
+              const Spacer(),
             ],
           ),
         ),
@@ -368,6 +380,7 @@ class WelcomePage {
   final String subtitle;
   final String content;
   final IconData icon;
+  final String? iconPath;
   final List<Color> gradient;
 
   const WelcomePage({
@@ -375,6 +388,7 @@ class WelcomePage {
     required this.subtitle,
     required this.content,
     required this.icon,
+    this.iconPath,
     required this.gradient,
   });
 }

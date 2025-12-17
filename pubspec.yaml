@@ -81,12 +81,16 @@ flutter:
     - assets/icon/
     - assets/animations/
     
-    # Univers visuel - TOUS les sous-dossiers doivent etre declares
+    # Univers visuel - TOUS les sous-dossiers
     - assets/univers_visuel/
     - assets/univers_visuel/orientation/
+    - assets/univers_visuel/evaluation/
+    - assets/univers_visuel/icon/
     
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon.png"
+  image_path: "assets/univers_visuel/iconeapplication.png"
   remove_alpha_ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/univers_visuel/iconeapplication.png"

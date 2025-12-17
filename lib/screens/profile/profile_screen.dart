@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import '../../models/user_profile.dart';
 import '../../services/complete_auth_service.dart';
-import '../../widgets/app_scaffold.dart'; // ✅ NOUVEAU
+import '../../widgets/app_scaffold.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,20 +17,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
   UserProfile? _userProfile;
   final _formKey = GlobalKey<FormState>();
   
-  // Controllers pour tous les champs
-  final _ageController = TextEditingController();
-  final _situationFamilialeController = TextEditingController();
-  final _healthEnergyController = TextEditingController();
-  final _contraintesController = TextEditingController();
-  final _valeursController = TextEditingController();
-  final _ressourcesController = TextEditingController();
-  final _contraintesRecurrentesController = TextEditingController();
-  final _ouJenSuisController = TextEditingController();
-  final _ceQuiPeseController = TextEditingController();
-  final _ceQuiTientController = TextEditingController();
+  // Controllers
+  final _prenomController = TextEditingController();
+  final _valeursLibresController = TextEditingController();
+  
+  // Date de naissance
+  DateTime? _dateNaissance;
+  
+  // Valeurs sélectionnées
+  Set<String> _valeursSelectionnees = {};
   
   String? _currentUser;
   bool _isLoading = false;
+
+  // Liste des catégories avec icône et valeurs
+  static const List<Map<String, dynamic>> _categories = [
+    {
+      'name': 'Relations et famille',
+      'icon': 'assets/univers_visuel/relationetfamille.png',
+      'valeurs': [
+        {'key': 'famille_loyaute', 'label': 'Famille / Loyauté familiale', 'desc': 'Accorder de l\'importance aux liens familiaux et au soutien mutuel'},
+        {'key': 'amour_affection', 'label': 'Amour / Affection', 'desc': 'Chérir et prendre soin des personnes proches'},
+        {'key': 'respect_parents', 'label': 'Respect des parents / aînés', 'desc': 'Honorer et respecter ceux qui m\'ont précédé'},
+        {'key': 'responsabilite_parentale', 'label': 'Responsabilité parentale', 'desc': 'Guider et accompagner ses enfants avec soin'},
+        {'key': 'amitie_solidarite', 'label': 'Amitié / Solidarité', 'desc': 'Soutenir et partager avec ses amis et proches'},
+      ],
+    },
+    {
+      'name': 'Développement personnel',
+      'icon': 'assets/univers_visuel/developpementpersonnel.png',
+      'valeurs': [
+        {'key': 'curiosite', 'label': 'Curiosité', 'desc': 'Désir d\'apprendre et de découvrir'},
+        {'key': 'creativite', 'label': 'Créativité', 'desc': 'Capacité à imaginer et exprimer des idées nouvelles'},
+        {'key': 'sagesse_reflexion', 'label': 'Sagesse / Réflexion', 'desc': 'Chercher à comprendre et à agir avec discernement'},
+        {'key': 'courage_resilience', 'label': 'Courage / Résilience', 'desc': 'Persévérer face aux difficultés'},
+        {'key': 'discipline_perseverance', 'label': 'Discipline / Persévérance', 'desc': 'Capacité à se structurer pour atteindre ses objectifs'},
+        {'key': 'autonomie_independance', 'label': 'Autonomie / Indépendance', 'desc': 'Prendre des décisions et agir par soi-même'},
+      ],
+    },
+    {
+      'name': 'Santé et bien-être',
+      'icon': 'assets/univers_visuel/santeetbienetre.png',
+      'valeurs': [
+        {'key': 'sante_vitalite', 'label': 'Santé / Vitalité', 'desc': 'Prendre soin de son corps et de son énergie'},
+        {'key': 'equilibre_harmonie', 'label': 'Équilibre / Harmonie', 'desc': 'Maintenir un équilibre entre différents aspects de sa vie'},
+        {'key': 'bienetre_emotionnel', 'label': 'Bien-être émotionnel', 'desc': 'Cultiver la sérénité et la paix intérieure'},
+      ],
+    },
+    {
+      'name': 'Spiritualité et sens',
+      'icon': 'assets/univers_visuel/spiritualiteetsens.png',
+      'valeurs': [
+        {'key': 'spiritualite_foi', 'label': 'Spiritualité / Foi', 'desc': 'Se relier à quelque chose de plus grand que soi'},
+        {'key': 'gratitude_appreciation', 'label': 'Gratitude / Appréciation', 'desc': 'Reconnaître et valoriser ce qui est positif'},
+        {'key': 'paix_interieure', 'label': 'Paix intérieure / Sérénité', 'desc': 'Rechercher le calme et la stabilité émotionnelle'},
+        {'key': 'contemplation_reflexion', 'label': 'Contemplation / Réflexion', 'desc': 'Prendre le temps d\'observer et de méditer'},
+      ],
+    },
+    {
+      'name': 'Liberté et authenticité',
+      'icon': 'assets/univers_visuel/liberteetauthenticite.png',
+      'valeurs': [
+        {'key': 'liberte', 'label': 'Liberté / Indépendance', 'desc': 'Pouvoir choisir sa voie et agir selon ses convictions'},
+        {'key': 'authenticite_honnetete', 'label': 'Authenticité / Honnêteté', 'desc': 'Être vrai avec soi-même et les autres'},
+        {'key': 'responsabilite_integrite', 'label': 'Responsabilité / Intégrité', 'desc': 'Assumer ses choix et agir selon ses valeurs'},
+      ],
+    },
+    {
+      'name': 'Contribution et engagement',
+      'icon': 'assets/univers_visuel/contributionetengagement.png',
+      'valeurs': [
+        {'key': 'generosite_partage', 'label': 'Générosité / Partage', 'desc': 'Donner aux autres sans attendre en retour'},
+        {'key': 'engagement_social', 'label': 'Engagement social / Écologie', 'desc': 'Agir pour le bien commun et l\'environnement'},
+        {'key': 'justice_equite', 'label': 'Justice / Équité', 'desc': 'Défendre ce qui est juste et équilibré pour tous'},
+      ],
+    },
+    {
+      'name': 'Esthétique et expression',
+      'icon': 'assets/univers_visuel/esthetiqueetexpression.png',
+      'valeurs': [
+        {'key': 'beaute_esthetique', 'label': 'Beauté / Esthétique', 'desc': 'Rechercher ou créer l\'harmonie et la beauté'},
+        {'key': 'art_expression', 'label': 'Art / Expression', 'desc': 'Exprimer ses émotions ou idées de façon créative'},
+        {'key': 'creativite_pratique', 'label': 'Créativité pratique', 'desc': 'Résoudre des problèmes avec imagination'},
+      ],
+    },
+  ];
 
   @override
   void initState() {
@@ -49,16 +121,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         
         setState(() {
           _userProfile = profile;
-          _ageController.text = profile.age?.toString() ?? '';
-          _situationFamilialeController.text = profile.situationFamiliale ?? '';
-          _healthEnergyController.text = profile.healthEnergy ?? '';
-          _contraintesController.text = profile.contraintes ?? '';
-          _valeursController.text = profile.valeurs ?? '';
-          _ressourcesController.text = profile.ressources ?? '';
-          _contraintesRecurrentesController.text = profile.contraintesRecurrentes ?? '';
-          _ouJenSuisController.text = profile.ouJenSuis ?? '';
-          _ceQuiPeseController.text = profile.ceQuiPese ?? '';
-          _ceQuiTientController.text = profile.ceQuiTient ?? '';
+          _prenomController.text = profile.prenom ?? '';
+          _dateNaissance = profile.dateNaissance;
+          
+          // Charger les valeurs sélectionnées
+          if (profile.valeursSelectionnees != null) {
+            _valeursSelectionnees = Set<String>.from(profile.valeursSelectionnees!);
+          }
+          
+          // Charger les valeurs libres
+          _valeursLibresController.text = profile.valeursLibres ?? '';
         });
       }
     } catch (e) {
@@ -85,143 +157,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildHeader(),
                   const SizedBox(height: 32),
                   
-                  // Tous les champs directement sur le fond bleu
-                  _buildFieldWithIcon(
-                    iconPath: 'assets/univers_visuel/age.png',
-                    fallbackIcon: Icons.cake_outlined,
-                    explanation: 'Votre âge nous permet d\'ajuster les perspectives à votre étape de vie, vos expériences et vos priorités du moment.',
-                    hint: 'Ex: 35',
-                    controller: _ageController,
-                    isNumber: true,
-                    maxLines: 1,
-                  ),
+                  // Champ Prénom
+                  _buildPrenomField(),
                   const SizedBox(height: 24),
                   
-                  _buildFieldWithIcon(
-                    iconPath: 'assets/univers_visuel/situation familliale.png',
-                    fallbackIcon: Icons.family_restroom,
-                    explanation: 'Décrivez votre contexte de vie : relations, enfants, entourage, travail… Tout ce qui façonne votre quotidien.',
-                    hint: 'Ex: Marié(e), 2 enfants, cadre en entreprise...',
-                    controller: _situationFamilialeController,
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 24),
+                  // Champ Date de naissance
+                  _buildDateNaissanceField(),
+                  const SizedBox(height: 32),
                   
-                  _buildFieldWithIcon(
-                    iconPath: 'assets/univers_visuel/sante et energie.png',
-                    fallbackIcon: Icons.favorite_outline,
-                    explanation: 'Comment vous sentez-vous physiquement ces temps-ci ? L\'énergie dont vous disposez influence beaucoup la manière dont vous vivez vos pensées.',
-                    hint: 'Ex: Fatigué(e) en ce moment, énergie variable...',
-                    controller: _healthEnergyController,
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 24),
+                  // Section Valeurs
+                  _buildValeursSection(),
                   
-                  _buildFieldWithIcon(
-                    iconPath: 'assets/univers_visuel/contraintes recurrentes.png',
-                    fallbackIcon: Icons.block_outlined,
-                    explanation: 'Quelles sont aujourd\'hui vos limites concrètes (temps, finances, responsabilités, santé…) ? Cela aide à proposer des pistes réalistes pour vous.',
-                    hint: 'Ex: Budget serré, peu de temps libre, santé fragile...',
-                    controller: _contraintesController,
-                    maxLines: 2,
-                  ),
+                  const SizedBox(height: 32),
+                  _buildSaveButton(),
                   const SizedBox(height: 24),
-                  
-                  _buildFieldWithIcon(
-                    iconPath: 'assets/univers_visuel/valeurs.png',
-                    fallbackIcon: Icons.star_outline,
-                    explanation: 'Quels sont les principes qui comptent vraiment pour vous ? Ils éclairent vos choix et donnent du sens à vos décisions.',
-                    hint: 'Ex: Authenticité, famille, liberté, créativité...',
-                    controller: _valeursController,
-                    maxLines: 3,
-                  ),
-                      const SizedBox(height: 24),
-                      
-                      _buildFieldWithIcon(
-                        iconPath: 'assets/univers_visuel/ressources.png',
-                        fallbackIcon: Icons.lightbulb_outline,
-                        explanation: 'Qu\'est-ce qui vous aide d\'habitude lorsque vous traversez quelque chose de difficile ? Personnes, habitudes, pratiques, forces intérieures…',
-                        hint: 'Ex: Marche en nature, amis proches, méditation, journal...',
-                        controller: _ressourcesController,
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      _buildFieldWithIcon(
-                        iconPath: 'assets/univers_visuel/contraintesrecurrentes.png',
-                        fallbackIcon: Icons.repeat,
-                        explanation: 'Quels blocages, difficultés ou schémas semblent revenir souvent dans votre vie ? Identifier ces motifs permet un recul précieux.',
-                        hint: 'Ex: Perfectionnisme, difficulté à dire non, procrastination...',
-                        controller: _contraintesRecurrentesController,
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      _buildFieldWithIcon(
-                        iconPath: 'assets/univers_visuel/oujensuis.png',
-                        fallbackIcon: Icons.explore_outlined,
-                        explanation: 'Comment décririez-vous votre état actuel, votre période de vie, votre humeur profonde du moment ?',
-                        hint: 'Ex: En transition, en questionnement, plutôt serein(e)...',
-                        controller: _ouJenSuisController,
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      _buildFieldWithIcon(
-                        iconPath: 'assets/univers_visuel/cequimepese.png',
-                        fallbackIcon: Icons.cloud_outlined,
-                        explanation: 'Qu\'est-ce qui vous fatigue, vous alourdit ou vous inquiète le plus en ce moment ?',
-                        hint: 'Ex: Conflits au travail, incertitude sur l\'avenir...',
-                        controller: _ceQuiPeseController,
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      _buildFieldWithIcon(
-                        iconPath: 'assets/univers_visuel/ressources.png',
-                        fallbackIcon: Icons.wb_sunny_outlined,
-                        explanation: 'Qu\'est-ce qui vous porte encore aujourd\'hui ? Ce qui vous donne de l\'élan, de la force ou de la stabilité ? Même si c\'est petit.',
-                        hint: 'Ex: Mes enfants, un projet qui me passionne, ma foi...',
-                        controller: _ceQuiTientController,
-                        maxLines: 3,
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      _buildSaveButton(),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF6366F1),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+                ],
+              ),
             ),
-          ),
-        ),
-        const Spacer(),
-        IconButton(
-          onPressed: _showLogoutDialog,
-          icon: const Icon(Icons.logout),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.red.withOpacity(0.1),
-            foregroundColor: Colors.red,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -259,7 +211,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            _userProfile?.email ?? _currentUser ?? 'Mon Profil',
+            _prenomController.text.isNotEmpty 
+                ? _prenomController.text 
+                : (_userProfile?.email ?? _currentUser ?? 'Mon Profil'),
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -274,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${_userProfile?.completionPercentage ?? 0}% complété',
+              '${_calculateCompletionPercentage()}% complété',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -287,60 +241,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildFieldWithIcon({
-    required String iconPath,
-    required IconData fallbackIcon,
-    required String explanation,
-    required String hint,
-    required TextEditingController controller,
-    int maxLines = 1,
-    bool isNumber = false,
-  }) {
-    // Calculer la hauteur de l'icône en fonction du nombre de lignes
-    // Zone de saisie: ~52px (1 ligne) + ~20px par ligne supplémentaire
-    // Texte explicatif: ~40px (2 lignes environ)
-    double iconHeight = 52 + (maxLines - 1) * 24 + 40;
-    if (iconHeight < 80) iconHeight = 80;
-    if (iconHeight > 120) iconHeight = 120;
+  int _calculateCompletionPercentage() {
+    int completed = 0;
+    int total = 3; // prénom, date naissance, valeurs
     
+    if (_prenomController.text.isNotEmpty) completed++;
+    if (_dateNaissance != null) completed++;
+    if (_valeursSelectionnees.isNotEmpty || _valeursLibresController.text.isNotEmpty) completed++;
+    
+    return ((completed / total) * 100).round();
+  }
+
+  Widget _buildPrenomField() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Icône PNG à gauche
+        // Icône
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.asset(
-            iconPath,
-            width: iconHeight * 0.85,
-            height: iconHeight,
+            'assets/univers_visuel/profil.png',
+            width: 68,
+            height: 80,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                width: iconHeight * 0.85,
-                height: iconHeight,
+                width: 68,
+                height: 80,
                 decoration: BoxDecoration(
                   color: const Color(0xFF6366F1).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  fallbackIcon, 
-                  color: const Color(0xFF6366F1), 
-                  size: iconHeight * 0.4,
-                ),
+                child: const Icon(Icons.person, color: Color(0xFF6366F1), size: 32),
               );
             },
           ),
         ),
         const SizedBox(width: 12),
         
-        // Colonne droite : explication + champ
+        // Champ
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Texte explicatif
               Text(
-                explanation,
+                'Comment veux-tu que je t\'appelle ?',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: const Color(0xFF64748B),
@@ -348,18 +293,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              
-              // Champ de saisie
               TextFormField(
-                controller: controller,
-                maxLines: maxLines,
-                keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+                controller: _prenomController,
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   color: const Color(0xFF0F172A),
                 ),
                 decoration: InputDecoration(
-                  hintText: hint,
+                  hintText: 'Ton prénom',
                   hintStyle: GoogleFonts.inter(
                     color: const Color(0xFF94A3B8),
                     fontSize: 14,
@@ -382,6 +323,425 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateNaissanceField() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Icône
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            'assets/univers_visuel/age.png',
+            width: 68,
+            height: 80,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: 68,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.cake_outlined, color: Color(0xFF6366F1), size: 32),
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        
+        // Champ
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ta date de naissance nous permet d\'ajuster les perspectives à ton étape de vie.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _showDatePicker,
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _dateNaissance != null
+                              ? '${_dateNaissance!.day.toString().padLeft(2, '0')}/${_dateNaissance!.month.toString().padLeft(2, '0')}/${_dateNaissance!.year}'
+                              : 'Sélectionner ta date de naissance',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            color: _dateNaissance != null 
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.calendar_today,
+                        color: Color(0xFF6366F1),
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDatePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        DateTime tempDate = _dateNaissance ?? DateTime(1990, 1, 1);
+        
+        return Container(
+          height: 300,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Annuler',
+                      style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+                    ),
+                  ),
+                  Text(
+                    'Date de naissance',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _dateNaissance = tempDate);
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      'Valider',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF6366F1),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: tempDate,
+                  minimumDate: DateTime(1920),
+                  maximumDate: DateTime.now(),
+                  onDateTimeChanged: (DateTime newDate) {
+                    tempDate = newDate;
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildValeursSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Titre avec icône
+        Row(
+          children: [
+            Image.asset(
+              'assets/univers_visuel/valeurs.png',
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.star, color: Color(0xFF6366F1), size: 24),
+                );
+              },
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Mes valeurs',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
+        // Texte explicatif
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF6366F1).withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '💡 Les valeurs sont ce qui compte le plus pour toi dans ta vie, ce qui te guide, te donne du sens ou te fait te sentir aligné·e avec toi-même.',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: const Color(0xFF0F172A),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '✨ Par exemple : liberté, honnêteté, curiosité, créativité, bienveillance, courage, spiritualité, famille...',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                  height: 1.4,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '🎯 Pense à ce que tu défends ou choisis même quand c\'est difficile ; ce qui fait que tu te sens toi-même.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // Liste des catégories
+        ..._categories.map((category) => _buildCategorySection(category)),
+        
+        const SizedBox(height: 24),
+        
+        // Saisie libre
+        _buildValeursLibresField(),
+      ],
+    );
+  }
+
+  Widget _buildCategorySection(Map<String, dynamic> category) {
+    final String categoryName = category['name'];
+    final String iconPath = category['icon'];
+    final List<dynamic> valeurs = category['valeurs'];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Titre de catégorie avec icône
+          Row(
+            children: [
+              Image.asset(
+                iconPath,
+                width: 32,
+                height: 32,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.category, color: Color(0xFF6366F1), size: 18),
+                  );
+                },
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  categoryName,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF6366F1),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Liste des valeurs avec checkboxes
+          ...valeurs.map((valeur) => _buildValeurCheckbox(valeur as Map<String, dynamic>)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValeurCheckbox(Map<String, dynamic> valeur) {
+    final String key = valeur['key'];
+    final String label = valeur['label'];
+    final String desc = valeur['desc'];
+    final bool isSelected = _valeursSelectionnees.contains(key);
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _valeursSelectionnees.remove(key);
+          } else {
+            _valeursSelectionnees.add(key);
+          }
+        });
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Checkbox personnalisée
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF6366F1) : Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF6366F1) : Colors.grey.shade300,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            
+            // Texte
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    desc,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF94A3B8),
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildValeursLibresField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Autres valeurs importantes pour toi',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _valeursLibresController,
+          maxLines: 2,
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            color: const Color(0xFF0F172A),
+          ),
+          decoration: InputDecoration(
+            hintText: 'Ex: Humour, Aventure, Tradition...',
+            hintStyle: GoogleFonts.inter(
+              color: const Color(0xFF94A3B8),
+              fontSize: 14,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+            ),
+            contentPadding: const EdgeInsets.all(14),
           ),
         ),
       ],
@@ -413,63 +773,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showLogoutDialog() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Déconnexion',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'Êtes-vous sûr de vouloir vous déconnecter ?',
-          style: GoogleFonts.inter(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Annuler',
-              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(
-              'Déconnecter',
-              style: GoogleFonts.inter(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-    
-    if (confirm == true) {
-      await CompleteAuthService.instance.logout();
-      if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
-      }
-    }
-  }
-
   void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
+      // Calculer l'âge à partir de la date de naissance
+      int? age;
+      if (_dateNaissance != null) {
+        final now = DateTime.now();
+        age = now.year - _dateNaissance!.year;
+        if (now.month < _dateNaissance!.month ||
+            (now.month == _dateNaissance!.month && now.day < _dateNaissance!.day)) {
+          age--;
+        }
+      }
+      
+      // Construire la chaîne des valeurs pour compatibilité
+      final valeursTexte = _buildValeursTexte();
+      
       final updatedProfile = (_userProfile ?? UserProfile.empty()).copyWith(
-        age: int.tryParse(_ageController.text),
-        situationFamiliale: _situationFamilialeController.text.isEmpty ? null : _situationFamilialeController.text,
-        healthEnergy: _healthEnergyController.text.isEmpty ? null : _healthEnergyController.text,
-        contraintes: _contraintesController.text.isEmpty ? null : _contraintesController.text,
-        valeurs: _valeursController.text.isEmpty ? null : _valeursController.text,
-        ressources: _ressourcesController.text.isEmpty ? null : _ressourcesController.text,
-        contraintesRecurrentes: _contraintesRecurrentesController.text.isEmpty ? null : _contraintesRecurrentesController.text,
-        ouJenSuis: _ouJenSuisController.text.isEmpty ? null : _ouJenSuisController.text,
-        ceQuiPese: _ceQuiPeseController.text.isEmpty ? null : _ceQuiPeseController.text,
-        ceQuiTient: _ceQuiTientController.text.isEmpty ? null : _ceQuiTientController.text,
+        prenom: _prenomController.text.isEmpty ? null : _prenomController.text,
+        dateNaissance: _dateNaissance,
+        age: age,
+        valeurs: valeursTexte,
+        valeursSelectionnees: _valeursSelectionnees.toList(),
+        valeursLibres: _valeursLibresController.text.isEmpty ? null : _valeursLibresController.text,
         lastUpdated: DateTime.now(),
       );
 
@@ -510,18 +836,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  String _buildValeursTexte() {
+    final valeurs = <String>[];
+    
+    // Ajouter les valeurs sélectionnées (avec leurs labels)
+    for (final category in _categories) {
+      final categoryValeurs = category['valeurs'] as List<dynamic>;
+      for (final valeur in categoryValeurs) {
+        final valeurMap = valeur as Map<String, dynamic>;
+        if (_valeursSelectionnees.contains(valeurMap['key'])) {
+          valeurs.add(valeurMap['label']);
+        }
+      }
+    }
+    
+    // Ajouter les valeurs libres
+    if (_valeursLibresController.text.isNotEmpty) {
+      valeurs.add(_valeursLibresController.text);
+    }
+    
+    return valeurs.join(', ');
+  }
+
   @override
   void dispose() {
-    _ageController.dispose();
-    _situationFamilialeController.dispose();
-    _healthEnergyController.dispose();
-    _contraintesController.dispose();
-    _valeursController.dispose();
-    _ressourcesController.dispose();
-    _contraintesRecurrentesController.dispose();
-    _ouJenSuisController.dispose();
-    _ceQuiPeseController.dispose();
-    _ceQuiTientController.dispose();
+    _prenomController.dispose();
+    _valeursLibresController.dispose();
     super.dispose();
   }
 }

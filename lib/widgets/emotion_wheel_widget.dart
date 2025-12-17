@@ -185,8 +185,9 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildHalfCircleLabel('😔 Difficiles', const Color(0xFFDC2626)),
-                _buildHalfCircleLabel('😊 Ressources', const Color(0xFF10B981)),
+                Flexible(child: _buildHalfCircleLabel('😔 Difficiles', const Color(0xFFDC2626))),
+                const SizedBox(width: 8),
+                Flexible(child: _buildHalfCircleLabel('😊 Ressources', const Color(0xFF10B981))),
               ],
             ),
             const SizedBox(height: 16),
@@ -760,7 +761,7 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/univers_visuel/$iconFile',
+                    'univers_visuel/$iconFile',
                     width: iconSize,
                     height: iconSize,
                     fit: BoxFit.cover,

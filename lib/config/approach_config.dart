@@ -224,7 +224,6 @@ class ApproachCategories {
       type: ApproachType.literary,
     ),
     
-    // Approches supplémentaires pour compatibilité avec approach_config original
     ApproachConfig(
       key: 'poetique',
       name: 'Poétique',
@@ -258,6 +257,130 @@ class ApproachCategories {
       exemples: ['Mallarmé', 'Valéry', 'Claudel'],
       icon: Icons.auto_awesome,
       color: Color(0xFF6366F1),
+      type: ApproachType.literary,
+    ),
+    
+    // ========================================
+    // 📚 AJOUTS POUR SYNCHRONISATION ÉCRANS
+    // ========================================
+    
+    ApproachConfig(
+      key: 'naturalisme',
+      name: 'Naturalisme',
+      description: 'L\'homme déterminé par son milieu et son hérédité',
+      credo: 'Comprendre les forces qui nous façonnent pour mieux les dépasser',
+      tonEmotionnel: 'Scientifique, lucide',
+      exemples: ['Zola', 'Les Rougon-Macquart', 'Germinal'],
+      icon: Icons.biotech,
+      color: Color(0xFF78716C),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'symbolisme',
+      name: 'Symbolisme',
+      description: 'Le monde visible comme reflet d\'une réalité spirituelle',
+      credo: 'Chaque chose est un signe qui renvoie à l\'invisible',
+      tonEmotionnel: 'Mystérieux, suggestif',
+      exemples: ['Baudelaire', 'Mallarmé', 'Verlaine'],
+      icon: Icons.blur_on,
+      color: Color(0xFF6366F1),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'surrealisme',
+      name: 'Surréalisme',
+      description: 'Libération de l\'inconscient et automatisme psychique',
+      credo: 'L\'imaginaire est ce qui tend à devenir réel',
+      tonEmotionnel: 'Onirique, libéré',
+      exemples: ['Breton', 'Éluard', 'Desnos'],
+      icon: Icons.psychology,
+      color: Color(0xFFD946EF),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'modernisme',
+      name: 'Modernisme',
+      description: 'Rupture avec la tradition et expérimentation formelle',
+      credo: 'Il faut être absolument moderne',
+      tonEmotionnel: 'Innovant, audacieux',
+      exemples: ['Proust', 'Joyce', 'Woolf'],
+      icon: Icons.architecture,
+      color: Color(0xFF0EA5E9),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'postmodernisme',
+      name: 'Postmodernisme',
+      description: 'Déconstruction des grands récits et jeu avec les codes',
+      credo: 'Toute vérité est une construction',
+      tonEmotionnel: 'Ironique, ludique',
+      exemples: ['Borges', 'Calvino', 'Perec'],
+      icon: Icons.layers,
+      color: Color(0xFFF43F5E),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'tragedie_classique',
+      name: 'Tragédie classique',
+      description: 'Le destin, la fatalité et la grandeur dans la chute',
+      credo: 'La vraie grandeur se révèle dans l\'adversité',
+      tonEmotionnel: 'Noble, fataliste',
+      exemples: ['Racine', 'Corneille', 'Sophocle'],
+      icon: Icons.theater_comedy,
+      color: Color(0xFF7C2D12),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'roman_psychologique',
+      name: 'Roman psychologique',
+      description: 'Exploration des profondeurs de l\'âme humaine',
+      credo: 'Comprendre l\'autre, c\'est se comprendre soi-même',
+      tonEmotionnel: 'Introspectif, nuancé',
+      exemples: ['Dostoïevski', 'Proust', 'Henry James'],
+      icon: Icons.psychology_alt,
+      color: Color(0xFF7C3AED),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'mythologie',
+      name: 'Mythologie',
+      description: 'Les récits fondateurs et les archétypes universels',
+      credo: 'Les mythes sont des vérités éternelles sous forme de récit',
+      tonEmotionnel: 'Épique, symbolique',
+      exemples: ['Homère', 'Ovide', 'Mythes grecs'],
+      icon: Icons.auto_awesome_motion,
+      color: Color(0xFFF59E0B),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'science_fiction',
+      name: 'Science-fiction',
+      description: 'Exploration des futurs possibles et questionnement de l\'humain',
+      credo: 'Imaginer demain pour mieux comprendre aujourd\'hui',
+      tonEmotionnel: 'Visionnaire, interrogatif',
+      exemples: ['Asimov', 'Philip K. Dick', 'Ursula Le Guin'],
+      icon: Icons.rocket_launch,
+      color: Color(0xFF0891B2),
+      type: ApproachType.literary,
+    ),
+    
+    ApproachConfig(
+      key: 'fantasy',
+      name: 'Fantasy',
+      description: 'Mondes imaginaires et quêtes initiatiques',
+      credo: 'L\'imaginaire révèle des vérités que le réel ne peut dire',
+      tonEmotionnel: 'Merveilleux, épique',
+      exemples: ['Tolkien', 'Ursula Le Guin', 'Robin Hobb'],
+      icon: Icons.castle,
+      color: Color(0xFF059669),
       type: ApproachType.literary,
     ),
   ];
@@ -350,12 +473,65 @@ class ApproachCategories {
       color: Color(0xFFEC4899),
       type: ApproachType.psychological,
     ),
+    
+    // ========================================
+    // 🧠 AJOUTS POUR SYNCHRONISATION ÉCRANS
+    // ========================================
+    
+    ApproachConfig(
+      key: 'psychanalyse',
+      name: 'Psychanalyse',
+      description: 'Exploration de l\'inconscient et des conflits refoulés',
+      credo: 'Ce qui est refoulé finit toujours par resurgir',
+      tonEmotionnel: 'Profond, analytique',
+      exemples: ['Freud', 'Lacan', 'Interprétation des rêves'],
+      icon: Icons.psychology,
+      color: Color(0xFF1E40AF),
+      type: ApproachType.psychological,
+    ),
+    
+    ApproachConfig(
+      key: 'analyse_transactionnelle',
+      name: 'Analyse Transactionnelle',
+      description: 'Comprendre les états du moi et les jeux relationnels',
+      credo: 'Quel état du moi (Parent, Adulte, Enfant) parle en toi ?',
+      tonEmotionnel: 'Structuré, relationnel',
+      exemples: ['Eric Berne', 'États du Moi', 'Jeux psychologiques'],
+      icon: Icons.people_outline,
+      color: Color(0xFFF59E0B),
+      type: ApproachType.psychological,
+    ),
+    
+    ApproachConfig(
+      key: 'systemique',
+      name: 'Approche Systémique',
+      description: 'L\'individu dans son système de relations',
+      credo: 'Changer une partie, c\'est changer le tout',
+      tonEmotionnel: 'Contextuel, holistique',
+      exemples: ['Palo Alto', 'Thérapie familiale', 'Bateson'],
+      icon: Icons.hub,
+      color: Color(0xFF06B6D4),
+      type: ApproachType.psychological,
+    ),
   ];
 
   // ========================================
   // 🏛️ COURANTS PHILOSOPHIQUES
   // ========================================
   static const List<ApproachConfig> philosophical = [
+    // AJOUT: stoicisme (sans _philo) pour matcher l'écran
+    ApproachConfig(
+      key: 'stoicisme',
+      name: 'Stoïcisme',
+      description: 'Maîtrise de soi et acceptation du destin',
+      credo: 'Distingue ce qui dépend de toi de ce qui n\'en dépend pas',
+      tonEmotionnel: 'Serein, rationnel',
+      exemples: ['Marc Aurèle', 'Épictète', 'Sénèque'],
+      icon: Icons.shield,
+      color: Color(0xFF6B7280),
+      type: ApproachType.philosophical,
+    ),
+    
     ApproachConfig(
       key: 'stoicisme_philo',
       name: 'Stoïcisme',

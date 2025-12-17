@@ -1,4 +1,5 @@
 // lib/widgets/emotion_widgets/emotion_detail_modal.dart
+// MODIFIÉ : Curseur 0-100% remplacé par 10 boutons cliquables (1-10)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -111,10 +112,10 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
           
           const SizedBox(height: 20),
           
-          // ✅ Icône PNG et titre
+          // Icône PNG et titre
           Row(
             children: [
-              // ✅ Icône PNG de l'émotion (au lieu de IconData)
+              // Icône PNG de l'émotion (au lieu de IconData)
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -177,7 +178,14 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
     ).animate().fadeIn(delay: 100.ms);
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU : 10 BOUTONS AU LIEU DU CURSEUR
+  // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildLevelSelector() {
+    // Convertir le level (0-100) en index bouton (0-10)
+    // 0 = pas sélectionné, 1-10 = intensité
+    final int selectedButton = (_level / 10).round().clamp(0, 10);
+    
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -200,11 +208,13 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: widget.emotion.color,
+                  color: selectedButton > 0 
+                      ? widget.emotion.color 
+                      : Colors.grey[300],
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '$_level%',
+                  selectedButton > 0 ? '$selectedButton/10' : '—',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -217,49 +227,90 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
           
           const SizedBox(height: 16),
           
-          // Slider principal
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: widget.emotion.color,
-              inactiveTrackColor: widget.emotion.color.withOpacity(0.2),
-              thumbColor: widget.emotion.color,
-              overlayColor: widget.emotion.color.withOpacity(0.1),
-              thumbShape: const RoundSliderThumbShape(
-                enabledThumbRadius: 12,
-              ),
-              overlayShape: const RoundSliderOverlayShape(
-                overlayRadius: 20,
-              ),
-              trackHeight: 6,
-              trackShape: const RoundedRectSliderTrackShape(),
-            ),
-            child: Slider(
-              value: _level.toDouble(),
-              min: 0,
-              max: 100,
-              divisions: 20,
-              onChanged: (value) {
-                setState(() {
-                  _level = value.round();
-                });
-                HapticFeedback.selectionClick();
-              },
-            ),
+          // ═══════════════════════════════════════════════════════════════════
+          // 10 BOUTONS CLIQUABLES
+          // ═══════════════════════════════════════════════════════════════════
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(10, (index) {
+              final buttonValue = index + 1; // 1 à 10
+              final isSelected = selectedButton == buttonValue;
+              final isLowerOrEqual = buttonValue <= selectedButton;
+              
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    // Si on clique sur le même bouton, on désélectionne (level = 0)
+                    if (_level == buttonValue * 10) {
+                      _level = 0;
+                    } else {
+                      _level = buttonValue * 10; // 10, 20, 30... 100
+                    }
+                  });
+                  HapticFeedback.selectionClick();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: 30,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isLowerOrEqual && selectedButton > 0
+                        ? widget.emotion.color.withOpacity(
+                            0.3 + (buttonValue / 10) * 0.7)
+                        : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected
+                          ? widget.emotion.color
+                          : isLowerOrEqual && selectedButton > 0
+                              ? widget.emotion.color.withOpacity(0.5)
+                              : Colors.grey[300]!,
+                      width: isSelected ? 2.5 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: widget.emotion.color.withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$buttonValue',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: isSelected 
+                            ? FontWeight.w700 
+                            : FontWeight.w500,
+                        color: isLowerOrEqual && selectedButton > 0
+                            ? Colors.white
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
           ),
+          
+          const SizedBox(height: 12),
           
           // Labels
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Pas du tout',
+                'Faible',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: const Color(0xFF94A3B8),
                 ),
               ),
               Text(
-                'Énormément',
+                'Fort',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: const Color(0xFF94A3B8),

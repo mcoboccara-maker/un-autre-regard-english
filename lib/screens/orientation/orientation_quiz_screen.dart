@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../config/orientation_config.dart';
+import '../../widgets/app_scaffold.dart'; // ✅ AJOUT IMPORT APPSCAFFOLD
 import 'orientation_result_screen.dart';
 
 class OrientationQuizScreen extends StatefulWidget {
@@ -138,7 +139,12 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    // ✅ UTILISATION DE APPSCAFFOLD
+    return AppScaffold(
+      title: 'Quiz d\'orientation',
+      headerIconPath: 'assets/univers_visuel/orientation.png',
+      showTitle: false,
+      showBackButton: false, // Pas de bouton retour standard, on a un bouton fermer custom
       body: Container(
         // Fond bleu pastel comme le reste de l'application
         decoration: const BoxDecoration(
@@ -153,32 +159,30 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
             stops: [0.0, 0.5, 1.0],
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Barre de progression
-              _buildProgressBar(),
-              
-              // Thème de la question
-              _buildQuestionTheme(),
-              
-              // Image principale (swipeable)
-              Expanded(
-                child: _buildSwipeableImage(),
-              ),
-              
-              // Indicateurs d'options
-              _buildOptionIndicators(),
-              
-              // Instructions
-              _buildInstructions(),
-              
-              // Bouton de sélection
-              _buildSelectButton(),
-              
-              const SizedBox(height: 20),
-            ],
-          ),
+        child: Column(
+          children: [
+            // Barre de progression
+            _buildProgressBar(),
+            
+            // Thème de la question
+            _buildQuestionTheme(),
+            
+            // Image principale (swipeable)
+            Expanded(
+              child: _buildSwipeableImage(),
+            ),
+            
+            // Indicateurs d'options
+            _buildOptionIndicators(),
+            
+            // Instructions
+            _buildInstructions(),
+            
+            // Bouton de sélection
+            _buildSelectButton(),
+            
+            const SizedBox(height: 20),
+          ],
         ),
       ),
     );

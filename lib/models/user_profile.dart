@@ -65,9 +65,9 @@ class UserProfile extends HiveObject {
 
   // === NOUVEAU CHAMP POUR LE PROMPT IA ===
   @HiveField(18)
-  final String? historique30JoursResume; // ⭐ Résumé des 30 derniers jours glissants pour contexte IA
+  final String? historique30JoursResume; // Résumé des 30 derniers jours glissants pour contexte IA
 
-  // === ⭐ NOUVEAUX CHAMPS ORIENTATION ===
+  // === CHAMPS ORIENTATION ===
   @HiveField(19)
   final List<String> philosophesSelectionnes; // Philosophes choisis via orientation
   
@@ -79,6 +79,19 @@ class UserProfile extends HiveObject {
   
   @HiveField(22)
   final DateTime? orientationDate; // Date du quiz orientation
+
+  // === ⭐ NOUVEAUX CHAMPS PROFIL SIMPLIFIÉ ===
+  @HiveField(23)
+  final String? prenom; // Prénom de l'utilisateur
+  
+  @HiveField(24)
+  final DateTime? dateNaissance; // Date de naissance
+  
+  @HiveField(25)
+  final List<String>? valeursSelectionnees; // Liste des clés de valeurs sélectionnées
+  
+  @HiveField(26)
+  final String? valeursLibres; // Valeurs saisies librement
 
   UserProfile({
     this.email,
@@ -106,14 +119,19 @@ class UserProfile extends HiveObject {
     this.isCompleted = false,
     // Nouveau champ
     this.historique30JoursResume,
-    // ⭐ Nouveaux champs orientation
+    // Champs orientation
     this.philosophesSelectionnes = const [],
     this.courantsPhilosophiques = const [],
     this.orientationCompleted = false,
     this.orientationDate,
+    // ⭐ Nouveaux champs profil simplifié
+    this.prenom,
+    this.dateNaissance,
+    this.valeursSelectionnees,
+    this.valeursLibres,
   });
 
-  // 🔧 DEUX CONSTRUCTEURS EMPTY POUR COMPATIBILITÉ MAXIMALE
+  // Factory constructor pour profil vide
   factory UserProfile.empty([String? email]) {
     return UserProfile(
       email: email,
@@ -142,11 +160,15 @@ class UserProfile extends HiveObject {
     DateTime? lastUpdated,
     bool? isCompleted,
     String? historique30JoursResume,
-    // ⭐ Nouveaux champs orientation
     List<String>? philosophesSelectionnes,
     List<String>? courantsPhilosophiques,
     bool? orientationCompleted,
     DateTime? orientationDate,
+    // ⭐ Nouveaux champs profil simplifié
+    String? prenom,
+    DateTime? dateNaissance,
+    List<String>? valeursSelectionnees,
+    String? valeursLibres,
   }) {
     return UserProfile(
       email: email ?? this.email,
@@ -168,11 +190,15 @@ class UserProfile extends HiveObject {
       lastUpdated: lastUpdated ?? this.lastUpdated,
       isCompleted: isCompleted ?? this.isCompleted,
       historique30JoursResume: historique30JoursResume ?? this.historique30JoursResume,
-      // ⭐ Nouveaux champs orientation
       philosophesSelectionnes: philosophesSelectionnes ?? this.philosophesSelectionnes,
       courantsPhilosophiques: courantsPhilosophiques ?? this.courantsPhilosophiques,
       orientationCompleted: orientationCompleted ?? this.orientationCompleted,
       orientationDate: orientationDate ?? this.orientationDate,
+      // ⭐ Nouveaux champs profil simplifié
+      prenom: prenom ?? this.prenom,
+      dateNaissance: dateNaissance ?? this.dateNaissance,
+      valeursSelectionnees: valeursSelectionnees ?? this.valeursSelectionnees,
+      valeursLibres: valeursLibres ?? this.valeursLibres,
     );
   }
 
@@ -192,12 +218,16 @@ class UserProfile extends HiveObject {
            (tonalitePrefere?.isNotEmpty == true) ||
            (ouJenSuis?.isNotEmpty == true) ||
            (ceQuiPese?.isNotEmpty == true) ||
-           (ceQuiTient?.isNotEmpty == true);
+           (ceQuiTient?.isNotEmpty == true) ||
+           (prenom?.isNotEmpty == true) ||
+           (dateNaissance != null) ||
+           (valeursSelectionnees?.isNotEmpty == true) ||
+           (valeursLibres?.isNotEmpty == true);
   }
 
   int get completionPercentage {
     int completed = 0;
-    int total = 15; // Nombre de champs principaux (ajusté)
+    int total = 17; // Nombre de champs principaux (ajusté)
     
     if (age != null) completed++;
     if (situationFamiliale?.isNotEmpty == true) completed++;
@@ -214,6 +244,8 @@ class UserProfile extends HiveObject {
     if (ouJenSuis?.isNotEmpty == true) completed++;
     if (ceQuiPese?.isNotEmpty == true) completed++;
     if (ceQuiTient?.isNotEmpty == true) completed++;
+    if (prenom?.isNotEmpty == true) completed++;
+    if (valeursSelectionnees?.isNotEmpty == true) completed++;
     
     return (completed / total * 100).round();
   }
@@ -238,14 +270,18 @@ class UserProfile extends HiveObject {
   String getContextForAI() {
     final buffer = StringBuffer();
     
-    // Profil utilisateur
-    buffer.writeln('Profil utilisateur :');
+    buffer.writeln('Contexte personnel :');
+    if (prenom?.isNotEmpty == true) buffer.writeln('Prénom : $prenom');
     if (age != null) buffer.writeln('Âge : $age ans');
     if (situationFamiliale?.isNotEmpty == true) buffer.writeln('Situation : $situationFamiliale');
-    if (healthEnergy?.isNotEmpty == true) buffer.writeln('Santé / énergie : $healthEnergy');
-    if (valeurs?.isNotEmpty == true) buffer.writeln('Valeurs essentielles : $valeurs');
+    if (healthEnergy?.isNotEmpty == true) buffer.writeln('Santé/Énergie : $healthEnergy');
     if (contraintes?.isNotEmpty == true) buffer.writeln('Contraintes actuelles : $contraintes');
     if (ressources?.isNotEmpty == true) buffer.writeln('Ressources habituelles : $ressources');
+    
+    // Valeurs (nouveau système)
+    if (valeurs?.isNotEmpty == true) {
+      buffer.writeln('Valeurs fondamentales : $valeurs');
+    }
     
     if (religionsSelectionnees.isNotEmpty) {
       buffer.writeln('Religions / traditions spirituelles choisies : ${religionsSelectionnees.join(", ")}');
@@ -256,7 +292,6 @@ class UserProfile extends HiveObject {
     if (approchesPsychologiques.isNotEmpty) {
       buffer.writeln('Démarches psychologiques / thérapeutiques préférées : ${approchesPsychologiques.join(", ")}');
     }
-    // ⭐ NOUVEAUX CHAMPS ORIENTATION
     if (philosophesSelectionnes.isNotEmpty) {
       buffer.writeln('Philosophes de référence : ${philosophesSelectionnes.join(", ")}');
     }
@@ -273,7 +308,7 @@ class UserProfile extends HiveObject {
     if (ceQuiPese?.isNotEmpty == true) buffer.writeln('Ce qui me pèse : $ceQuiPese');
     if (ceQuiTient?.isNotEmpty == true) buffer.writeln('Ce qui me tient : $ceQuiTient');
     
-    // ⭐ NOUVEAU : Historique 30 jours glissants pour contexte
+    // Historique 30 jours glissants pour contexte
     if (historique30JoursResume?.isNotEmpty == true) {
       buffer.writeln();
       buffer.writeln('Historique récent (30 derniers jours glissants) :');
@@ -283,7 +318,7 @@ class UserProfile extends HiveObject {
     return buffer.toString();
   }
 
-  /// ⭐ Getter pour toutes les sources d'inspiration (pour le prompt IA)
+  /// Getter pour toutes les sources d'inspiration (pour le prompt IA)
   List<String> get allSourcesInspiration {
     return [
       ...religionsSelectionnees,
@@ -315,11 +350,15 @@ class UserProfile extends HiveObject {
       'lastUpdated': lastUpdated.toIso8601String(),
       'isCompleted': isCompleted,
       'historique30JoursResume': historique30JoursResume,
-      // ⭐ Nouveaux champs orientation
       'philosophesSelectionnes': philosophesSelectionnes,
       'courantsPhilosophiques': courantsPhilosophiques,
       'orientationCompleted': orientationCompleted,
       'orientationDate': orientationDate?.toIso8601String(),
+      // ⭐ Nouveaux champs profil simplifié
+      'prenom': prenom,
+      'dateNaissance': dateNaissance?.toIso8601String(),
+      'valeursSelectionnees': valeursSelectionnees,
+      'valeursLibres': valeursLibres,
     };
   }
 
@@ -341,21 +380,30 @@ class UserProfile extends HiveObject {
       ouJenSuis: json['ouJenSuis'],
       ceQuiPese: json['ceQuiPese'],
       ceQuiTient: json['ceQuiTient'],
-      lastUpdated: DateTime.parse(json['lastUpdated']),
+      lastUpdated: json['lastUpdated'] != null 
+          ? DateTime.parse(json['lastUpdated']) 
+          : DateTime.now(),
       isCompleted: json['isCompleted'] ?? false,
       historique30JoursResume: json['historique30JoursResume'],
-      // ⭐ Nouveaux champs orientation
       philosophesSelectionnes: List<String>.from(json['philosophesSelectionnes'] ?? []),
       courantsPhilosophiques: List<String>.from(json['courantsPhilosophiques'] ?? []),
       orientationCompleted: json['orientationCompleted'] ?? false,
       orientationDate: json['orientationDate'] != null 
           ? DateTime.parse(json['orientationDate']) 
           : null,
+      // ⭐ Nouveaux champs profil simplifié
+      prenom: json['prenom'],
+      dateNaissance: json['dateNaissance'] != null 
+          ? DateTime.parse(json['dateNaissance']) 
+          : null,
+      valeursSelectionnees: json['valeursSelectionnees'] != null 
+          ? List<String>.from(json['valeursSelectionnees']) 
+          : null,
+      valeursLibres: json['valeursLibres'],
     );
   }
   
-  /// ⭐ MÉTHODE UTILITAIRE : Générer le résumé des 30 derniers jours glissants
-  /// À appeler depuis un service avec accès aux Reflections
+  /// MÉTHODE UTILITAIRE : Générer le résumé des 30 derniers jours glissants
   static String generateHistorique30Jours(List<dynamic> recentReflections) {
     if (recentReflections.isEmpty) {
       return '';
@@ -445,7 +493,7 @@ class ProfileChoices {
     'Bienveillant et profond',
   ];
   
-  // ⭐ NOUVEAUX CHOIX ORIENTATION
+  // CHOIX ORIENTATION
   static const List<String> philosophes = [
     'Socrate',
     'Platon',

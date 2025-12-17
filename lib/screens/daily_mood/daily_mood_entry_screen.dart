@@ -1,5 +1,6 @@
 // lib/screens/daily_mood/daily_mood_entry_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/mood_entry.dart';
 import '../../services/emotional_tracking_service.dart';
@@ -44,11 +45,15 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
   }
 
   Future<void> _saveEntry() async {
-    if (_selectedEmotions.isEmpty) {
+    // Filtrer les émotions avec intensité > 0 uniquement
+    final validEmotions = Map<String, Map<String, dynamic>>.from(_selectedEmotions)
+      ..removeWhere((key, value) => (value['intensity'] as int) == 0);
+    
+    if (validEmotions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Sélectionne au moins une émotion',
+            'Sélectionne au moins une émotion avec une intensité',
             style: GoogleFonts.poppins(),
           ),
         ),
@@ -58,7 +63,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
 
     // Convertir les émotions sélectionnées en EmotionDetail
     final emotionsDetails = <String, EmotionDetail>{};
-    for (final entry in _selectedEmotions.entries) {
+    for (final entry in validEmotions.entries) {
       emotionsDetails[entry.key] = EmotionDetail(
         intensity: entry.value['intensity'] as int,
         nuances: List<String>.from(entry.value['nuances'] as List),
@@ -109,7 +114,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          '✅ Émotions enregistrées !',
+                          'Émotions enregistrées !',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -201,13 +206,19 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+          colors: [Color(0xFF6B9FBF), Color(0xFF87B5D0)],  // Bleu pastel cohérent
         ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(Icons.calendar_today, color: Colors.white, size: 32),
+          // Icône calendrier personnalisée
+          Image.asset(
+            'assets/univers_visuel/calendrier.png',
+            width: 40,
+            height: 40,
+            errorBuilder: (_, __, ___) => Icon(Icons.calendar_today, color: Colors.white, size: 32),
+          ),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,8 +266,6 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
         ),
         const SizedBox(height: 16),
         
-        // SUPPRIMÉ: Le texte "😔 Avec cette pensée/situation"
-        
         // Liste des émotions négatives
         ...EmotionCategories.negativeEmotions.map((emotion) {
           final isSelected = _selectedEmotions.containsKey(emotion.key);
@@ -271,8 +280,6 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
         }),
         
         const SizedBox(height: 24),
-        
-        // SUPPRIMÉ: Le texte "😊 Sans cette pensée/situation" et "Qui seriez-vous..."
         
         // Liste des émotions positives
         ...EmotionCategories.positiveEmotions.map((emotion) {
@@ -296,6 +303,9 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
     int intensity,
     List<String> selectedNuances,
   ) {
+    // Convertir l'intensité (0-100) en valeur 1-10
+    final displayLevel = (intensity / 10).round().clamp(0, 10);
+    
     return Column(
       children: [
         // Carte principale
@@ -306,7 +316,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                 _selectedEmotions.remove(emotion.key);
               } else {
                 _selectedEmotions[emotion.key] = {
-                  'intensity': 50,
+                  'intensity': 0,
                   'nuances': <String>[],
                 };
               }
@@ -365,7 +375,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
           ),
         ),
         
-        // Slider d'intensité (si sélectionné)
+        // Section intensité avec boutons 1-10 (si sélectionné)
         if (isSelected) ...[
           const SizedBox(height: 8),
           Container(
@@ -377,6 +387,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // En-tête avec label et valeur
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -388,7 +399,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                       ),
                     ),
                     Text(
-                      '$intensity%',
+                      '$displayLevel/10',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -397,27 +408,15 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                     ),
                   ],
                 ),
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: emotion.color,
-                    inactiveTrackColor: emotion.color.withOpacity(0.2),
-                    thumbColor: emotion.color,
-                    overlayColor: emotion.color.withOpacity(0.2),
-                  ),
-                  child: Slider(
-                    value: intensity.toDouble(),
-                    min: 0,
-                    max: 100,
-                    divisions: 10,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedEmotions[emotion.key]!['intensity'] = value.toInt();
-                      });
-                    },
-                  ),
-                ),
                 
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
+                
+                // ═══════════════════════════════════════════════════════════
+                // MODIFIÉ: Boutons 1-10 au lieu du slider
+                // ═══════════════════════════════════════════════════════════
+                _buildIntensityButtons(emotion, intensity),
+                
+                const SizedBox(height: 12),
                 
                 // Bouton pour sélectionner les nuances
                 OutlinedButton.icon(
@@ -468,6 +467,139 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SLIDER pour l'intensité avec couleurs VERT/BLEU des icônes
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildIntensityButtons(EmotionConfig emotion, int intensity) {
+    // Convertir l'intensité (0-100) en niveau (0-10)
+    final currentLevel = (intensity / 10).round().clamp(0, 10);
+    
+    // Couleurs des icônes
+    const vertMenthe = Color(0xFF9FD5A1);  // Vert des icônes emotion
+    const bleuPetrole = Color(0xFF2E7D8A); // Bleu des icônes evaluation
+    
+    return Column(
+      children: [
+        // Icône emotion qui change selon la valeur sélectionnée
+        Image.asset(
+          'assets/univers_visuel/evaluation/emotion$currentLevel.png',
+          width: 44,
+          height: 44,
+          errorBuilder: (_, __, ___) => Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: vertMenthe.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$currentLevel',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: bleuPetrole,
+                ),
+              ),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 8),
+        
+        // SLIDER avec couleurs VERT (actif) / BLEU (inactif)
+        Row(
+          children: [
+            Text(
+              '0',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: const Color(0xFF94A3B8),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Expanded(
+              child: SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: vertMenthe,
+                  inactiveTrackColor: bleuPetrole.withOpacity(0.3),
+                  thumbColor: vertMenthe,
+                  overlayColor: vertMenthe.withOpacity(0.1),
+                  trackHeight: 6,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+                ),
+                child: Slider(
+                  value: currentLevel.toDouble(),
+                  min: 0,
+                  max: 10,
+                  divisions: 10,
+                  onChanged: (value) {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      if (value.round() == 0) {
+                        _selectedEmotions.remove(emotion.key);
+                      } else {
+                        _selectedEmotions[emotion.key]!['intensity'] = value.round() * 10;
+                      }
+                    });
+                  },
+                ),
+              ),
+            ),
+            Text(
+              '10',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: const Color(0xFF94A3B8),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        
+        // Raccourcis rapides 0, 5, 10
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [0, 5, 10].map((quickValue) {
+            final isSelected = currentLevel == quickValue;
+            return GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() {
+                  if (quickValue == 0) {
+                    _selectedEmotions.remove(emotion.key);
+                  } else {
+                    _selectedEmotions[emotion.key]!['intensity'] = quickValue * 10;
+                  }
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                decoration: BoxDecoration(
+                  color: isSelected ? vertMenthe : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected ? vertMenthe : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: Text(
+                  '$quickValue',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   Future<void> _showNuancesDialog(EmotionConfig emotion, List<String> selectedNuances) async {
     final result = await showDialog<List<String>>(
       context: context,
@@ -489,7 +621,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '📝 Note optionnelle',
+          'Note optionnelle',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -520,7 +652,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
       child: ElevatedButton(
         onPressed: _saveEntry,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF3B82F6),
+          backgroundColor: const Color(0xFFD4A574),  // Ambre/doré cohérent
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

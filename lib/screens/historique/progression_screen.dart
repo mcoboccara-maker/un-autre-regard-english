@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../services/persistent_storage_service.dart'; // ✅ SEUL SERVICE NÉCESSAIRE
+import '../../widgets/app_scaffold.dart'; // ✅ AJOUT IMPORT APPSCAFFOLD
 // ❌ SUPPRIMÉS - Services redondants :
 // import '../../services/historique_eclairages_service.dart';
 // import '../../services/dynamic_approach_service_zero_hardcoded.dart';
@@ -60,43 +61,52 @@ class _ProgressionScreenState extends State<ProgressionScreen>
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
+      return AppScaffold(
+        title: 'Ma Progression',
+        headerIconPath: 'assets/univers_visuel/historique.png',
+        showTitle: false,
+        showBackButton: true,
+        body: const Center(
           child: CircularProgressIndicator(),
         ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          'Ma Progression',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF111827),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: const Color(0xFF6366F1),
-          unselectedLabelColor: Colors.grey[600],
-          indicatorColor: const Color(0xFF6366F1),
-          tabs: const [
-            Tab(text: 'Vue d\'ensemble'),
-            Tab(text: 'Émotions'),
-            Tab(text: 'Approches'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+    // ✅ UTILISATION DE APPSCAFFOLD avec TabBar dans le body
+    return AppScaffold(
+      title: 'Ma Progression',
+      headerIconPath: 'assets/univers_visuel/historique.png',
+      showTitle: false,
+      showBackButton: true,
+      body: Column(
         children: [
-          _buildOverviewTab(),
-          _buildEmotionsTab(),
-          _buildApproachesTab(),
+          // TabBar personnalisé dans le body
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: const Color(0xFF6366F1),
+              unselectedLabelColor: Colors.grey[600],
+              indicatorColor: const Color(0xFF6366F1),
+              tabs: const [
+                Tab(text: 'Vue d\'ensemble'),
+                Tab(text: 'Émotions'),
+                Tab(text: 'Approches'),
+              ],
+            ),
+          ),
+          
+          // Contenu des onglets
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOverviewTab(),
+                _buildEmotionsTab(),
+                _buildApproachesTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );

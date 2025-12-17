@@ -10,6 +10,29 @@
 
 class PromptsConfig {
   
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONSTANTES ET MÉTHODES UTILITAIRES (pour compatibilité ai_service.dart)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  static const int maxRetries = 3;
+  
+  static String getDefaultStartDate() {
+    final date = DateTime.now().subtract(const Duration(days: 30));
+    return '${date.day}/${date.month}/${date.year}';
+  }
+  
+  static String getDefaultEndDate() {
+    final date = DateTime.now();
+    return '${date.day}/${date.month}/${date.year}';
+  }
+  
+  static String buildPersonnagesInterdits({
+    required List<String> personnages30Jours,
+  }) {
+    if (personnages30Jours.isEmpty) return '';
+    return personnages30Jours.join(", ");
+  }
+  
   /// ==========================================================================
   /// PROMPT GENERAL - VERSION FINALISEE
   /// (Relecture integrale effectuee : complet, coherent, toutes les sections 
@@ -17,30 +40,57 @@ class PromptsConfig {
   /// ==========================================================================
   
   static String buildGeneralPrompt({
-    required String userAge,
-    required String userSituationFamiliale,
-    required String userSanteEnergie,
-    required String userContraintes,
-    required String userValeurs,
-    required String userRessources,
-    required String userContraintesRecurrentes,
-    required String userOuJenSuis,
-    required String userCeQuiPese,
-    required String userCeQuiTient,
-    required String typeEntree,
+    // Paramètres requis par ai_service.dart
     required String contenu,
+    required String sourcesChoisies,
+    required String userAge,
+    String? userValeurs,
+    String? personnagesInterdits,
+    String? reponseARefaire,
+    String? contrainteViolee,
+    String? explicationViolation,
+    int? tentative,
+    // Paramètres optionnels pour rétrocompatibilité
+    String? userSituationFamiliale,
+    String? userSanteEnergie,
+    String? userContraintes,
+    String? userRessources,
+    String? userContraintesRecurrentes,
+    String? userOuJenSuis,
+    String? userCeQuiPese,
+    String? userCeQuiTient,
+    String? typeEntree,
     String? declencheur,
     String? souhait,
     String? petitPas,
-    required String religions,
-    required String litteratures,
-    required String psychologies,
-    required String philosophies,
-    required String philosophes,
+    String? religions,
+    String? litteratures,
+    String? psychologies,
+    String? philosophies,
+    String? philosophes,
     String? historique30Jours,
   }) {
+    // Gestion de la relance après violation
+    String relanceInfo = '';
+    if (tentative != null && tentative > 1 && reponseARefaire != null) {
+      relanceInfo = '''
+⚠️ ATTENTION - Tentative $tentative :
+La réponse précédente a été rejetée.
+${contrainteViolee != null ? 'Raison : $contrainteViolee' : ''}
+${explicationViolation != null ? 'Explication : $explicationViolation' : ''}
+
+Tu dois produire une nouvelle réponse qui corrige ce problème.
+
+''';
+    }
+    
+    // Personnages interdits
+    final interdits = (personnagesInterdits != null && personnagesInterdits.isNotEmpty)
+        ? '\nPERSONNAGES INTERDITS (déjà utilisés ces 30 derniers jours) :\n$personnagesInterdits\n'
+        : '';
+    
     return '''
-================================================================
+$relanceInfo================================================================
 0 - ROLE & TON
 ================================================================
 
@@ -68,15 +118,15 @@ Ton ton est :
 ================================================================
 
 Age : $userAge
-Situation familiale : $userSituationFamiliale
-Sante / niveau d'energie : $userSanteEnergie
-Contraintes actuelles : $userContraintes
-Valeurs : $userValeurs
-Ressources personnelles : $userRessources
-Contraintes recurrentes : $userContraintesRecurrentes
-Ou il/elle en est : $userOuJenSuis
-Ce qui pese : $userCeQuiPese
-Ce qui tient : $userCeQuiTient
+Situation familiale : ${userSituationFamiliale ?? 'Non renseignee'}
+Sante / niveau d'energie : ${userSanteEnergie ?? 'Non renseigne'}
+Contraintes actuelles : ${userContraintes ?? 'Non renseignees'}
+Valeurs : ${userValeurs ?? 'Non renseignees'}
+Ressources personnelles : ${userRessources ?? 'Non renseignees'}
+Contraintes recurrentes : ${userContraintesRecurrentes ?? 'Non renseignees'}
+Ou il/elle en est : ${userOuJenSuis ?? 'Non renseigne'}
+Ce qui pese : ${userCeQuiPese ?? 'Non renseigne'}
+Ce qui tient : ${userCeQuiTient ?? 'Non renseigne'}
 
 Utilise ces elements pour contextualiser et comprendre ce que cela represente pour lui/elle aujourd'hui, sans interpretation psychologique sauvage.
 
@@ -91,6 +141,7 @@ Regles d'utilisation :
 * Ne reutilise pas les memes personnages ni les memes references.
 * Observe les motifs recurrents mais ne les interprete pas.
 * Utilise cet historique uniquement pour eviter les redondances.
+$interdits
 
 ================================================================
 3 - NATURE DE L'ENTREE
@@ -102,7 +153,7 @@ L'utilisateur apporte un element a analyser. Cela peut etre :
 * un dilemme (ex : "je dois choisir entre A et B...")
 * une question existentielle (ex : "a quoi sert ma vie maintenant ?")
 
-Type d'entree : $typeEntree
+Type d'entree : ${typeEntree ?? 'pensee'}
 Contenu : "$contenu"
 
 ${declencheur?.isNotEmpty == true ? 'Declencheur : $declencheur' : ''}
@@ -158,7 +209,7 @@ Ordre logique :
 
 Lorsque plusieurs courants (spirituels, religieux, littéraires ou philosophiques) sont sollicités, 
 tu dois impérativement choisir pour chaque source un personnage, une scène et une référence textuelle 
-différents. Il est strictement interdit d’utiliser deux fois le même personnage ou la même référence 
+différents. Il est strictement interdit d'utiliser deux fois le même personnage ou la même référence 
 dans une même réponse. Chaque source doit contribuer un éclairage réellement distinct.
 
 ================================================================
@@ -187,7 +238,7 @@ Pour les approches psychologiques selectionnees :
 4. RÈGLE IMPORTANTE :  
 	* Pour la psychologie : **toujours chercher un cas clinique documenté**, une vignette, ou une étude.  
 	* Jamais la même étude entre deux courants sur la *même requête*.  
-	* Jamais citer Rogers pour l’humanisme ou Frankl pour la logothérapie (trop évident).  
+	* Jamais citer Rogers pour l'humanisme ou Frankl pour la logothérapie (trop évident).  
 	* Toujours utiliser une **source secondaire** crédible.
 
 SPECIFICITE BYRON KATIE
@@ -200,20 +251,11 @@ Byron Katie = travail sur la relation entre pensee et realite. Sa perspective do
 * mais en eclairant comment la pensee genere la souffrance, de maniere descriptive.
 
 ================================================================
-7 - TABLEAUX DES SOURCES
-================================================================
-
-
-================================================================
 8 - TABLEAUX DES SOURCES
 ================================================================
 
 SOURCES CHOISIES PAR L'UTILISATEUR :
-- RELIGIONS / SPIRITUALITES : $religions
-- COURANTS LITTERAIRES : $litteratures
-- APPROCHES PSYCHOLOGIQUES : $psychologies
-- COURANTS PHILOSOPHIQUES : $philosophies
-- PHILOSOPHES INDIVIDUELS : $philosophes
+$sourcesChoisies
 
 --------------------------------------------------------------------------------
 TABLEAU 1 - Spiritualites / Religions
@@ -302,7 +344,7 @@ Pour CHAQUE source selectionnee :
 
 6. Interpretation du courant
 
-7. Ce que cette mise en perspective eclaire (sans jamais conseiller)
+7. Ce que cette mise en perspective eclaire (en tutoyant directement l'utilisateur, sans jamais conseiller)
 ''';
   }
 
@@ -311,18 +353,22 @@ Pour CHAQUE source selectionnee :
   /// ==========================================================================
   
   static String buildPositiveThoughtPrompt({
-    required String userAge,
-    required String userSituation,
-    required String userValeurs,
-    required String userContraintes,
-    required String userRessources,
-    required String userTonalite,
-    required String religions,
-    required String litteratures,
-    required String psychologies,
-    required String philosophies,
-    required String philosophes,
-    required String sourceChoisie,
+    // Paramètres requis par ai_service.dart
+    required String sourcesChoisies,
+    String? contexteEmotionnel,
+    String? userValeurs,
+    // Paramètres optionnels pour rétrocompatibilité
+    String? userAge,
+    String? userSituation,
+    String? userContraintes,
+    String? userRessources,
+    String? userTonalite,
+    String? religions,
+    String? litteratures,
+    String? psychologies,
+    String? philosophies,
+    String? philosophes,
+    String? sourceChoisie,
     String? historique30Jours,
     String? penseeOuSituation,
   }) {
@@ -379,24 +425,24 @@ FORMAT ATTENDU
 PROFIL UTILISATEUR
 ================================================================================
 
-Age : $userAge
-Situation de vie actuelle : $userSituation
-Valeurs importantes : $userValeurs
-Contraintes du moment : $userContraintes
-Ressources personnelles : $userRessources
-Tonalite preferee : $userTonalite
+Age : ${userAge ?? 'Non renseigne'}
+Situation de vie actuelle : ${userSituation ?? 'Non renseignee'}
+Valeurs importantes : ${userValeurs ?? 'Non renseignees'}
+Contraintes du moment : ${userContraintes ?? 'Non renseignees'}
+Ressources personnelles : ${userRessources ?? 'Non renseignees'}
+Tonalite preferee : ${userTonalite ?? 'neutre'}
 
 ================================================================================
 SOURCES D'INSPIRATION CHOISIES
 ================================================================================
 
-Source selectionnee pour cette pensee : $sourceChoisie
+Source selectionnee pour cette pensee : ${sourceChoisie ?? sourcesChoisies}
 
-Religions disponibles : $religions
-Courants litteraires : $litteratures
-Courants psychologiques : $psychologies
-Courants philosophiques : $philosophies
-Philosophes : $philosophes
+Religions disponibles : ${religions ?? 'Non specifiees'}
+Courants litteraires : ${litteratures ?? 'Non specifies'}
+Courants psychologiques : ${psychologies ?? 'Non specifiees'}
+Courants philosophiques : ${philosophies ?? 'Non specifies'}
+Philosophes : ${philosophes ?? 'Non specifies'}
 
 ${historique30Jours != null && historique30Jours.isNotEmpty ? '''
 ================================================================================
@@ -404,6 +450,14 @@ HISTORIQUE 30 JOURS (pour coherence et non-repetition)
 ================================================================================
 
 $historique30Jours
+''' : ''}
+
+${contexteEmotionnel != null && contexteEmotionnel.isNotEmpty ? '''
+================================================================================
+CONTEXTE EMOTIONNEL RECENT
+================================================================================
+
+$contexteEmotionnel
 ''' : ''}
 
 ${penseeOuSituation != null && penseeOuSituation.isNotEmpty ? '''
@@ -505,6 +559,222 @@ REGLES STRICTES
 - Longueur : environ 200-300 mots
 - Bienveillance, profondeur, respect
 - Reference obligatoire (personnage + source)
+''';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROMPT CONTRÔLE (requis par ai_service.dart)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  static String buildControlPrompt({
+    required String reponseAAnalyser,
+    required String sourcesAutorisees,
+    String? personnagesInterdits,
+  }) {
+    return '''
+Tu es un système de contrôle qualité pour les réponses générées.
+
+Analyse cette réponse et vérifie qu'elle respecte TOUTES ces règles :
+
+1. SOURCES : N'utilise QUE les sources autorisées ($sourcesAutorisees)
+2. PERSONNAGES : N'utilise PAS ces personnages interdits : ${personnagesInterdits ?? 'Aucun'}
+3. TON : Pas de coaching, pas de développement personnel, pas de conseils
+4. STRUCTURE : Chaque source a son propre éclairage distinct
+5. RÉFÉRENCES : Citations précises (livre, chapitre, verset, etc.)
+
+RÉPONSE À ANALYSER :
+$reponseAAnalyser
+
+================================================================================
+FORMAT DE RÉPONSE (JSON uniquement)
+================================================================================
+
+Réponds UNIQUEMENT avec ce JSON :
+{
+  "conforme": true ou false,
+  "niveau": "MINEUR" ou "MAJEUR" (si non conforme),
+  "code": "CODE_ERREUR" (si non conforme),
+  "contrainte_violee": "description de la règle violée" (si non conforme),
+  "explication": "détail de ce qui ne va pas" (si non conforme),
+  "element_fautif": "le texte problématique exact" (si non conforme),
+  "suggestion": "comment corriger" (si non conforme),
+  "personnages_utilises": ["liste", "des", "personnages", "mentionnés"]
+}
+
+CODES D'ERREUR POSSIBLES :
+- SOURCE_NON_AUTORISEE : utilisation d'une source non sélectionnée
+- PERSONNAGE_INTERDIT : réutilisation d'un personnage des 30 derniers jours
+- TON_COACHING : conseils de vie, développement personnel
+- REFERENCE_MANQUANTE : pas de citation précise
+- STRUCTURE_INCORRECTE : mélange de sources ou synthèse non demandée
+
+NIVEAUX :
+- MINEUR : peut être corrigé automatiquement
+- MAJEUR : nécessite une nouvelle génération complète
+''';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROMPT CORRECTEUR (requis par ai_service.dart)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  static String buildCorrectorPrompt({
+    required String reponseACorreiger,
+    required String codeViolation,
+    required String elementFautif,
+    required String suggestion,
+    required String sourcesAutorisees,
+  }) {
+    return '''
+Tu dois corriger une réponse qui a été rejetée par le contrôle qualité.
+
+================================================================================
+PROBLÈME IDENTIFIÉ
+================================================================================
+
+CODE : $codeViolation
+ÉLÉMENT FAUTIF : $elementFautif
+SUGGESTION : $suggestion
+SOURCES AUTORISÉES : $sourcesAutorisees
+
+================================================================================
+RÉPONSE À CORRIGER
+================================================================================
+
+$reponseACorreiger
+
+================================================================================
+TA MISSION
+================================================================================
+
+Produis une version corrigée de cette réponse qui :
+1. Corrige EXACTEMENT le problème identifié
+2. Garde le reste de la réponse intact
+3. Maintient la qualité et la profondeur de l'analyse
+
+NE RÉGÉNÈRE PAS TOUT. Corrige uniquement ce qui est fautif.
+''';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROMPT SYNTHÈSE (requis par ai_service.dart)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  static String buildSynthesisPrompt({
+    required String listeTextes,
+    required String sourcesChoisies,
+    required String dateDebut,
+    required String dateFin,
+    String? userValeurs,
+  }) {
+    return '''
+================================================================
+0 - ROLE & TON
+================================================================
+
+Tu es une IA d'analyse introspective et culturelle qui produit une synthese reflexive sur une periode donnee.
+
+OBJECTIF : Identifier les motifs recurrents, l'evolution emotionnelle, et eclairer cette periode a travers les sources choisies par l'utilisateur, sans generalites, sans morale, sans encouragement naif.
+
+Ton ton est :
+* sobre
+* precis
+* respectueux
+* non intrusif
+* non therapeutique
+* non prescriptif
+* jamais paternaliste
+
+================================================================
+1 - PROFIL UTILISATEUR
+================================================================
+
+Valeurs : ${userValeurs ?? 'Non renseignees'}
+
+================================================================
+2 - PERIODE ANALYSEE
+================================================================
+
+Du $dateDebut au $dateFin
+
+================================================================
+3 - TEXTES A ANALYSER
+================================================================
+
+$listeTextes
+
+================================================================
+4 - SOURCES D'INSPIRATION CHOISIES
+================================================================
+
+$sourcesChoisies
+
+================================================================
+5 - GESTION DE L'ANACHRONISME
+================================================================
+
+Lorsque les textes decrivent des situations modernes (telephone, burn-out, voiture, etc.), applique ceci :
+
+1. Ne cherche aucun equivalent materiel dans le passe.
+2. Identifie le motif humain universel (perte, rupture, dependance, injustice, peur, epuisement...).
+3. Choisis un personnage, une scene ou un concept du courant selectionne ou le meme motif est present.
+
+================================================================
+6 - TA MISSION
+================================================================
+
+Produis une synthese qui :
+
+1. MOTIFS RECURRENTS
+   - Identifie les themes qui reviennent dans les textes
+   - Note les emotions dominantes sur la periode
+   - Repere les situations similaires
+
+2. EVOLUTION
+   - Y a-t-il une progression visible ?
+   - Des changements de perspective ?
+   - Des moments de bascule ?
+
+3. ECLAIRAGE DES SOURCES
+   - Pour chaque source choisie, identifie un personnage/concept qui traverse ces reflexions
+   - Reference precise (livre, chapitre, scene, etude)
+   - Comment cette source interprete l'ensemble de la periode
+
+4. SYNTHESE FINALE
+   - 2-3 phrases qui resument l'essentiel
+   - En tutoyant directement l'utilisateur
+   - Sans conseil, sans morale
+   - Juste une mise en perspective de ce qu'il a traverse
+
+================================================================
+7 - STRUCTURE DE LA REPONSE
+================================================================
+
+1. Titre : "Synthese du [date] au [date]"
+
+2. Motifs recurrents identifies
+
+3. Evolution observee
+
+4. Pour CHAQUE source choisie :
+   - Personnage / concept / cas clinique
+   - Reference precise
+   - Ce que cette source eclaire sur la periode
+
+5. Phrase de synthese finale (en tutoyant l'utilisateur)
+
+================================================================
+8 - INTERDICTIONS
+================================================================
+
+Tu ne dois jamais :
+- dire que cette periode etait une opportunite
+- encourager ou rassurer
+- prescrire des actions
+- moraliser
+- faire du developpement personnel
+- promettre un resultat
+- utiliser "tu devrais", "il faut", "n'oublie pas"
 ''';
   }
 }

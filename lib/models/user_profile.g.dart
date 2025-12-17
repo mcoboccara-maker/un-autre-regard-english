@@ -40,13 +40,17 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       courantsPhilosophiques: (fields[20] as List).cast<String>(),
       orientationCompleted: fields[21] as bool,
       orientationDate: fields[22] as DateTime?,
+      prenom: fields[23] as String?,
+      dateNaissance: fields[24] as DateTime?,
+      valeursSelectionnees: (fields[25] as List?)?.cast<String>(),
+      valeursLibres: fields[26] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(23)
+      ..writeByte(27)
       ..writeByte(0)
       ..write(obj.email)
       ..writeByte(1)
@@ -92,7 +96,15 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..writeByte(21)
       ..write(obj.orientationCompleted)
       ..writeByte(22)
-      ..write(obj.orientationDate);
+      ..write(obj.orientationDate)
+      ..writeByte(23)
+      ..write(obj.prenom)
+      ..writeByte(24)
+      ..write(obj.dateNaissance)
+      ..writeByte(25)
+      ..write(obj.valeursSelectionnees)
+      ..writeByte(26)
+      ..write(obj.valeursLibres);
   }
 
   @override

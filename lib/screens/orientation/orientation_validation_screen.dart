@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../config/orientation_config.dart';
 import '../../services/complete_auth_service.dart';
 import '../../models/user_profile.dart';
+import '../../widgets/app_scaffold.dart'; // ✅ AJOUT IMPORT APPSCAFFOLD
 
 class OrientationValidationScreen extends StatefulWidget {
   final Map<String, int> scores;
@@ -154,7 +155,13 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    // ✅ UTILISATION DE APPSCAFFOLD
+    return AppScaffold(
+      title: 'Personnalisation',
+      headerIconPath: 'assets/univers_visuel/orientation.png',
+      showTitle: false,
+      showBackButton: false, // On utilise bottomAction à la place
+      bottomAction: _buildActionButtons(),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -168,116 +175,78 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
             stops: [0.0, 0.5, 1.0],
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              _buildHeader(),
+        child: Column(
+          children: [
+            // Header
+            _buildHeader(),
 
-              // Message explicatif
-              _buildExplanation(),
+            // Message explicatif
+            _buildExplanation(),
 
-              // Liste des sources
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      _buildCategorySection(
-                        icon: '👤',
-                        title: 'Philosophes suggérés',
-                        sources: _suggestedPhilosophes,
-                        selectedIds: _selectedPhilosophes,
-                        onToggle: (id) => _toggleSelection(_selectedPhilosophes, id),
-                        color: const Color(0xFF6366F1),
-                      ),
-                      
-                      _buildCategorySection(
-                        icon: '🏛️',
-                        title: 'Courants philosophiques',
-                        sources: _suggestedCourantsPhilo,
-                        selectedIds: _selectedCourantsPhilo,
-                        onToggle: (id) => _toggleSelection(_selectedCourantsPhilo, id),
-                        color: const Color(0xFF8B5CF6),
-                      ),
-                      
-                      _buildCategorySection(
-                        icon: '📚',
-                        title: 'Courants littéraires',
-                        sources: _suggestedLitteraires,
-                        selectedIds: _selectedLitteraires,
-                        onToggle: (id) => _toggleSelection(_selectedLitteraires, id),
-                        color: const Color(0xFFEC4899),
-                      ),
-                      
-                      _buildCategorySection(
-                        icon: '🧠',
-                        title: 'Approches psychologiques',
-                        sources: _suggestedPsychologiques,
-                        selectedIds: _selectedPsychologiques,
-                        onToggle: (id) => _toggleSelection(_selectedPsychologiques, id),
-                        color: const Color(0xFF10B981),
-                      ),
+            // Liste des sources
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildCategorySection(
+                      icon: '👤',
+                      title: 'Philosophes suggérés',
+                      sources: _suggestedPhilosophes,
+                      selectedIds: _selectedPhilosophes,
+                      onToggle: (id) => _toggleSelection(_selectedPhilosophes, id),
+                      color: const Color(0xFF6366F1),
+                    ),
+                    
+                    _buildCategorySection(
+                      icon: '🏛️',
+                      title: 'Courants philosophiques',
+                      sources: _suggestedCourantsPhilo,
+                      selectedIds: _selectedCourantsPhilo,
+                      onToggle: (id) => _toggleSelection(_selectedCourantsPhilo, id),
+                      color: const Color(0xFF8B5CF6),
+                    ),
+                    
+                    _buildCategorySection(
+                      icon: '📚',
+                      title: 'Courants littéraires',
+                      sources: _suggestedLitteraires,
+                      selectedIds: _selectedLitteraires,
+                      onToggle: (id) => _toggleSelection(_selectedLitteraires, id),
+                      color: const Color(0xFFEC4899),
+                    ),
+                    
+                    _buildCategorySection(
+                      icon: '🧠',
+                      title: 'Approches psychologiques',
+                      sources: _suggestedPsychologiques,
+                      selectedIds: _selectedPsychologiques,
+                      onToggle: (id) => _toggleSelection(_selectedPsychologiques, id),
+                      color: const Color(0xFF10B981),
+                    ),
 
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
-
-              // Boutons d'action
-              _buildActionButtons(),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Color(0xFF6366F1),
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              'Valide tes sources',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF1E293B),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '$_totalSelected',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+          Text(
+            '🎨 Personnalise ton profil',
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF1E293B),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -287,10 +256,10 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
 
   Widget _buildExplanation() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF6366F1).withOpacity(0.05),
+        color: const Color(0xFF6366F1).withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: const Color(0xFF6366F1).withOpacity(0.1),
@@ -298,9 +267,9 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.info_outline,
-            color: Color(0xFF6366F1),
+            color: const Color(0xFF6366F1),
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -460,74 +429,61 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
   }
 
   Widget _buildActionButtons() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Bouton principal
+        ElevatedButton.icon(
+          onPressed: _totalSelected == 0
+              ? null
+              : (_saved ? null : (_isSaving ? null : _saveToProfile)),
+          icon: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(_saved ? Icons.check : Icons.save),
+          label: Text(
+            _saved
+                ? 'Enregistré !'
+                : _totalSelected == 0
+                    ? 'Sélectionne au moins une source'
+                    : 'Enregistrer $_totalSelected sources',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Bouton principal
-          ElevatedButton.icon(
-            onPressed: _totalSelected == 0
-                ? null
-                : (_saved ? null : (_isSaving ? null : _saveToProfile)),
-            icon: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Icon(_saved ? Icons.check : Icons.save),
-            label: Text(
-              _saved
-                  ? 'Enregistré !'
-                  : _totalSelected == 0
-                      ? 'Sélectionne au moins une source'
-                      : 'Enregistrer $_totalSelected sources',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _saved
+                ? const Color(0xFF10B981)
+                : const Color(0xFF6366F1),
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: const Color(0xFFE2E8F0),
+            disabledForegroundColor: const Color(0xFF94A3B8),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _saved
-                  ? const Color(0xFF10B981)
-                  : const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: const Color(0xFFE2E8F0),
-              disabledForegroundColor: const Color(0xFF94A3B8),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              minimumSize: const Size(double.infinity, 56),
-            ),
+            minimumSize: const Size(double.infinity, 56),
           ),
+        ),
 
-          const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-          // Bouton secondaire
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Revenir aux résultats',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF64748B),
-                fontSize: 13,
-              ),
+        // Bouton secondaire
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            'Revenir aux résultats',
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF64748B),
+              fontSize: 13,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     ).animate().fadeIn(delay: 400.ms, duration: 300.ms);
   }
 }

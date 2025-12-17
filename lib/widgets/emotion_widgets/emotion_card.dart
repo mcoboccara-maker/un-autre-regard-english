@@ -27,12 +27,10 @@ class _EmotionCardState extends State<EmotionCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  double _sliderValue = 0;
 
   @override
   void initState() {
     super.initState();
-    _sliderValue = widget.level.toDouble();
     
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 150),
@@ -46,16 +44,6 @@ class _EmotionCardState extends State<EmotionCard>
       parent: _scaleController,
       curve: Curves.easeInOut,
     ));
-  }
-
-  @override
-  void didUpdateWidget(EmotionCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.level != widget.level) {
-      setState(() {
-        _sliderValue = widget.level.toDouble();
-      });
-    }
   }
 
   @override
@@ -97,7 +85,7 @@ class _EmotionCardState extends State<EmotionCard>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ✅ Icône PNG GRANDE (comme menu principal)
+                    // Icône PNG GRANDE (comme menu principal)
                     _buildEmotionIcon(),
                     
                     const SizedBox(height: 8),
@@ -107,8 +95,8 @@ class _EmotionCardState extends State<EmotionCard>
                     
                     const SizedBox(height: 8),
                     
-                    // Slider pour ajuster le niveau
-                    _buildSlider(),
+                    // MODIFIÉ: Boutons 1-10 au lieu du slider
+                    _buildLevelButtons(),
                   ],
                 ),
               ),
@@ -119,13 +107,13 @@ class _EmotionCardState extends State<EmotionCard>
     );
   }
 
-  /// ✅ NOUVELLE MÉTHODE : Icône PNG grande comme menu principal
+  /// Icône PNG grande comme menu principal
   Widget _buildEmotionIcon() {
     final isActive = widget.level > 0;
     
     return Stack(
       children: [
-        // ✅ Icône PNG grande (64x64 comme menu principal)
+        // Icône PNG grande (64x64 comme menu principal)
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -174,6 +162,9 @@ class _EmotionCardState extends State<EmotionCard>
   }
 
   Widget _buildEmotionName() {
+    // Convertir le niveau (0-100) en valeur 1-10
+    final displayLevel = (widget.level / 10).round().clamp(0, 10);
+    
     return Column(
       children: [
         Text(
@@ -193,7 +184,7 @@ class _EmotionCardState extends State<EmotionCard>
         if (widget.level > 0) ...[
           const SizedBox(height: 2),
           Text(
-            '${widget.level}%',
+            '$displayLevel/10',
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w800,
@@ -205,46 +196,60 @@ class _EmotionCardState extends State<EmotionCard>
     );
   }
 
-  Widget _buildSlider() {
-    return SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        activeTrackColor: widget.emotion.color,
-        inactiveTrackColor: widget.emotion.color.withOpacity(0.2),
-        thumbColor: widget.emotion.color,
-        overlayColor: widget.emotion.color.withOpacity(0.1),
-        thumbShape: const RoundSliderThumbShape(
-          enabledThumbRadius: 6,
-        ),
-        overlayShape: const RoundSliderOverlayShape(
-          overlayRadius: 12,
-        ),
-        trackHeight: 3,
-        trackShape: const RoundedRectSliderTrackShape(),
-      ),
-      child: Slider(
-        value: _sliderValue,
-        min: 0,
-        max: 100,
-        divisions: 20,
-        onChanged: (value) {
-          setState(() {
-            _sliderValue = value;
-          });
-          
-          // Haptic feedback
-          if (value > 0 && widget.level == 0) {
-            HapticFeedback.lightImpact();
-          } else if (value == 0 && widget.level > 0) {
-            HapticFeedback.lightImpact();
-          }
-          
-          widget.onLevelChanged(value.round());
-        },
-        onChangeEnd: (value) {
-          // Haptic feedback à la fin
-          HapticFeedback.selectionClick();
-        },
-      ),
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MODIFIÉ: Boutons 1-10 au lieu du slider
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildLevelButtons() {
+    // Convertir le niveau (0-100) en bouton sélectionné (0-10)
+    final selectedButton = (widget.level / 10).round().clamp(0, 10);
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(10, (index) {
+        final buttonValue = index + 1; // 1 à 10
+        final isSelected = selectedButton == buttonValue;
+        final isLowerOrEqual = buttonValue <= selectedButton && selectedButton > 0;
+        
+        return GestureDetector(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            
+            // Si on clique sur le bouton déjà sélectionné, on désélectionne (niveau 0)
+            if (isSelected) {
+              widget.onLevelChanged(0);
+            } else {
+              // Sinon on sélectionne ce niveau (converti en 0-100)
+              widget.onLevelChanged(buttonValue * 10);
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 22,
+            height: 22,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: isLowerOrEqual
+                  ? widget.emotion.color.withOpacity(0.3 + (buttonValue / 10) * 0.7)
+                  : Colors.grey[200],
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: isSelected ? widget.emotion.color : Colors.transparent,
+                width: isSelected ? 2 : 0,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                '$buttonValue',
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                  color: isLowerOrEqual ? Colors.white : Colors.grey[500],
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 

@@ -1,101 +1,124 @@
-import 'dart:convert';
+// lib/models/eclairage_entry.dart
+// Modèle pour représenter un éclairage structuré en 3 niveaux
 
-/// Modèle représentant un éclairage généré par l'IA pour une approche donnée
-class EclairageEntry {
-  final String approachKey;         // Clé de l'approche (ex: "stoicisme", "tcc")
-  final String content;            // Contenu complet de la réponse IA
-  final List<String> microActions; // Actions pratiques extraites
-  final List<String> keyInsights;  // Insights clés extraits
-  final DateTime timestamp;        // Moment de génération
-
-  const EclairageEntry({
-    required this.approachKey,
-    required this.content,
-    required this.microActions,
-    required this.keyInsights,
-    required this.timestamp,
+/// Représente une source d'éclairage (majeure ou secondaire)
+class SourceEclairage {
+  final String nom;
+  final String type; // 'spiritual', 'literary', 'psychological', 'philosophical', 'philosopher'
+  final String personnage;
+  final String reference;
+  final String contexte;
+  final String interpretation;
+  final bool isMajeure;
+  
+  const SourceEclairage({
+    required this.nom,
+    required this.type,
+    required this.personnage,
+    required this.reference,
+    required this.contexte,
+    required this.interpretation,
+    required this.isMajeure,
   });
-
-  /// Éclairage vide pour initialisation
-  factory EclairageEntry.empty() => EclairageEntry(
-    approachKey: '',
-    content: '',
-    microActions: const [],
-    keyInsights: const [],
-    timestamp: DateTime.now(),
-  );
-
-  /// Sérialisation vers JSON
-  Map<String, dynamic> toJson() => {
-    'approachKey': approachKey,
-    'content': content,
-    'microActions': microActions,
-    'keyInsights': keyInsights,
-    'timestamp': timestamp.toIso8601String(),
-  };
-
-  /// Désérialisation depuis JSON
-  factory EclairageEntry.fromJson(Map<String, dynamic> json) => EclairageEntry(
-    approachKey: json['approachKey'] as String,
-    content: json['content'] as String,
-    microActions: List<String>.from(json['microActions'] as List),
-    keyInsights: List<String>.from(json['keyInsights'] as List),
-    timestamp: DateTime.parse(json['timestamp'] as String),
-  );
-
-  /// Copie avec modifications
-  EclairageEntry copyWith({
-    String? approachKey,
-    String? content,
-    List<String>? microActions,
-    List<String>? keyInsights,
-    DateTime? timestamp,
-  }) {
-    return EclairageEntry(
-      approachKey: approachKey ?? this.approachKey,
-      content: content ?? this.content,
-      microActions: microActions ?? this.microActions,
-      keyInsights: keyInsights ?? this.keyInsights,
-      timestamp: timestamp ?? this.timestamp,
+  
+  factory SourceEclairage.fromMap(Map<String, dynamic> map) {
+    return SourceEclairage(
+      nom: map['nom'] ?? '',
+      type: map['type'] ?? '',
+      personnage: map['personnage'] ?? '',
+      reference: map['reference'] ?? '',
+      contexte: map['contexte'] ?? '',
+      interpretation: map['interpretation'] ?? '',
+      isMajeure: map['isMajeure'] ?? false,
     );
   }
-
-  /// Vérifie si l'éclairage est valide
-  bool get isValid => 
-      approachKey.isNotEmpty && 
-      content.isNotEmpty;
-
-  /// Vérifie si l'éclairage a des actions pratiques
-  bool get hasMicroActions => microActions.isNotEmpty;
-
-  /// Vérifie si l'éclairage a des insights
-  bool get hasInsights => keyInsights.isNotEmpty;
-
-  /// Résumé court de l'éclairage (première phrase)
-  String get summary {
-    if (content.isEmpty) return '';
-    
-    final sentences = content.split('.');
-    if (sentences.isEmpty) return content;
-    
-    return '${sentences.first.trim()}.';
+  
+  Map<String, dynamic> toMap() {
+    return {
+      'nom': nom,
+      'type': type,
+      'personnage': personnage,
+      'reference': reference,
+      'contexte': contexte,
+      'interpretation': interpretation,
+      'isMajeure': isMajeure,
+    };
   }
+}
 
-  /// Longueur du contenu en mots
-  int get wordCount => content.split(' ').where((w) => w.isNotEmpty).length;
-
-  @override
-  String toString() => 'EclairageEntry(approach: $approachKey, words: $wordCount)';
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EclairageEntry &&
-          runtimeType == other.runtimeType &&
-          approachKey == other.approachKey &&
-          content == other.content &&
-          timestamp == other.timestamp;
-
-  @override
-  int get hashCode => approachKey.hashCode ^ content.hashCode ^ timestamp.hashCode;
+/// Représente un éclairage complet avec synthèse et sources
+class EclairageEntry {
+  final String synthese; // 80-120 mots
+  final List<SourceEclairage> sourcesMajeures; // 1-2 sources, 180-250 mots
+  final List<SourceEclairage> sourcesSecondaires; // 1-2 sources, 70-120 mots
+  final String rawResponse; // Réponse brute pour fallback
+  final DateTime createdAt;
+  
+  const EclairageEntry({
+    required this.synthese,
+    required this.sourcesMajeures,
+    required this.sourcesSecondaires,
+    required this.rawResponse,
+    required this.createdAt,
+  });
+  
+  /// Nombre total de sources
+  int get totalSources => sourcesMajeures.length + sourcesSecondaires.length;
+  
+  /// Vérifie si l'éclairage est valide (au moins une synthèse)
+  bool get isValid => synthese.isNotEmpty || rawResponse.isNotEmpty;
+  
+  /// Vérifie si le parsing a réussi (au moins une source majeure ou secondaire)
+  bool get isParsed => sourcesMajeures.isNotEmpty || sourcesSecondaires.isNotEmpty;
+  
+  factory EclairageEntry.fromMap(Map<String, dynamic> map) {
+    return EclairageEntry(
+      synthese: map['synthese'] ?? '',
+      sourcesMajeures: (map['sourcesMajeures'] as List?)
+          ?.map((s) => SourceEclairage.fromMap(s))
+          .toList() ?? [],
+      sourcesSecondaires: (map['sourcesSecondaires'] as List?)
+          ?.map((s) => SourceEclairage.fromMap(s))
+          .toList() ?? [],
+      rawResponse: map['rawResponse'] ?? '',
+      createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+    );
+  }
+  
+  Map<String, dynamic> toMap() {
+    return {
+      'synthese': synthese,
+      'sourcesMajeures': sourcesMajeures.map((s) => s.toMap()).toList(),
+      'sourcesSecondaires': sourcesSecondaires.map((s) => s.toMap()).toList(),
+      'rawResponse': rawResponse,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
+  
+  /// Créer depuis une réponse brute (sans parsing)
+  factory EclairageEntry.fromRawResponse(String response) {
+    return EclairageEntry(
+      synthese: '',
+      sourcesMajeures: [],
+      sourcesSecondaires: [],
+      rawResponse: response,
+      createdAt: DateTime.now(),
+    );
+  }
+  
+  /// Créer avec synthèse et sources parsées
+  factory EclairageEntry.parsed({
+    required String synthese,
+    required List<SourceEclairage> majeures,
+    required List<SourceEclairage> secondaires,
+    required String rawResponse,
+  }) {
+    return EclairageEntry(
+      synthese: synthese,
+      sourcesMajeures: majeures,
+      sourcesSecondaires: secondaires,
+      rawResponse: rawResponse,
+      createdAt: DateTime.now(),
+    );
+  }
 }
