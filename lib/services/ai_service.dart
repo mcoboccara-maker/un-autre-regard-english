@@ -894,6 +894,59 @@ class AIService {
   void resetSourceUsageHistory() {
     _sourceUsageHistory.clear();
   }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AJOUTER CETTE MÉTHODE DANS lib/services/ai_service.dart
+  // À insérer AVANT la méthode isConfigured() (vers ligne 496)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Générer une synthèse vocale d'un texte
+  /// Utilisé pour condenser une réponse longue en 2-3 phrases
+  Future<String> generateSynthesis({
+    required String systemPrompt,
+    required String userPrompt,
+    String model = 'gpt-4o-mini',
+    double temperature = 0.3,
+    int maxTokens = 150,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(_baseUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
+        },
+        body: jsonEncode({
+          'model': model,
+          'messages': [
+            {
+              'role': 'system',
+              'content': systemPrompt,
+            },
+            {
+              'role': 'user',
+              'content': userPrompt,
+            }
+          ],
+          'max_tokens': maxTokens,
+          'temperature': temperature,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices']?[0]?['message']?['content'] ?? '';
+        print('✅ Synthèse générée: ${content.length} caractères');
+        return content.trim();
+      } else {
+        print('❌ Erreur API synthèse: ${response.statusCode} - ${response.body}');
+        throw Exception('Erreur API: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Erreur requête synthèse: $e');
+      rethrow;
+    }
+  }
 }
 
 /// ==========================================================================
@@ -917,3 +970,4 @@ class ControlResult {
     this.problems = const [],
   });
 }
+

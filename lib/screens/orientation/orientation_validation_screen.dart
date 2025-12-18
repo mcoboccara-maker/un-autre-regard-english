@@ -46,17 +46,25 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
     final sortedScores = widget.scores.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Séparer par catégorie
-    _suggestedPhilosophes = _getTopByCategory(sortedScores, 'philosophe', 5);
+    // Séparer par catégorie (on affiche les 4 meilleures pour que l'utilisateur puisse choisir)
+    _suggestedPhilosophes = _getTopByCategory(sortedScores, 'philosophe', 4);
     _suggestedCourantsPhilo = _getTopByCategory(sortedScores, 'philosophique', 4);
     _suggestedLitteraires = _getTopByCategory(sortedScores, 'litteraire', 4);
     _suggestedPsychologiques = _getTopByCategory(sortedScores, 'psychologique', 4);
 
-    // Par défaut, toutes les suggestions sont sélectionnées
-    _selectedPhilosophes = _suggestedPhilosophes.map((s) => s.id).toSet();
-    _selectedCourantsPhilo = _suggestedCourantsPhilo.map((s) => s.id).toSet();
-    _selectedLitteraires = _suggestedLitteraires.map((s) => s.id).toSet();
-    _selectedPsychologiques = _suggestedPsychologiques.map((s) => s.id).toSet();
+    // CORRIGÉ : Par défaut, seule la PREMIÈRE (meilleure) de chaque catégorie est sélectionnée
+    _selectedPhilosophes = _suggestedPhilosophes.isNotEmpty 
+        ? {_suggestedPhilosophes.first.id} 
+        : {};
+    _selectedCourantsPhilo = _suggestedCourantsPhilo.isNotEmpty 
+        ? {_suggestedCourantsPhilo.first.id} 
+        : {};
+    _selectedLitteraires = _suggestedLitteraires.isNotEmpty 
+        ? {_suggestedLitteraires.first.id} 
+        : {};
+    _selectedPsychologiques = _suggestedPsychologiques.isNotEmpty 
+        ? {_suggestedPsychologiques.first.id} 
+        : {};
   }
 
   List<SourceInfo> _getTopByCategory(
@@ -190,7 +198,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
                 child: Column(
                   children: [
                     _buildCategorySection(
-                      icon: '👤',
+                      iconPath: 'assets/univers_visuel/philosophes.png',
                       title: 'Philosophes suggérés',
                       sources: _suggestedPhilosophes,
                       selectedIds: _selectedPhilosophes,
@@ -199,7 +207,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
                     ),
                     
                     _buildCategorySection(
-                      icon: '🏛️',
+                      iconPath: 'assets/univers_visuel/philosophie.png',
                       title: 'Courants philosophiques',
                       sources: _suggestedCourantsPhilo,
                       selectedIds: _selectedCourantsPhilo,
@@ -208,7 +216,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
                     ),
                     
                     _buildCategorySection(
-                      icon: '📚',
+                      iconPath: 'assets/univers_visuel/litterature.png',
                       title: 'Courants littéraires',
                       sources: _suggestedLitteraires,
                       selectedIds: _selectedLitteraires,
@@ -217,7 +225,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
                     ),
                     
                     _buildCategorySection(
-                      icon: '🧠',
+                      iconPath: 'assets/univers_visuel/psychologie.png',
                       title: 'Approches psychologiques',
                       sources: _suggestedPsychologiques,
                       selectedIds: _selectedPsychologiques,
@@ -241,8 +249,16 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       child: Row(
         children: [
+          // MODIFIÉ : Icône PNG profil.png au lieu de l'emoji 🎨
+          Image.asset(
+            'assets/univers_visuel/profil.png',
+            width: 28,
+            height: 28,
+            errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 28, color: Color(0xFF6366F1)),
+          ),
+          const SizedBox(width: 10),
           Text(
-            '🎨 Personnalise ton profil',
+            'Personnalise ton profil',
             style: GoogleFonts.poppins(
               color: const Color(0xFF1E293B),
               fontSize: 20,
@@ -287,8 +303,9 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
     ).animate().fadeIn(delay: 100.ms, duration: 300.ms);
   }
 
+  // MODIFIÉ : Utilise iconPath (String) au lieu de icon (emoji String)
   Widget _buildCategorySection({
-    required String icon,
+    required String iconPath,
     required String title,
     required List<SourceInfo> sources,
     required Set<String> selectedIds,
@@ -304,7 +321,13 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
         children: [
           Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 18)),
+              // MODIFIÉ : Icône PNG au lieu de l'emoji
+              Image.asset(
+                iconPath,
+                width: 22,
+                height: 22,
+                errorBuilder: (_, __, ___) => Icon(Icons.category, size: 18, color: color),
+              ),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -379,6 +402,14 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
                             : null,
                       ),
                       const SizedBox(width: 10),
+                      // NOUVEAU : Icône PNG de la source individuelle
+                      Image.asset(
+                        'assets/univers_visuel/${source.id}.png',
+                        width: 18,
+                        height: 18,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                      const SizedBox(width: 6),
                       // Nom
                       Text(
                         source.name,

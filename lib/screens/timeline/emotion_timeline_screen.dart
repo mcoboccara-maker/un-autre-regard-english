@@ -75,23 +75,31 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: '📈 Suivi émotionnel',
-      showMenuButton: true,
-      showPositiveButton: true,
-      showBackButton: true,
-      additionalActions: [
-        PopupMenuButton<int>(
-          icon: Icon(Icons.date_range, color: Colors.grey[700]),
-          onSelected: (days) {
-            setState(() => _selectedDays = days);
-            _loadData();
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(value: 7, child: Text('7 jours')),
-            const PopupMenuItem(value: 14, child: Text('14 jours')),
-            const PopupMenuItem(value: 30, child: Text('30 jours')),
-            const PopupMenuItem(value: 90, child: Text('90 jours')),
-          ],
+	  title: 'Suivi émotionnel',
+	  headerIconPath: 'assets/univers_visuel/suivi_emotions.png',  // Calendrier à gauche
+	  showMenuButton: true,
+	  showPositiveButton: true,
+	  showBackButton: true,
+	  additionalActions: [
+		PopupMenuButton<int>(
+		  icon: Image.asset(
+			'assets/univers_visuel/calendrier.png',  // Icône période à droite
+			width: 32,
+			height: 32,
+			errorBuilder: (context, error, stackTrace) {
+			  return Icon(Icons.date_range, color: Colors.grey[700]);
+			},
+		  ),
+		  onSelected: (days) {
+			setState(() => _selectedDays = days);
+			_loadData();
+		  },
+		  itemBuilder: (context) => [
+			const PopupMenuItem(value: 7, child: Text('7 jours')),
+			const PopupMenuItem(value: 14, child: Text('14 jours')),
+			const PopupMenuItem(value: 30, child: Text('30 jours')),
+			const PopupMenuItem(value: 90, child: Text('90 jours')),
+		  ],
         ),
       ],
       body: _isLoading

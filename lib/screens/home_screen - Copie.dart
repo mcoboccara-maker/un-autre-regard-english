@@ -147,12 +147,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         print('📋 Sources brutes du profil: $sources');
         
         if (sources.isEmpty) {
-          // CORRECTION: Sauvegarder les sources par défaut dans le profil
-          // pour que AIService puisse les lire
-          await _saveDefaultSourcesToProfile(defaultSources);
           sources.addAll(defaultSources);
           _isUsingDefaultSources = true;
-          print('📌 Sources par défaut appliquées ET sauvegardées: ${sources.length}');
+          print('📌 Sources par défaut appliquées: ${sources.length}');
         } else {
           // Vérifier si les sources sont exactement les sources par défaut
           final sortedSources = List<String>.from(sources)..sort();
@@ -255,23 +252,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
   
-  /// Initialiser les sources du profil invité avec les sources par défaut
-  /// CORRECTION: Au lieu de juste effacer, on initialise directement avec les 4 par défaut
+  /// Effacer toutes les sources du profil invité (réinitialisation)
   Future<void> _clearGuestSources() async {
     try {
       final profileData = await CompleteAuthService.instance.getProfile() ?? {};
       
-      // Effacer toutes les catégories puis ajouter les sources par défaut
+      // Effacer toutes les catégories de sources
       profileData['religionsSelectionnees'] = <String>[];
-      profileData['courantsLitteraires'] = ['realisme'];           // Source par défaut
-      profileData['approchesPsychologiques'] = ['schemas_young'];  // Source par défaut
-      profileData['courantsPhilosophiques'] = ['existentialisme']; // Source par défaut
-      profileData['philosophesSelectionnes'] = ['aristote'];       // Source par défaut
+      profileData['courantsLitteraires'] = <String>[];
+      profileData['approchesPsychologiques'] = <String>[];
+      profileData['courantsPhilosophiques'] = <String>[];
+      profileData['philosophesSelectionnes'] = <String>[];
       
       await CompleteAuthService.instance.saveProfile(profileData);
-      print('✅ Sources invité initialisées avec les 4 sources par défaut');
+      print('✅ Sources invité effacées');
     } catch (e) {
-      print('⚠️ Erreur initialisation sources invité: $e');
+      print('⚠️ Erreur effacement sources invité: $e');
     }
   }
   

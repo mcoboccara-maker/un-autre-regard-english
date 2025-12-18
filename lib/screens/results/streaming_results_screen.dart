@@ -13,6 +13,8 @@ import '../../services/complete_auth_service.dart';
 import '../../services/email_service.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/brain_gestation_widget.dart';
+import '../../services/tts_service.dart';
+import '../../config/prompts/prompt_synthese.dart';
 
 /// ECRAN STREAMING DES RESULTATS - VERSION FUSIONNEE
 /// 
@@ -67,6 +69,13 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   // Contrôleur pour le scroll automatique
   final ScrollController _scrollController = ScrollController();
   
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TTS & SYNTHÈSE VOCALE
+  // ═══════════════════════════════════════════════════════════════════════════
+  final Map<String, String> _syntheses = {};           // Synthèses générées
+  final Map<String, bool> _isGeneratingSynthesis = {}; // État de génération
+  String? _currentSpeakingKey;                          // Clé en cours de lecture
+  
   @override
   void initState() {
     super.initState();
@@ -84,13 +93,27 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     // Démarrer la génération
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startGeneration();
+      _initTts();
     });
+  }
+  
+  /// Initialiser le service TTS
+  Future<void> _initTts() async {
+    await TtsService.instance.init();
+    TtsService.instance.onStateChanged = (approachKey, isSpeaking) {
+      if (mounted) {
+        setState(() {
+          _currentSpeakingKey = isSpeaking ? approachKey : null;
+        });
+      }
+    };
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _scrollController.dispose();
+    TtsService.instance.stop();  // Arrêter la lecture en cours
     super.dispose();
   }
 
@@ -775,6 +798,11 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ),
           ),
           
+          // ═══════════════════════════════════════════════════════════════════
+          // BOUTONS LECTURE VOCALE
+          // ═══════════════════════════════════════════════════════════════════
+          _buildVoiceButtons(approach, response),
+          
           // SECTION ÉVALUATION
           _buildEvaluationSection(approach, evaluation),
         ],
@@ -823,6 +851,220 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
         ],
       ),
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BOUTONS LECTURE VOCALE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Widget _buildVoiceButtons(ApproachConfig approach, String response) {
+    final isSpeakingFull = _currentSpeakingKey == '${approach.key}_full';
+    final isSpeakingSynthesis = _currentSpeakingKey == '${approach.key}_synthesis';
+    final isGenerating = _isGeneratingSynthesis[approach.key] == true;
+    final hasSynthesis = _syntheses.containsKey(approach.key);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: approach.color.withOpacity(0.03),
+        border: Border(
+          top: BorderSide(color: approach.color.withOpacity(0.1)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Icône haut-parleur
+          Icon(
+            Icons.volume_up_rounded,
+            size: 18,
+            color: approach.color.withOpacity(0.6),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Écouter',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          const Spacer(),
+          
+          // Bouton "Texte complet"
+          _buildVoiceButton(
+            label: isSpeakingFull ? 'Stop' : 'Complet',
+            icon: isSpeakingFull ? Icons.stop_rounded : Icons.play_arrow_rounded,
+            isActive: isSpeakingFull,
+            color: approach.color,
+            onTap: () => _speakFullText(approach.key, response),
+          ),
+          
+          const SizedBox(width: 8),
+          
+          // Bouton "Synthèse"
+          _buildVoiceButton(
+            label: isGenerating 
+                ? '...' 
+                : (isSpeakingSynthesis ? 'Stop' : 'Synthèse'),
+            icon: isGenerating 
+                ? Icons.hourglass_top_rounded
+                : (isSpeakingSynthesis ? Icons.stop_rounded : Icons.auto_awesome),
+            isActive: isSpeakingSynthesis,
+            isLoading: isGenerating,
+            color: approach.color,
+            onTap: isGenerating 
+                ? null 
+                : () => _speakSynthesis(approach, response),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildVoiceButton({
+    required String label,
+    required IconData icon,
+    required bool isActive,
+    required Color color,
+    bool isLoading = false,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: color.withOpacity(isActive ? 1 : 0.3),
+            width: 1,
+          ),
+          boxShadow: isActive ? [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ] : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isActive ? Colors.white : color,
+                  ),
+                ),
+              )
+            else
+              Icon(
+                icon,
+                size: 16,
+                color: isActive ? Colors.white : color,
+              ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isActive ? Colors.white : color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Lire le texte complet
+  Future<void> _speakFullText(String approachKey, String text) async {
+    await TtsService.instance.speak(
+      text,
+      approachKey: '${approachKey}_full',
+    );
+  }
+  
+  /// Générer et lire la synthèse
+  Future<void> _speakSynthesis(ApproachConfig approach, String originalText) async {
+    final synthesisKey = '${approach.key}_synthesis';
+    
+    // Si déjà en lecture, arrêter
+    if (_currentSpeakingKey == synthesisKey) {
+      await TtsService.instance.stop();
+      return;
+    }
+    
+    // Si synthèse déjà générée, la lire directement
+    if (_syntheses.containsKey(approach.key)) {
+      await TtsService.instance.speak(
+        _syntheses[approach.key]!,
+        approachKey: synthesisKey,
+      );
+      return;
+    }
+    
+    // Générer la synthèse via l'API
+    setState(() {
+      _isGeneratingSynthesis[approach.key] = true;
+    });
+    
+    try {
+      final synthesis = await _generateSynthesis(approach.name, originalText);
+      
+      if (mounted) {
+        setState(() {
+          _syntheses[approach.key] = synthesis;
+          _isGeneratingSynthesis[approach.key] = false;
+        });
+        
+        // Lire la synthèse générée
+        await TtsService.instance.speak(
+          synthesis,
+          approachKey: synthesisKey,
+        );
+      }
+    } catch (e) {
+      print('❌ Erreur génération synthèse: $e');
+      if (mounted) {
+        setState(() {
+          _isGeneratingSynthesis[approach.key] = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(PromptSynthese.errorMessage),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+  }
+  
+  /// Appeler l'API OpenAI pour générer la synthèse
+  Future<String> _generateSynthesis(String sourceName, String originalText) async {
+    final userPrompt = PromptSynthese.buildUserPrompt(
+      sourceName: sourceName,
+      originalText: originalText,
+    );
+    
+    // Utiliser AIService pour l'appel API
+    final synthesis = await AIService.instance.generateSynthesis(
+      systemPrompt: PromptSynthese.systemPrompt,
+      userPrompt: userPrompt,
+      model: PromptSynthese.model,
+      temperature: PromptSynthese.temperature,
+      maxTokens: PromptSynthese.maxTokens,
+    );
+    
+    return synthesis;
   }
 
   Widget _buildRatingScale(ApproachConfig approach, int? currentRating) {

@@ -333,39 +333,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
                   .fadeIn(duration: 200.ms)
                   .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
                 
-                // Overlay avec label
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(24),
-                        bottomRight: Radius.circular(24),
-                      ),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
-                      ),
-                    ),
-                    child: Text(
-                      _currentOption.label,
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
+                // ❌ SUPPRIMÉ : Overlay avec label (causait la duplication de texte)
                 
                 // Indicateur de swipe gauche
                 if (_dragOffset < -20)

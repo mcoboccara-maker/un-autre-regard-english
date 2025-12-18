@@ -1,0 +1,1608 @@
+// lib/screens/wisdom_wheel_screen.dart
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROUE DE LA SAGESSE - ÉCRAN D'ACCUEIL PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════════════════
+// 
+// Premier écran de l'application avec :
+// - Roue tournante avec TOUTES les sources (spirituelles, psycho, littéraires, philo)
+// - Icône de l'app pour accéder à welcome_screen (app complète)
+// - Affichage de la source obtenue
+// - Saisie de pensée
+// - Double appel API : génération + contrôle qualité (via AIService)
+// - Lecture vocale (complète ou synthèse)
+// - Bruit de roue de fête foraine (vibrations + son)
+// - Pas de connexion, pas d'historique
+//
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import 'dart:math' as math;
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:audioplayers/audioplayers.dart';
+import '../config/approach_config.dart';
+import '../models/reflection.dart';
+import '../models/emotional_state.dart';
+import '../services/ai_service.dart';
+import '../services/tts_service.dart';
+import '../config/prompts/prompt_synthese.dart';
+
+class WisdomWheelScreen extends StatefulWidget {
+  const WisdomWheelScreen({super.key});
+
+  @override
+  State<WisdomWheelScreen> createState() => _WisdomWheelScreenState();
+}
+
+class _WisdomWheelScreenState extends State<WisdomWheelScreen>
+    with TickerProviderStateMixin {
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VARIABLES D'ÉTAT
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Toutes les sources disponibles
+  late List<ApproachConfig> _allSources;
+  
+  /// Construit la liste limitée des sources (sans spirituelles, 6 par type)
+  List<ApproachConfig> _buildLimitedSources() {
+    final List<ApproachConfig> limited = [];
+    
+    // Récupérer 6 sources de chaque type (sauf spirituel)
+    final psychological = ApproachCategories.allApproaches
+        .where((a) => a.type == ApproachType.psychological)
+        .take(6)
+        .toList();
+    
+    final literary = ApproachCategories.allApproaches
+        .where((a) => a.type == ApproachType.literary)
+        .take(6)
+        .toList();
+    
+    final philosophical = ApproachCategories.allApproaches
+        .where((a) => a.type == ApproachType.philosophical)
+        .take(6)
+        .toList();
+    
+    final philosophers = ApproachCategories.allApproaches
+        .where((a) => a.type == ApproachType.philosopher)
+        .take(6)
+        .toList();
+    
+    // Combiner toutes les sources
+    limited.addAll(psychological);
+    limited.addAll(literary);
+    limited.addAll(philosophical);
+    limited.addAll(philosophers);
+    
+    return limited;
+  }
+  
+  // Contrôleurs d'animation
+  late AnimationController _wheelController;
+  late Animation<double> _wheelAnimation;
+  
+  // Audio pour le son de la roue
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  Timer? _tickTimer;
+  
+  // État de la roue
+  double _currentRotation = 0;
+  bool _isSpinning = false;
+  ApproachConfig? _selectedSource;
+  
+  // Saisie de pensée
+  final TextEditingController _thoughtController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  
+  // Génération IA (double appel : prompt général + contrôle)
+  bool _isGenerating = false;
+  String? _generatedResponse;
+  String? _errorMessage;
+  
+  // TTS - Lecture vocale
+  String? _synthesis;
+  bool _isGeneratingSynthesis = false;
+  bool _isSpeakingFull = false;
+  bool _isSpeakingSynthesis = false;
+  
+  // Scroll controller pour la vue résultat
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Charger TOUTES les sources (spirituelles + psycho + littéraires + philo + philosophes)
+    // Charger les sources limitées (sans spirituelles, 3 par type = 12 total)
+    _allSources = _buildLimitedSources();
+    
+    // Animation de la roue avec décélération
+    _wheelController = AnimationController(
+      duration: const Duration(seconds: 6),
+      vsync: this,
+    );
+    
+    // Initialiser le service TTS
+    _initTts();
+  }
+  
+  Future<void> _initTts() async {
+    await TtsService.instance.init();
+    TtsService.instance.onStateChanged = (key, isSpeaking) {
+      if (mounted) {
+        setState(() {
+          _isSpeakingFull = key == 'full' && isSpeaking;
+          _isSpeakingSynthesis = key == 'synthesis' && isSpeaking;
+        });
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    _wheelController.dispose();
+    _thoughtController.dispose();
+    _focusNode.dispose();
+    _audioPlayer.dispose();
+    _tickTimer?.cancel();
+    _scrollController.dispose();
+    TtsService.instance.stop();
+    super.dispose();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOGIQUE DE LA ROUE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  void _spinWheel() {
+    if (_isSpinning) return;
+    
+    // Reset état
+    setState(() {
+      _isSpinning = true;
+      _selectedSource = null;
+      _generatedResponse = null;
+      _synthesis = null;
+      _errorMessage = null;
+    });
+    
+    // Nombre de tours aléatoire (4 à 7 tours) + position finale aléatoire
+    final random = math.Random();
+    final extraTurns = 4 + random.nextInt(4);
+    final finalPosition = random.nextDouble();
+    final totalRotation = (extraTurns * 2 * math.pi) + (finalPosition * 2 * math.pi);
+    
+    // Animation avec décélération réaliste (easeOutCubic)
+    _wheelAnimation = Tween<double>(
+      begin: _currentRotation,
+      end: _currentRotation + totalRotation,
+    ).animate(CurvedAnimation(
+      parent: _wheelController,
+      curve: Curves.easeOutCubic,
+    ));
+    
+    // Démarrer le son/vibrations de rotation
+    _startTickSound();
+    
+    // Écouter l'animation
+    _wheelController.reset();
+    _wheelController.forward().then((_) {
+      _stopTickSound();
+      
+      // Calculer la source sélectionnée
+      final finalAngle = _wheelAnimation.value % (2 * math.pi);
+      final segmentAngle = (2 * math.pi) / _allSources.length;
+      // Ajuster pour que l'indicateur soit en haut
+      final adjustedAngle = (finalAngle + math.pi / 2) % (2 * math.pi);
+      final selectedIndex = (adjustedAngle / segmentAngle).floor() % _allSources.length;
+      
+      setState(() {
+        _isSpinning = false;
+        _currentRotation = _wheelAnimation.value;
+        _selectedSource = _allSources[selectedIndex];
+      });
+      
+      // Vibration de fin (impact fort)
+      HapticFeedback.heavyImpact();
+      
+      // Annoncer la source sélectionnée vocalement
+      _announceSelection();
+    });
+  }
+  
+  void _startTickSound() {
+    // Simuler le son de la roue avec des vibrations rapides décroissantes
+    int tickCount = 0;
+    int tickInterval = 30; // Millisecondes entre chaque tick
+    
+    _tickTimer = Timer.periodic(Duration(milliseconds: tickInterval), (timer) {
+      if (!_isSpinning) {
+        timer.cancel();
+        return;
+      }
+      
+      tickCount++;
+      
+      // Décélérer les ticks progressivement (comme une vraie roue)
+      if (tickCount < 20) {
+        HapticFeedback.lightImpact();
+      } else if (tickCount < 40) {
+        if (tickCount % 2 == 0) HapticFeedback.lightImpact();
+      } else if (tickCount < 60) {
+        if (tickCount % 3 == 0) HapticFeedback.selectionClick();
+      } else if (tickCount < 80) {
+        if (tickCount % 4 == 0) HapticFeedback.selectionClick();
+      } else {
+        if (tickCount % 6 == 0) HapticFeedback.selectionClick();
+      }
+    });
+    
+    // Jouer le son de roue si fichier disponible
+    _playWheelSound();
+  }
+  
+  void _stopTickSound() {
+    _tickTimer?.cancel();
+    _tickTimer = null;
+    _audioPlayer.stop();
+  }
+  
+  Future<void> _playWheelSound() async {
+    try {
+      // Essayer de jouer un son de roue depuis les assets
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+      await _audioPlayer.play(AssetSource('sounds/wheel_spin.mp3'));
+    } catch (e) {
+      // Si le fichier n'existe pas, on utilise juste les vibrations
+      print('🔇 Son de roue non disponible (vibrations uniquement): $e');
+    }
+  }
+  
+  void _announceSelection() {
+    if (_selectedSource != null) {
+      // Petit délai puis annonce vocale
+      Future.delayed(const Duration(milliseconds: 600), () {
+        TtsService.instance.speak(
+          'La roue a choisi : ${_selectedSource!.name}',
+          approachKey: 'announce',
+        );
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GÉNÉRATION IA (DOUBLE APPEL : PROMPT GÉNÉRAL + CONTRÔLE)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Future<void> _generateResponse() async {
+    if (_selectedSource == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Tourne d\'abord la roue pour choisir une source !',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: Colors.orange[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+    
+    if (_thoughtController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Saisis ta pensée ou situation avant de générer',
+            style: GoogleFonts.inter(),
+          ),
+          backgroundColor: Colors.orange[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+    
+    setState(() {
+      _isGenerating = true;
+      _errorMessage = null;
+      _generatedResponse = null;
+      _synthesis = null;
+    });
+    
+    // Cacher le clavier
+    FocusScope.of(context).unfocus();
+    
+    try {
+      // ═══════════════════════════════════════════════════════════════════════
+      // APPEL AIService.generateApproachSpecificResponse
+      // Cette méthode fait DÉJÀ le double appel :
+      // 1. Génération avec le prompt général (PromptGeneral.build)
+      // 2. Contrôle qualité (_controlResponse)
+      // ═══════════════════════════════════════════════════════════════════════
+      
+      final response = await AIService.instance.generateApproachSpecificResponse(
+        approach: _selectedSource!.key,
+        reflectionText: _thoughtController.text.trim(),
+        reflectionType: ReflectionType.thought, // Type par défaut
+        emotionalState: EmotionalState.empty(), // État émotionnel vide (mode standalone)
+        userProfile: null, // Pas de profil en mode standalone (pas de connexion)
+        intensiteEmotionnelle: 50, // Intensité par défaut
+      );
+      
+      if (mounted) {
+        setState(() {
+          _generatedResponse = response;
+          _isGenerating = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Erreur génération: $e');
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Erreur lors de la génération. Réessaie.';
+          _isGenerating = false;
+        });
+      }
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LECTURE VOCALE
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Future<void> _speakFull() async {
+    if (_generatedResponse == null) return;
+    
+    if (_isSpeakingFull) {
+      await TtsService.instance.stop();
+    } else {
+      await TtsService.instance.speak(_generatedResponse!, approachKey: 'full');
+    }
+  }
+  
+  Future<void> _speakSynthesis() async {
+    if (_generatedResponse == null) return;
+    
+    if (_isSpeakingSynthesis) {
+      await TtsService.instance.stop();
+      return;
+    }
+    
+    // Si synthèse déjà générée, la lire directement
+    if (_synthesis != null) {
+      await TtsService.instance.speak(_synthesis!, approachKey: 'synthesis');
+      return;
+    }
+    
+    // Générer la synthèse via API
+    setState(() => _isGeneratingSynthesis = true);
+    
+    try {
+      final synthesis = await AIService.instance.generateSynthesis(
+        systemPrompt: PromptSynthese.systemPrompt,
+        userPrompt: PromptSynthese.buildUserPrompt(
+          sourceName: _selectedSource!.name,
+          originalText: _generatedResponse!,
+        ),
+      );
+      
+      if (mounted) {
+        setState(() {
+          _synthesis = synthesis;
+          _isGeneratingSynthesis = false;
+        });
+        
+        await TtsService.instance.speak(synthesis, approachKey: 'synthesis');
+      }
+    } catch (e) {
+      print('❌ Erreur génération synthèse: $e');
+      if (mounted) {
+        setState(() => _isGeneratingSynthesis = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la synthèse', style: GoogleFonts.inter()),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INTERFACE UTILISATEUR
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          // Fond bleu clair marbré comme le reste de l'application
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE0F2FE), // Bleu clair
+              Color(0xFFF0F9FF), // Bleu très clair
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: _generatedResponse != null
+              ? _buildResultView()
+              : _buildWheelView(),
+        ),
+      ),
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VUE PRINCIPALE (ROUE)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Widget _buildWheelView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Column(
+        children: [
+          // Titre
+          _buildTitle(),
+          
+          const SizedBox(height: 20),
+          
+          // ROUE
+          _buildWheel(),
+          
+          const SizedBox(height: 16),
+          
+          // ICÔNE APP → Accès à welcome_screen
+          _buildAppAccessButton(),
+          
+          const SizedBox(height: 16),
+          
+          // SOURCE SÉLECTIONNÉE
+          if (_selectedSource != null) _buildSelectedSource(),
+          
+          const SizedBox(height: 20),
+          
+          // CHAMP DE PENSÉE
+          _buildThoughtInput(),
+          
+          const SizedBox(height: 16),
+          
+          // BOUTONS D'ACTION
+          _buildActionButtons(),
+          
+          // Message d'erreur
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 12),
+            _buildErrorMessage(),
+          ],
+          
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTitle() {
+    return Column(
+      children: [
+        Text(
+          '✨ Roue de la Sagesse',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF1E293B), // Bleu foncé pour fond clair
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Tourne la roue, découvre ta perspective',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: const Color(0xFF64748B), // Gris pour fond clair
+          ),
+        ),
+      ],
+    );
+  }
+  
+  // Mapping des clés vers les noms de fichiers PNG réels
+  static final Map<String, String> _iconMapping = {
+    'judaisme_rabbinique': 'rabbinique',
+    'moussar': 'moussar',
+    'kabbale': 'kabale',
+    'christianisme': 'christianisme',
+    'islam': 'islam',
+    'soufisme': 'soufisme',
+    'bouddhisme': 'boudhisme',
+    'hindouisme': 'hindouisme',
+    'stoicisme': 'stoicisme',
+    'spiritualite_contemporaine': 'contemporaine_et_laique',
+    'humanisme': 'humanisme',
+    'romantisme': 'romantisme',
+    'realisme': 'realisme',
+    'existentialisme': 'existentialisme',
+    'absurdisme': 'absurdisme',
+    'poetique': 'poetique',
+    'mystique': 'mystique',
+    'symboliste_moderne': 'symbolisme',
+    'act': 'pleine_conscience',
+    'tcc': 'TCC',
+    'jungienne': 'jungienne',
+    'logotherapie': 'logotherapie_frankl',
+    'schemas_young': 'schemas_young',
+    'the_work': 'theworkkb',
+    'humaniste_rogers': 'humanisme',
+    'stoicisme_philo': 'stoicisme',
+    'epicurisme': 'epicurisme',
+    'existentialisme_philo': 'existentialisme',
+    'phenomenologie': 'phenomenologie',
+    'absurdisme_philo': 'absurdisme',
+    'pragmatisme': 'pragmatisme',
+    'rationalisme': 'rationalisme',
+    'empirisme': 'empirisme',
+    'idealisme': 'idealisme',
+    'nihilisme': 'nihilisme',
+    'cynisme': 'cynisme',
+    'utilitarisme': 'utilitarisme',
+    'socrate': 'socrate',
+    'platon': 'platon',
+    'aristote': 'aristote',
+    'epictete': 'epictete',
+    'marc_aurele': 'marc_aurele',
+    'seneque': 'seneque',
+    'epicure': 'epicure',
+    'diogene': 'diogene',
+    'descartes': 'descartes',
+    'spinoza': 'spinoza',
+    'kant': 'kant',
+    'nietzsche': 'nietzsche',
+    'schopenhauer': 'schopenhauer',
+    'kierkegaard': 'kierkegaard',
+    'hume': 'hume',
+    'rousseau': 'rousseau',
+    'montaigne': 'montaigne',
+    'sartre': 'sartre',
+    'camus': 'camus',
+    'simone_de_beauvoir': 'simonedebeauvoir',
+    'arendt': 'arendt',
+    'foucault': 'foucault',
+    'confucius': 'confucius',
+    'simone_weil': 'weill',
+  };
+  
+  String _getIconPath(String key) {
+    final mappedName = _iconMapping[key] ?? key;
+    return 'assets/univers_visuel/$mappedName.png';
+  }
+  
+  Widget _buildWheel() {
+    final double wheelSize = 280;
+    final int sourceCount = _allSources.length;
+    
+    // Avec 24 sources, icônes de taille moyenne
+    final double iconSize = sourceCount <= 12 ? 36 : (sourceCount <= 24 ? 28 : 22);
+    final double iconRadius = wheelSize / 2 - 48;
+    
+    return GestureDetector(
+      onTap: _isSpinning ? null : _spinWheel,
+      child: SizedBox(
+        width: wheelSize + 20,
+        height: wheelSize + 20,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Bordure dorée extérieure
+            Container(
+              width: wheelSize + 12,
+              height: wheelSize + 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFD4AF37), // Or
+                    Color(0xFFF4E4BC), // Or clair
+                    Color(0xFFD4AF37), // Or
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+            
+            // Roue principale (fond bleu foncé uniforme)
+            AnimatedBuilder(
+              animation: _wheelController,
+              builder: (context, child) {
+                final rotation = _wheelController.isAnimating
+                    ? _wheelAnimation.value
+                    : _currentRotation;
+                return Transform.rotate(
+                  angle: rotation,
+                  child: Container(
+                    width: wheelSize,
+                    height: wheelSize,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF1E3A5F), // Bleu foncé uniforme
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Icônes sur la roue
+                        ..._buildWheelIcons(wheelSize, iconSize, iconRadius),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            
+            // Indicateur (triangle doré en haut)
+            Positioned(
+              top: 2,
+              child: CustomPaint(
+                size: const Size(20, 16),
+                painter: _TriangleIndicatorPainter(),
+              ),
+            ),
+            
+            // Cercle central doré avec bouton HASARD
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFD4AF37),
+                    Color(0xFFF4E4BC),
+                    Color(0xFFD4AF37),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.25),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Container(
+                margin: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF1E3A5F), // Bleu foncé
+                ),
+                child: Center(
+                  child: _isSpinning
+                      ? const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation(Color(0xFFD4AF37)),
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.touch_app,
+                              color: Color(0xFFD4AF37),
+                              size: 26,
+                            ),
+                            Text(
+                              'HASARD',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFD4AF37),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Construire les icônes positionnées sur la roue
+  List<Widget> _buildWheelIcons(double wheelSize, double iconSize, double iconRadius) {
+    final List<Widget> icons = [];
+    final int count = _allSources.length;
+    final double segmentAngle = (2 * math.pi) / count;
+    final double center = wheelSize / 2;
+    
+    for (int i = 0; i < count; i++) {
+      final source = _allSources[i];
+      // Angle au milieu du segment (décalé de -90° pour commencer en haut)
+      final double angle = (i * segmentAngle) + (segmentAngle / 2) - (math.pi / 2);
+      
+      // Position X, Y de l'icône
+      final double x = center + iconRadius * math.cos(angle) - (iconSize / 2);
+      final double y = center + iconRadius * math.sin(angle) - (iconSize / 2);
+      
+      icons.add(
+        Positioned(
+          left: x,
+          top: y,
+          child: Container(
+            width: iconSize,
+            height: iconSize,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Image.asset(
+                  _getIconPath(source.key),
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                    source.icon,
+                    color: source.color,
+                    size: iconSize - 6,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return icons;
+  }
+  
+  Widget _buildAppAccessButton() {
+    return GestureDetector(
+      onTap: () {
+        // Naviguer vers welcome_screen (application complète)
+        Navigator.pushReplacementNamed(context, '/welcome');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icône de l'application
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(
+                'assets/icon/app_icon.png',
+                width: 36,
+                height: 36,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2FE),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.apps, color: Color(0xFF6366F1), size: 20),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Accéder à l\'application',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                Text(
+                  'Connexion, profil, historique...',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_ios, color: Color(0xFF94A3B8), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSelectedSource() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _selectedSource!.color.withOpacity(0.5),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _selectedSource!.color.withOpacity(0.15),
+            blurRadius: 15,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icône ou image de la source
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _selectedSource!.color,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Image.asset(
+              _getIconPath(_selectedSource!.key),
+              width: 28,
+              height: 28,
+              errorBuilder: (_, __, ___) => Icon(
+                _selectedSource!.icon,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _selectedSource!.name,
+                  style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                Text(
+                  _selectedSource!.credo,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                    fontStyle: FontStyle.italic,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildThoughtInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.edit_note, color: Color(0xFF64748B), size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Ta pensée ou situation',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: _thoughtController,
+            focusNode: _focusNode,
+            maxLines: 3,
+            style: GoogleFonts.inter(
+              color: const Color(0xFF1E293B),
+              fontSize: 15,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Qu\'est-ce qui te traverse l\'esprit ?',
+              hintStyle: GoogleFonts.inter(
+                color: const Color(0xFF94A3B8),
+                fontSize: 14,
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.all(14),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        // Bouton Tourner
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _isSpinning ? null : _spinWheel,
+            icon: Icon(
+              _isSpinning ? Icons.hourglass_top : Icons.casino,
+              size: 20,
+            ),
+            label: Text(
+              _isSpinning ? 'Rotation...' : 'Tourner',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black87,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+            ),
+          ),
+        ),
+        
+        const SizedBox(width: 12),
+        
+        // Bouton Générer
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: (_isGenerating || _selectedSource == null)
+                ? null
+                : _generateResponse,
+            icon: Icon(
+              _isGenerating ? Icons.hourglass_top : Icons.auto_awesome,
+              size: 20,
+            ),
+            label: Text(
+              _isGenerating ? 'Génération...' : 'Générer',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              disabledBackgroundColor: const Color(0xFF7C3AED).withOpacity(0.3),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildErrorMessage() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.red.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red[700], size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: Colors.red[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VUE RÉSULTAT
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Widget _buildResultView() {
+    return Column(
+      children: [
+        // Header avec bouton retour
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  TtsService.instance.stop();
+                  setState(() {
+                    _generatedResponse = null;
+                    _synthesis = null;
+                  });
+                },
+                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF6366F1)),
+                tooltip: 'Retour à la roue',
+              ),
+              Expanded(
+                child: Text(
+                  _selectedSource?.name ?? 'Résultat',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 48), // Balance le bouton retour
+            ],
+          ),
+        ),
+        
+        // Contenu scrollable
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Carte de la source
+                _buildResultSourceCard(),
+                
+                const SizedBox(height: 16),
+                
+                // Pensée originale
+                _buildOriginalThought(),
+                
+                const SizedBox(height: 16),
+                
+                // Réponse générée
+                _buildResponseCard(),
+                
+                const SizedBox(height: 16),
+                
+                // Boutons lecture vocale
+                _buildVoiceButtons(),
+                
+                const SizedBox(height: 24),
+                
+                // Bouton nouvelle réflexion
+                _buildNewReflectionButton(),
+                
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildResultSourceCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _selectedSource!.color.withOpacity(0.5), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: _selectedSource!.color.withOpacity(0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _selectedSource!.color,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Image.asset(
+              _getIconPath(_selectedSource!.key),
+              width: 28,
+              height: 28,
+              errorBuilder: (_, __, ___) => Icon(
+                _selectedSource!.icon,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _selectedSource!.name,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _selectedSource!.credo,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFF64748B),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildOriginalThought() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.format_quote, color: Color(0xFF94A3B8), size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'TA PENSÉE',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _thoughtController.text,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: const Color(0xFF475569),
+              fontStyle: FontStyle.italic,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildResponseCard() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _selectedSource!.color.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                color: _selectedSource!.color,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'ÉCLAIRAGE',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _selectedSource!.color,
+                  letterSpacing: 1,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.verified, color: Colors.green[600], size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Contrôlé',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            _generatedResponse!,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: const Color(0xFF1E293B),
+              height: 1.7,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildVoiceButtons() {
+    return Row(
+      children: [
+        // Bouton lecture complète
+        Expanded(
+          child: _buildVoiceButton(
+            label: _isSpeakingFull ? 'Stop' : 'Écouter complet',
+            icon: _isSpeakingFull ? Icons.stop : Icons.volume_up,
+            isActive: _isSpeakingFull,
+            onTap: _speakFull,
+          ),
+        ),
+        
+        const SizedBox(width: 10),
+        
+        // Bouton synthèse
+        Expanded(
+          child: _buildVoiceButton(
+            label: _isGeneratingSynthesis
+                ? 'Génération...'
+                : (_isSpeakingSynthesis ? 'Stop' : 'Synthèse'),
+            icon: _isGeneratingSynthesis
+                ? Icons.hourglass_top
+                : (_isSpeakingSynthesis ? Icons.stop : Icons.auto_awesome),
+            isActive: _isSpeakingSynthesis,
+            isLoading: _isGeneratingSynthesis,
+            onTap: _isGeneratingSynthesis ? null : _speakSynthesis,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildVoiceButton({
+    required String label,
+    required IconData icon,
+    required bool isActive,
+    bool isLoading = false,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: BoxDecoration(
+          color: isActive
+              ? _selectedSource!.color
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isActive
+                ? _selectedSource!.color
+                : const Color(0xFFE2E8F0),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(
+                    isActive ? Colors.white : const Color(0xFF6366F1),
+                  ),
+                ),
+              )
+            else
+              Icon(
+                icon,
+                size: 18,
+                color: isActive ? Colors.white : const Color(0xFF6366F1),
+              ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? Colors.white : const Color(0xFF1E293B),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildNewReflectionButton() {
+    return ElevatedButton.icon(
+      onPressed: () {
+        TtsService.instance.stop();
+        setState(() {
+          _generatedResponse = null;
+          _synthesis = null;
+          _selectedSource = null;
+          _thoughtController.clear();
+          _currentRotation = 0;
+        });
+      },
+      icon: const Icon(Icons.refresh, size: 20),
+      label: Text(
+        'Nouvelle réflexion',
+        style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF6366F1),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        elevation: 2,
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAINTERS POUR LA ROUE (style bleu avec lignes blanches)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Dessine les lignes séparatrices blanches entre les segments
+class _WheelLinesPainter extends CustomPainter {
+  final int count;
+  
+  _WheelLinesPainter({required this.count});
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final segmentAngle = (2 * math.pi) / count;
+    
+    // Paint pour les lignes séparatrices
+    final linePaint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    
+    // Dessiner les lignes de chaque segment
+    for (int i = 0; i < count; i++) {
+      final angle = i * segmentAngle - math.pi / 2;
+      final endX = center.dx + radius * math.cos(angle);
+      final endY = center.dy + radius * math.sin(angle);
+      
+      canvas.drawLine(center, Offset(endX, endY), linePaint);
+    }
+    
+    // Cercle intérieur (délimitation zone centrale)
+    final innerCirclePaint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    
+    canvas.drawCircle(center, radius * 0.3, innerCirclePaint);
+  }
+  
+  @override
+  bool shouldRepaint(covariant _WheelLinesPainter oldDelegate) {
+    return oldDelegate.count != count;
+  }
+}
+
+/// Dessine le triangle indicateur doré en haut
+class _TriangleIndicatorPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFD4AF37) // Or
+      ..style = PaintingStyle.fill;
+    
+    final path = Path();
+    path.moveTo(size.width / 2, size.height); // Pointe vers le bas
+    path.lineTo(0, 0);
+    path.lineTo(size.width, 0);
+    path.close();
+    
+    // Ombre
+    canvas.drawShadow(path, Colors.black, 3, false);
+    canvas.drawPath(path, paint);
+  }
+  
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Ancien painter (gardé pour compatibilité mais non utilisé)
+class _WheelPainter extends CustomPainter {
+  final List<ApproachConfig> sources;
+  
+  _WheelPainter({required this.sources});
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final segmentAngle = (2 * math.pi) / sources.length;
+    
+    // Dessiner les segments colorés
+    for (int i = 0; i < sources.length; i++) {
+      final startAngle = i * segmentAngle - math.pi / 2;
+      
+      // Couleur du segment
+      final paint = Paint()
+        ..color = sources[i].color
+        ..style = PaintingStyle.fill;
+      
+      // Dessiner l'arc
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        segmentAngle,
+        true,
+        paint,
+      );
+      
+      // Bordure blanche semi-transparente
+      final borderPaint = Paint()
+        ..color = Colors.white.withOpacity(0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+      
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        segmentAngle,
+        true,
+        borderPaint,
+      );
+    }
+    
+    // Bordure extérieure dorée
+    final outerBorderPaint = Paint()
+      ..color = Colors.amber.withOpacity(0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+    
+    canvas.drawCircle(center, radius - 2, outerBorderPaint);
+    
+    // Cercle central (fond sombre)
+    final centerPaint = Paint()
+      ..color = const Color(0xFF1E1B4B)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawCircle(center, radius * 0.22, centerPaint);
+    
+    // Bordure dorée du cercle central
+    final centerBorderPaint = Paint()
+      ..color = Colors.amber
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    
+    canvas.drawCircle(center, radius * 0.22, centerBorderPaint);
+  }
+  
+  @override
+  bool shouldRepaint(covariant _WheelPainter oldDelegate) {
+    return false;
+  }
+}
