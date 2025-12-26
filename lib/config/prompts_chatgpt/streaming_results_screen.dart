@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/reflection.dart';
 import '../../models/emotional_state.dart';
@@ -59,14 +58,6 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   final Map<String, String> _responses = {};           // Réponses générées
   final Map<String, String> _status = {};              // Status par approche
   final Map<String, SourceEvaluation> _evaluations = {}; // Évaluations
-  
-  // ═══════════════════════════════════════════════════════════════════════════
-  // OPTION C : FILE D'ATTENTE DES PERSPECTIVES
-  // La première s'affiche auto, les suivantes attendent que l'utilisateur clique
-  // ═══════════════════════════════════════════════════════════════════════════
-  final Set<String> _revealedKeys = {};                // Perspectives révélées à l'utilisateur
-  bool _isFirstReveal = true;                          // Pour savoir si c'est la première carte
-  final Map<String, GlobalKey> _cardKeys = {};         // Keys pour scroll vers carte précise
   
   bool _isGenerating = false;
   bool _isComplete = false;
@@ -202,18 +193,12 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           setState(() {
             _responses[approachKey] = response;
             _status[approachNameOrKey] = 'completed';
-            
-            // OPTION C : Révéler automatiquement la PREMIÈRE perspective
-            if (_isFirstReveal) {
-              _revealedKeys.add(approachKey);
-              _isFirstReveal = false;
-              // Scroll seulement pour la première carte
-              _scrollToBottom();
-            }
-            // Les suivantes restent en attente - pas de scroll auto
           });
           
           print('✅ Génération terminée pour: ${approach.name}');
+          
+          // Scroll vers le bas pour voir la nouvelle carte
+          _scrollToBottom();
           
         } catch (e) {
           print('❌ Erreur génération pour ${approach.name}: $e');
@@ -353,201 +338,61 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Calculer le nombre de perspectives en attente
-    final pendingCount = _responses.keys.where((key) => !_revealedKeys.contains(key)).length;
-    
     return AppScaffold(
       title: 'Tes perspectives',
       headerIconPath: 'assets/univers_visuel/perspectives.png',
       showTitle: false,
       showBackButton: false,
       bottomAction: _isComplete ? _buildNavigationButtons(context) : null,
-      body: Stack(
-        children: [
-          // CONTENU PRINCIPAL
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8F4F8),
-                  Color(0xFFD0E8F0),
-                  Color(0xFFB8DCE8),
-                  Color(0xFFD8EEF5),
-                  Color(0xFFE0F0F5),
-                ],
-                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
-              ),
-            ),
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 24),
-                  
-                  if (_errorMessage != null) ...[
-                    _buildError(),
-                    const SizedBox(height: 24),
-                  ],
-                  
-                  // Afficher les cartes générées (incluant le widget BrainGestation qui descend)
-                  ..._buildResultCards(),
-                  
-                  // Bouton d'export si terminé
-                  if (_isComplete && _responses.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    _buildExportButton(),
-                  ],
-                  
-                  const SizedBox(height: 100), // Espace pour le bottomAction
-                ],
-              ),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFE8F4F8),
+              Color(0xFFD0E8F0),
+              Color(0xFFB8DCE8),
+              Color(0xFFD8EEF5),
+              Color(0xFFE0F0F5),
+            ],
+            stops: [0.0, 0.25, 0.5, 0.75, 1.0],
           ),
-          
-          // ═══════════════════════════════════════════════════════════════════
-          // BOUTON FLOTTANT "X perspectives disponibles" (Option C)
-          // ═══════════════════════════════════════════════════════════════════
-          if (pendingCount > 0)
-            Positioned(
-              bottom: _isComplete ? 180 : 20,
-              left: 20,
-              right: 20,
-              child: _buildPendingPerspectivesButton(pendingCount),
-            ),
-        ],
+        ),
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
+              
+              if (_errorMessage != null) ...[
+                _buildError(),
+                const SizedBox(height: 24),
+              ],
+              
+              // Afficher les cartes générées (incluant le widget BrainGestation qui descend)
+              ..._buildResultCards(),
+              
+              // Bouton d'export si terminé
+              if (_isComplete && _responses.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _buildExportButton(),
+              ],
+              
+              const SizedBox(height: 100), // Espace pour le bottomAction
+            ],
+          ),
+        ),
       ),
     );
-  }
-  
-  /// Bouton flottant pour révéler les perspectives en attente
-  Widget _buildPendingPerspectivesButton(int count) {
-    return GestureDetector(
-      onTap: _revealNextPerspective,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$count',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                count == 1 
-                    ? 'Nouvelle perspective disponible'
-                    : 'Nouvelles perspectives disponibles',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Icon(
-              Icons.arrow_downward_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    ).animate(onPlay: (c) => c.repeat(reverse: true))
-      .moveY(begin: 0, end: -4, duration: 1000.ms);
-  }
-  
-  /// Révéler la prochaine perspective en attente
-  void _revealNextPerspective() {
-    // Trouver la prochaine clé non révélée (dans l'ordre de selectedApproaches)
-    for (final approachNameOrKey in widget.selectedApproaches) {
-      ApproachConfig? approach;
-      try {
-        approach = ApproachCategories.allApproaches
-            .firstWhere((a) => a.name == approachNameOrKey || a.key == approachNameOrKey);
-      } catch (e) {
-        continue;
-      }
-      
-      final key = approach.key;
-      if (_responses.containsKey(key) && !_revealedKeys.contains(key)) {
-        setState(() {
-          _revealedKeys.add(key);
-        });
-        
-        // Scroll vers le DÉBUT de la nouvelle carte (pas vers le bas)
-        _scrollToCard(key);
-        break;
-      }
-    }
-  }
-  
-  /// Scroll vers une carte spécifique par sa clé
-  void _scrollToCard(String cardKey) {
-    Future.delayed(const Duration(milliseconds: 300), () {
-      final key = _cardKeys[cardKey];
-      if (key?.currentContext != null) {
-        Scrollable.ensureVisible(
-          key!.currentContext!,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOut,
-          alignment: 0.0, // 0.0 = haut de l'écran
-        );
-      }
-    });
-  }
-  
-  /// Nettoyer le texte Markdown pour supprimer les éléments de structure
-  /// tout en gardant le gras (**) et l'italique (*)
-  String _cleanMarkdown(String text) {
-    return text
-        // Supprimer les lignes de séparation (underscores multiples)
-        .replaceAll(RegExp(r'_{3,}'), '')
-        // Supprimer les titres de section ## X. TITRE
-        .replaceAll(RegExp(r'##\s*\d+\.\s*[A-ZÉÈÊËÀÂÄÙÛÜÔÖÎÏ\s]+\n'), '')
-        // Supprimer les blocs FIGURE_META
-        .replaceAll(RegExp(r'\[FIGURE_META\][\s\S]*?\[/FIGURE_META\]'), '')
-        // Supprimer les lignes vides multiples
-        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-        .trim();
   }
 
   Widget _buildHeader() {
     final completedCount = _status.values.where((s) => s == 'completed').length;
-    final revealedCount = _revealedKeys.length;
     final totalCount = widget.selectedApproaches.length;
-    final pendingToReveal = completedCount - revealedCount;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,7 +427,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
               Flexible(
                 child: Text(
                   _isComplete 
-                      ? '$revealedCount/$completedCount perspectives lues'
+                      ? '$completedCount perspectives générées'
                       : 'Génération... $completedCount/$totalCount',
                   style: GoogleFonts.inter(
                     color: Colors.white,
@@ -643,12 +488,10 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       final status = _status[approachNameOrKey] ?? 'pending';
       final response = _responses[approach.key];
       
-      // OPTION C : Afficher la carte UNIQUEMENT si révélée par l'utilisateur
-      if (status == 'completed' && response != null && _revealedKeys.contains(approach.key)) {
+      // Afficher la carte si complétée ou en cours
+      if (status == 'completed' && response != null) {
         numero++;
-        // Créer une GlobalKey pour cette carte si elle n'existe pas
-        _cardKeys.putIfAbsent(approach.key, () => GlobalKey());
-        cards.add(_buildResultCard(approach, response, numero, _cardKeys[approach.key]!));
+        cards.add(_buildResultCard(approach, response, numero));
       } else {
         // Insérer le widget BrainGestation AVANT la première carte non complétée
         if (!brainWidgetInserted && _isGenerating) {
@@ -790,7 +633,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1));
   }
 
-  Widget _buildResultCard(ApproachConfig approach, String response, int numero, GlobalKey cardKey) {
+  Widget _buildResultCard(ApproachConfig approach, String response, int numero) {
     // Couleurs pour les numéros
     final numeroColors = [
       const Color(0xFF2E8B7B),
@@ -810,7 +653,6 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     final evaluation = _evaluations[approach.key];
 
     return Container(
-      key: cardKey, // Key pour scroll précis
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -943,31 +785,16 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ),
           ),
           
-          // CONTENU - Rendu Markdown (gras, italique)
+          // CONTENU
           Padding(
             padding: const EdgeInsets.all(20),
-            child: MarkdownBody(
-              data: _cleanMarkdown(response),
-              styleSheet: MarkdownStyleSheet(
-                p: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: const Color(0xFF1E293B),
-                  height: 1.7,
-                ),
-                strong: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1E293B),
-                  height: 1.7,
-                ),
-                em: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontStyle: FontStyle.italic,
-                  color: const Color(0xFF1E293B),
-                  height: 1.7,
-                ),
+            child: Text(
+              response,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: const Color(0xFF1E293B),
+                height: 1.7,
               ),
-              selectable: true,
             ),
           ),
           

@@ -83,9 +83,6 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
   late AnimationController _wheelController;
   late Animation<double> _wheelAnimation;
   
-  // Animation du sablier (rotation continue)
-  late AnimationController _hourglassController;
-  
   // Audio pour le son de la roue
   final AudioPlayer _audioPlayer = AudioPlayer();
   Timer? _tickTimer;
@@ -127,12 +124,6 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       vsync: this,
     );
     
-    // Animation du sablier (rotation continue)
-    _hourglassController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(); // Rotation infinie
-    
     // Initialiser le service TTS
     _initTts();
   }
@@ -152,7 +143,6 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
   @override
   void dispose() {
     _wheelController.dispose();
-    _hourglassController.dispose();
     _thoughtController.dispose();
     _focusNode.dispose();
     _audioPlayer.dispose();
@@ -995,73 +985,61 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
   }
   
   Widget _buildActionButtons() {
-    // Couleur bleu sombre comme la roue
-    const wheelBlue = Color(0xFF1E3A5F);
-    
-    // Si génération en cours, afficher l'indicateur avec IMAGE SABLIER
-    if (_isGenerating) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          children: [
-            // ═══════════════════════════════════════════════════════════════════
-            // IMAGE DU SABLIER ANIMÉ (rotation continue)
-            // ═══════════════════════════════════════════════════════════════════
-            RotationTransition(
-              turns: _hourglassController,
-              child: Image.asset(
-                'assets/univers_visuel/generationiaencours.png',
-                width: 50,
-                height: 50,
-                errorBuilder: (_, __, ___) => SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(
-                    valueColor: const AlwaysStoppedAnimation(wheelBlue),
-                    strokeWidth: 3,
-                  ),
-                ),
-              ),
+    return Row(
+      children: [
+        // Bouton Tourner
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _isSpinning ? null : _spinWheel,
+            icon: Icon(
+              _isSpinning ? Icons.hourglass_top : Icons.casino,
+              size: 20,
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Génération en cours...',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF64748B),
-                fontWeight: FontWeight.w500,
-              ),
+            label: Text(
+              _isSpinning ? 'Rotation...' : 'Tourner',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
             ),
-          ],
-        ),
-      );
-    }
-    
-    // Bouton Générer (seul bouton, bleu sombre)
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _selectedSource == null ? null : _generateResponse,
-        icon: const Icon(Icons.auto_awesome, size: 22),
-        label: Text(
-          'Générer un éclairage',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black87,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+            ),
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: wheelBlue,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+        
+        const SizedBox(width: 12),
+        
+        // Bouton Générer
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: (_isGenerating || _selectedSource == null)
+                ? null
+                : _generateResponse,
+            icon: Icon(
+              _isGenerating ? Icons.hourglass_top : Icons.auto_awesome,
+              size: 20,
+            ),
+            label: Text(
+              _isGenerating ? 'Génération...' : 'Générer',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              disabledBackgroundColor: const Color(0xFF7C3AED).withOpacity(0.3),
+            ),
           ),
-          elevation: 4,
-          disabledBackgroundColor: wheelBlue.withOpacity(0.3),
-          disabledForegroundColor: Colors.white60,
         ),
-      ),
+      ],
     );
   }
   
@@ -1103,7 +1081,6 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
             children: [
-              // Bouton retour à la roue
               IconButton(
                 onPressed: () {
                   TtsService.instance.stop();
@@ -1112,7 +1089,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                     _synthesis = null;
                   });
                 },
-                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1E3A5F)),
+                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF6366F1)),
                 tooltip: 'Retour à la roue',
               ),
               Expanded(
@@ -1126,27 +1103,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                   textAlign: TextAlign.center,
                 ),
               ),
-              // Bouton retour vers la roue (écran d'accueil)
-              IconButton(
-                onPressed: () {
-                  TtsService.instance.stop();
-                  setState(() {
-                    _generatedResponse = null;
-                    _synthesis = null;
-                  });
-                },
-                icon: Image.asset(
-                  'assets/univers_visuel/retour.png',
-                  width: 28,
-                  height: 28,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.refresh,
-                    color: Color(0xFF1E3A5F),
-                    size: 26,
-                  ),
-                ),
-                tooltip: 'Retour à la roue',
-              ),
+              const SizedBox(width: 48), // Balance le bouton retour
             ],
           ),
         ),
@@ -1320,35 +1277,23 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Groupe gauche avec Flexible pour éviter overflow
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: _selectedSource!.color,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'ÉCLAIRAGE',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _selectedSource!.color,
-                          letterSpacing: 1,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+              Icon(
+                Icons.auto_awesome,
+                color: _selectedSource!.color,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'ÉCLAIRAGE',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _selectedSource!.color,
+                  letterSpacing: 1,
                 ),
               ),
-              // Badge "Contrôlé" - taille fixe
+              const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(

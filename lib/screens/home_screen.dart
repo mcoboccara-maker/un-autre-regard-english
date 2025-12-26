@@ -154,37 +154,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _isUsingDefaultSources = true;
           print('📌 Sources par défaut appliquées ET sauvegardées: ${sources.length}');
         } else {
-          // Vérifier si les sources sont exactement les sources par défaut
-          final sortedSources = List<String>.from(sources)..sort();
-          final sortedDefaults = List<String>.from(defaultSources)..sort();
-          final isExactlyDefaults = sortedSources.length == sortedDefaults.length &&
-              sortedSources.every((s) => sortedDefaults.contains(s));
+          // ═══════════════════════════════════════════════════════════════════════
+          // CORRECTION BUG : Si le quiz d'orientation est complété, les sources ont
+          // été CHOISIES explicitement par l'utilisateur → ne pas nettoyer !
+          // ═══════════════════════════════════════════════════════════════════════
+          final orientationCompleted = profileData['orientationCompleted'] == true;
           
-          if (isExactlyDefaults) {
-            _isUsingDefaultSources = true;
-            print('📌 Sources par défaut détectées: ${sources.length}');
-          } else {
-            // Vérifier si les sources contiennent AU MOINS UNE source par défaut + d'autres
-            final defaultsInSources = sources.where((s) => defaultSources.contains(s)).toList();
-            final otherSources = sources.where((s) => !defaultSources.contains(s)).toList();
-            
-            print('📋 Sources par défaut trouvées: $defaultsInSources');
-            print('📋 Autres sources: $otherSources');
-            
-            // Si on a des sources par défaut ET des autres sources, nettoyer
-            if (defaultsInSources.isNotEmpty && otherSources.isNotEmpty) {
-              print('🔄 Nettoyage des sources par défaut du profil...');
-              await _removeDefaultSourcesFromProfile();
-              // Garder uniquement les sources non-défaut
-              setState(() {
-                _profileSources = otherSources;
-                _isUsingDefaultSources = false;
-              });
-              print('✅ Sources nettoyées: ${otherSources.length}');
-              return; // Sortir car on a déjà fait le setState
-            }
-            
+          if (orientationCompleted) {
+            // L'utilisateur a fait le quiz et choisi ses sources → les garder telles quelles
             _isUsingDefaultSources = false;
+            print('✅ Quiz complété: ${sources.length} sources choisies par l\'utilisateur');
+          } else {
+            // Quiz pas fait → vérifier si ce sont les sources par défaut
+            final sortedSources = List<String>.from(sources)..sort();
+            final sortedDefaults = List<String>.from(defaultSources)..sort();
+            final isExactlyDefaults = sortedSources.length == sortedDefaults.length &&
+                sortedSources.every((s) => sortedDefaults.contains(s));
+            
+            if (isExactlyDefaults) {
+              _isUsingDefaultSources = true;
+              print('📌 Sources par défaut détectées: ${sources.length}');
+            } else {
+              // Quiz pas fait mais sources différentes des défauts (ajout manuel via profil)
+              _isUsingDefaultSources = false;
+              print('📋 Sources personnalisées (sans quiz): ${sources.length}');
+            }
           }
         }
         
@@ -631,30 +625,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           
           // ═══════════════════════════════════════════════════════════════════
           // Indicateur du TOTAL des sources sélectionnées (profil + roue)
+          // Tooltip au toucher pour montrer les sources par défaut
           // ═══════════════════════════════════════════════════════════════════
           if (_totalSourcesCount > 0) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E8B7B).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF2E8B7B).withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.auto_awesome, color: Color(0xFF2E8B7B), size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    _isUsingDefaultSources 
-                        ? '$_totalSourcesCount sagesse(s) par défaut'
-                        : '$_totalSourcesCount sagesse(s) sélectionnée(s)',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF2E8B7B),
+            GestureDetector(
+              onTap: _isUsingDefaultSources ? _showDefaultSourcesDialog : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E8B7B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF2E8B7B).withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Color(0xFF2E8B7B), size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      _isUsingDefaultSources 
+                          ? '$_totalSourcesCount sagesse(s) par défaut'
+                          : '$_totalSourcesCount sagesse(s) sélectionnée(s)',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF2E8B7B),
+                      ),
                     ),
-                  ),
-                ],
+                    // Indicateur tactile pour sources par défaut
+                    if (_isUsingDefaultSources) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.info_outline, color: Color(0xFF2E8B7B), size: 14),
+                    ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -1377,6 +1380,111 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  /// Dialog affichant les 4 sources par défaut avec leurs icônes
+  void _showDefaultSourcesDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.auto_awesome, color: Color(0xFF2E8B7B), size: 24),
+            const SizedBox(width: 10),
+            Text(
+              'Sources par défaut',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Ces 4 sources d\'inspiration sont utilisées par défaut. Tu peux les personnaliser via le quiz ou les roues.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildDefaultSourceTile('aristote', 'Aristote', 'Philosophe'),
+            _buildDefaultSourceTile('existentialisme', 'Existentialisme', 'Courant philosophique'),
+            _buildDefaultSourceTile('realisme', 'Réalisme', 'Courant littéraire'),
+            _buildDefaultSourceTile('schemas_young', 'Schémas de Young', 'Approche psychologique'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Compris',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF2E8B7B),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Widget pour afficher une source par défaut avec son icône
+  Widget _buildDefaultSourceTile(String id, String name, String category) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/univers_visuel/$id.png',
+              width: 36,
+              height: 36,
+              errorBuilder: (_, __, ___) => Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E8B7B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.auto_awesome, size: 20, color: Color(0xFF2E8B7B)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                Text(
+                  category,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Indicateur mode invité
   Widget _buildGuestIndicator() {
     return Container(
@@ -1478,28 +1586,66 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   /// Afficher la roue des sagesses (WisdomWheelDialog)
-  /// MODIFIÉ : Stocke les sources et reste sur HOME (ne navigue plus vers /main)
+  /// MODIFIÉ : Sauvegarde les sources dans le profil (remplace les sources par défaut)
   void _showWisdomWheel() async {
     final sources = await WisdomWheelDialog.show(context);
     if (sources != null && sources.isNotEmpty && mounted) {
-      setState(() {
-        _selectedRandomSources = sources;
-        // Si on était en mode sources par défaut, les effacer
-        if (_isUsingDefaultSources) {
-          _profileSources = [];  // Effacer les sources par défaut
-        }
-        _isUsingDefaultSources = false;  // Dès qu'on choisit, plus de défaut
-      });
+      // Sauvegarder les sources dans le profil (comme le quiz)
+      await _saveWheelSourcesToProfile(sources);
+      
+      // Recharger les sources du profil
+      await _loadProfileSources();
+      
       // Afficher confirmation
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${sources.length} sagesse(s) sélectionnée(s)'),
+          content: Text('${sources.length} sagesse(s) enregistrée(s)'),
           backgroundColor: const Color(0xFF2E8B7B),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           duration: const Duration(seconds: 2),
         ),
       );
+    }
+  }
+  
+  /// Sauvegarder les sources de la roue dans le profil
+  /// Catégorise chaque source et remplace les sources par défaut
+  Future<void> _saveWheelSourcesToProfile(List<String> sources) async {
+    try {
+      // Mapping des IDs vers les catégories (basé sur wisdom_wheel_dialog.dart)
+      const litteraires = ['humanisme', 'romantisme', 'realisme', 'existentialisme', 
+                          'absurdisme', 'poetique', 'mystique', 'symboliste_moderne'];
+      const psychologiques = ['jungienne', 'tcc', 'logotherapie', 'act', 
+                              'the_work', 'schemas_young', 'humaniste_rogers'];
+      const philosophes = ['socrate', 'platon', 'aristote', 'epictete', 'marc_aurele',
+                          'spinoza', 'kant', 'nietzsche', 'camus', 'sartre', 'confucius'];
+      const courantsPhilo = ['stoicisme_philo', 'epicurisme', 'existentialisme_philo',
+                            'humanisme_philo', 'vitalisme', 'absurdisme_philo', 'rationalisme',
+                            'empirisme', 'pragmatisme', 'phenomenologie', 'idealisme',
+                            'utilitarisme', 'structuralisme', 'philosophies_orientales'];
+      
+      // Catégoriser les sources sélectionnées
+      final selectedLitteraires = sources.where((s) => litteraires.contains(s)).toList();
+      final selectedPsycho = sources.where((s) => psychologiques.contains(s)).toList();
+      final selectedPhilosophes = sources.where((s) => philosophes.contains(s)).toList();
+      final selectedCourantsPhilo = sources.where((s) => courantsPhilo.contains(s)).toList();
+      
+      // Récupérer le profil actuel
+      final profileData = await CompleteAuthService.instance.getProfile() ?? {};
+      
+      // Mettre à jour avec les nouvelles sources (REMPLACE, n'ajoute pas)
+      profileData['courantsLitteraires'] = selectedLitteraires;
+      profileData['approchesPsychologiques'] = selectedPsycho;
+      profileData['philosophesSelectionnes'] = selectedPhilosophes;
+      profileData['courantsPhilosophiques'] = selectedCourantsPhilo;
+      profileData['religionsSelectionnees'] = <String>[]; // Pas de spirituelles dans la roue
+      profileData['lastUpdated'] = DateTime.now().toIso8601String();
+      
+      await CompleteAuthService.instance.saveProfile(profileData);
+      print('✅ Sources de la roue sauvegardées: ${sources.length}');
+    } catch (e) {
+      print('⚠️ Erreur sauvegarde sources roue: $e');
     }
   }
 

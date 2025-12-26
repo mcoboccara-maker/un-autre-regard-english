@@ -1,73 +1,56 @@
-// lib/config/prompts/prompt_synthese.dart
-// Prompt pour générer une synthèse vocale d'un éclairage
-// Utilisé pour condenser une réponse longue en 2-3 phrases à lire à voix haute
+/// PROMPT SYNTHESE - GENERATION DE SYNTHESE VOCALE
+/// 
+/// Fichier : lib/config/prompts/prompt_synthese.dart
+/// Usage  : Condenser une réponse longue en 2-3 phrases pour lecture vocale
+/// Appelé : wisdom_wheel_screen.dart, streaming_results_screen.dart
 
-/// Configuration du prompt de synthèse vocale
 class PromptSynthese {
   
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PROMPT SYSTÈME
-  // ═══════════════════════════════════════════════════════════════════════════
+  /// Modèle à utiliser pour la synthèse (plus léger = plus rapide)
+  static const String model = 'claude-sonnet-4-5-20250929';
   
+  /// Température basse pour une synthèse fidèle
+  static const double temperature = 0.3;
+  
+  /// Tokens limités pour une synthèse courte
+  static const int maxTokens = 150;
+  
+  /// Message d'erreur standard
+  static const String errorMessage = 'Impossible de générer la synthèse vocale';
+  
+  /// System prompt pour la synthèse
   static const String systemPrompt = '''
-Tu es un assistant spécialisé dans la synthèse de textes pour lecture vocale.
+Tu es un assistant de synthèse vocale.
 
-RÈGLES STRICTES :
-1. Tu résumes le texte en 2-3 phrases MAXIMUM
-2. Tu gardes l'essence et le message principal
-3. Tu utilises un langage naturel, fluide, adapté à l'écoute
-4. Tu évites les listes, tirets, numérotations
-5. Tu écris des phrases complètes et bien ponctuées
-6. Tu tutoies l'utilisateur (cohérent avec l'app)
-7. Tu NE rajoutes PAS de commentaire type "Voici la synthèse..."
-8. Tu commences directement par le contenu résumé
+Ta mission : condenser un texte long en 2-3 phrases essentielles,
+adaptées à une lecture à voix haute.
 
-LONGUEUR CIBLE : 50-80 mots maximum
+Règles :
+- Maximum 2-3 phrases courtes et fluides
+- Conserver l'essence et le ton du texte original
+- Pas de formules d'introduction ("Voici la synthèse...")
+- Pas de listes à puces
+- Style oral naturel, pas écrit
+- Tutoiement si le texte original tutoie
+- Garder les termes clés de la tradition/source mentionnée
+
+Tu ne changes pas le sens, tu concentres.
 ''';
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PROMPT UTILISATEUR (TEMPLATE)
-  // ═══════════════════════════════════════════════════════════════════════════
-  
-  /// Génère le prompt utilisateur pour une synthèse
-  /// [sourceName] : nom de la source (ex: "Stoïcisme", "Épicure")
-  /// [originalText] : texte complet à résumer
+  /// Construire le user prompt pour la synthèse
   static String buildUserPrompt({
     required String sourceName,
     required String originalText,
   }) {
     return '''
-Résume cet éclairage "$sourceName" en 2-3 phrases pour une lecture vocale :
+SOURCE : $sourceName
 
----
+TEXTE À SYNTHÉTISER :
 $originalText
----
 
-Rappel : 50-80 mots maximum, langage naturel et fluide.
+CONSIGNE :
+Condense ce texte en 2-3 phrases essentielles pour une lecture vocale.
+Garde le ton et les concepts clés de la source "$sourceName".
 ''';
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PARAMÈTRES API
-  // ═══════════════════════════════════════════════════════════════════════════
-  
-  /// Modèle à utiliser pour la synthèse (léger et rapide)
-  static const String model = 'gpt-4o-mini';
-  
-  /// Température (créativité) - basse pour rester fidèle au texte
-  static const double temperature = 0.3;
-  
-  /// Tokens maximum pour la réponse
-  static const int maxTokens = 150;
-  
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MESSAGES FALLBACK
-  // ═══════════════════════════════════════════════════════════════════════════
-  
-  /// Message si la synthèse échoue
-  static const String errorMessage = 
-      'Impossible de générer la synthèse. Tu peux écouter le texte complet.';
-  
-  /// Message de chargement
-  static const String loadingMessage = 'Génération de la synthèse en cours...';
 }

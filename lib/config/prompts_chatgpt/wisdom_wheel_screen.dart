@@ -1320,35 +1320,23 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Groupe gauche avec Flexible pour éviter overflow
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: _selectedSource!.color,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'ÉCLAIRAGE',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _selectedSource!.color,
-                          letterSpacing: 1,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+              Icon(
+                Icons.auto_awesome,
+                color: _selectedSource!.color,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'ÉCLAIRAGE',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: _selectedSource!.color,
+                  letterSpacing: 1,
                 ),
               ),
-              // Badge "Contrôlé" - taille fixe
+              const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(

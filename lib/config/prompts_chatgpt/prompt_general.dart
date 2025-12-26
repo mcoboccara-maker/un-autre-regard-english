@@ -503,7 +503,7 @@ et historisée avec la pensée et son éclairage.
 
 RÉPONSE
 
-Réponds en français.
+Réponds dans la langue de la pensée, situation ou question soumise,
 
 
 ''';

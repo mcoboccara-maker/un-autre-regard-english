@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:async'; // AJOUT: Pour TimeoutException
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import '../models/reflection.dart';
@@ -8,33 +9,47 @@ import '../models/user_profile.dart';
 import '../services/persistent_storage_service.dart';
 import '../services/character_tracking_service.dart';
 import '../config/approach_config.dart';
-import '../config/prompts/prompt_general.dart';
-import '../config/prompts/prompt_control.dart';
+// ═══════════════════════════════════════════════════════════════════════════════
+// IMPORTS UNIFIÉS - Remplacent les 4 anciens fichiers prompts
+// ═══════════════════════════════════════════════════════════════════════════════
+import '../config/prompts/prompt_unifie.dart';
+import '../config/prompts/prompt_system_unifie.dart';
 import '../config/prompts/prompt_positive_thought.dart';
-import '../config/prompts/prompt_synthesis.dart';
-import '../config/prompts/prompt_system.dart';
-import '../config/prompts/prompt_system_control.dart';
+// import '../config/prompts/prompt_synthesis.dart'; // Garder si utilisé
 
-/// SERVICE IA - VERSION CORRIGEE
-/// Les sources du profil utilisateur sont maintenant transmises correctement
-/// a toutes les methodes de generation
+/// SERVICE IA - VERSION CLAUDE (ANTHROPIC)
+/// 
+/// Refactorisé pour:
+/// - Utiliser l'API Claude au lieu d'OpenAI
+/// - Prompts unifiés (1 appel au lieu de 2)
+/// - Auto-contrôle intégré (pas de boucle de régénération)
+/// - Extraction des métadonnées de figures pour historisation
+/// 
 class AIService {
   static AIService? _instance;
   static AIService get instance => _instance ??= AIService._();
   AIService._();
 
-  // Configuration OpenAI
-  final String _baseUrl = 'https://api.openai.com/v1/chat/completions';
-  String _apiKey = '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';
-  final String _model = 'gpt-4o-mini';
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFIGURATION API CLAUDE (ANTHROPIC)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  final String _baseUrl = 'https://api.anthropic.com/v1/messages';
+  String _apiKey = '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'; // À remplacer
+  final String _model = 'claude-sonnet-4-5-20250929';
+  final String _anthropicVersion = '2023-06-01';
+  
+  // AJOUT: Timeout pour les requêtes (en secondes)
+  static const int _requestTimeoutSeconds = 60;
+  
+  // AJOUT: Configuration du retry automatique (erreurs 429/529)
+  static const int _maxRetryAttempts = 3;           // Nombre max de tentatives
+  static const int _initialRetryDelaySeconds = 2;   // Délai initial (2s, 4s, 8s)
 
-  // Limite de regeneration
-  static const int _maxRegenerationAttempts = 2;
-
-  // =========================================================================
-  // SOURCES PAR DEFAUT (utilisees si aucune source choisie par l'utilisateur)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SOURCES PAR DEFAUT (utilisées si aucune source choisie par l'utilisateur)
   // REGLE: 1 source par type hors spirituel
-  // =========================================================================
+  // ═══════════════════════════════════════════════════════════════════════════
   static const List<String> _defaultSources = [
     'roman_psychologique',    // Littéraire
     'schemas_young',          // Psychologique
@@ -46,24 +61,26 @@ class AIService {
   List<String> get userApproches => _userApproaches;
   List<String> _userApproaches = [];
 
-  /// Historique d'utilisation des sources pour pensee positive
+  /// Historique d'utilisation des sources pour pensée positive
   Map<String, int> _sourceUsageHistory = {};
 
-  /// Charger les approches de l'utilisateur (5 categories)
-  /// REGLE: Si aucune source choisie, utiliser les sources par defaut
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CHARGEMENT DES APPROCHES UTILISATEUR
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Charger les approches de l'utilisateur (5 catégories)
+  /// REGLE: Si aucune source choisie, utiliser les sources par défaut
   Future<void> loadUserApproaches() async {
     try {
       _userApproaches = await PersistentStorageService.instance.getUserApproaches();
-      print('AIService: Approches utilisateur chargees: $_userApproaches');
+      print('AIService: Approches utilisateur chargées: $_userApproaches');
       
-      // Si aucune source choisie, appliquer les sources par defaut
       if (_userApproaches.isEmpty) {
-        print('AIService: Aucune source utilisateur -> Application des sources par defaut');
+        print('AIService: Aucune source utilisateur -> Application des sources par défaut');
         _userApproaches = List.from(_defaultSources);
       }
     } catch (e) {
       print('AIService: Erreur chargement approches: $e');
-      // En cas d'erreur, utiliser les sources par defaut
       _userApproaches = List.from(_defaultSources);
     }
   }
@@ -71,9 +88,9 @@ class AIService {
   /// Message de configuration
   String getSetupMessage() {
     if (_userApproaches.isEmpty) {
-      return 'Aucune approche selectionnee. Veuillez completer votre profil.';
+      return 'Aucune approche sélectionnée. Veuillez compléter votre profil.';
     }
-    return 'Vos approches selectionnees : ${_userApproaches.join(", ")}';
+    return 'Vos approches sélectionnées : ${_userApproaches.join(", ")}';
   }
 
   /// Formatage des noms d'approches  
@@ -101,7 +118,7 @@ class AIService {
     return formattedNames.join(', ');
   }
 
-  /// Categoriser les approches en 5 categories
+  /// Catégoriser les approches en 5 catégories
   Map<String, List<String>> _categorizeApproaches(List<String> approaches) {
     final religions = <String>[];
     final litteratures = <String>[];
@@ -153,42 +170,233 @@ class AIService {
     };
   }
 
-  /// Identifier le motif universel a partir de la pensee
-  String _identifyUniversalMotif(String pensee) {
-    final penseeLower = pensee.toLowerCase();
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AJOUT: GESTION DES ERREURS API CLAUDE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// AJOUT: Convertit un code d'erreur HTTP en message utilisateur compréhensible
+  String _getErrorMessage(int statusCode, String responseBody) {
+    // Essayer d'extraire le message d'erreur JSON
+    String? apiMessage;
+    try {
+      final json = jsonDecode(responseBody);
+      apiMessage = json['error']?['message'];
+    } catch (_) {}
     
-    final motifs = {
-      'peur': ['peur', 'angoisse', 'anxieux', 'anxiete', 'effray', 'terrifi', 'inquiet', 'stress'],
-      'perte': ['perte', 'perdu', 'deuil', 'mort', 'disparu', 'fini', 'termine'],
-      'doute': ['doute', 'incertain', 'hesit', 'confus', 'perplexe', 'indecis'],
-      'culpabilite': ['culpab', 'faute', 'responsable', 'regret', 'remords', 'honte'],
-      'colere': ['colere', 'enerv', 'furieux', 'rage', 'irrit', 'agac', 'frustre'],
-      'tristesse': ['triste', 'melanc', 'deprim', 'abattu', 'morose', 'cafard'],
-      'solitude': ['seul', 'isol', 'abandon', 'incompris', 'exclu'],
-      'impuissance': ['impuissant', 'bloqu', 'coinc', 'paralyse', 'incapable', 'depass'],
-      'epuisement': ['epuis', 'fatigu', 'burn', 'bout', 'vide', 'extenua'],
-      'injustice': ['injust', 'inegal', 'arbitraire', 'trahi', 'exploit'],
-      'rupture': ['rupture', 'separation', 'divorce', 'quitt', 'rompu'],
-      'dependance': ['depend', 'attach', 'besoin', 'manque', 'addict'],
-      'conflit': ['conflit', 'dispute', 'tension', 'desaccord', 'opposi'],
-      'echec': ['echec', 'rate', 'echou', 'fiasco', 'defaite'],
-      'vide': ['vide', 'sens', 'absurde', 'inutile', 'pourquoi'],
-    };
+    switch (statusCode) {
+      case 400:
+        return 'Requête invalide. ${apiMessage ?? "Vérifiez les paramètres."}';
+      case 401:
+        return 'Clé API invalide ou expirée. Veuillez vérifier votre configuration.';
+      case 403:
+        return 'Accès refusé. ${apiMessage ?? "Vérifiez vos permissions API."}';
+      case 404:
+        return 'Service non trouvé. L\'API Claude est peut-être indisponible.';
+      case 429:
+        return 'Limite de requêtes atteinte. Veuillez patienter quelques secondes et réessayer.';
+      case 500:
+        return 'Erreur serveur Claude. Le service est temporairement indisponible.';
+      case 529:
+        return 'API Claude surchargée. Veuillez réessayer dans quelques instants.';
+      default:
+        return 'Erreur inattendue ($statusCode). ${apiMessage ?? "Veuillez réessayer."}';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // APPEL API CLAUDE (ANTHROPIC)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  /// Appel à l'API Claude avec séparation System/User prompts
+  /// 
+  /// [userPrompt] : La demande spécifique (prompt_unifie, prompt_positive_thought, etc.)
+  /// [systemPrompt] : L'identité de l'IA (utilise PromptSystemUnifie.content par défaut)
+  /// [maxTokens] : Limite de tokens pour la réponse
+  /// 
+  /// MODIFIÉ: Retourne maintenant un message d'erreur explicite au lieu de chaîne vide
+  /// AJOUT: Retry automatique avec backoff exponentiel pour erreurs 429/529
+  Future<String> _callClaude(
+    String userPrompt, {
+    String? systemPrompt,
+    int maxTokens = 4096,
+    double temperature = 0.7,
+  }) async {
+    final effectiveSystemPrompt = systemPrompt ?? PromptSystemUnifie.content;
     
-    for (final entry in motifs.entries) {
-      for (final keyword in entry.value) {
-        if (penseeLower.contains(keyword)) {
-          return entry.key;
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RETRY AUTOMATIQUE AVEC BACKOFF EXPONENTIEL
+    // Tentatives: 1, 2, 3 avec délais: 2s, 4s, 8s entre chaque
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    for (int attempt = 1; attempt <= _maxRetryAttempts; attempt++) {
+      try {
+        print('AIService: Envoi requête Claude (tentative $attempt/$_maxRetryAttempts)...');
+        print('AIService: Model: $_model');
+        print('AIService: MaxTokens: $maxTokens');
+        print('AIService: Prompt length: ${userPrompt.length} chars');
+        
+        final response = await http.post(
+          Uri.parse(_baseUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': _apiKey,
+            'anthropic-version': _anthropicVersion,
+          },
+          body: jsonEncode({
+            'model': _model,
+            'max_tokens': maxTokens,
+            'system': effectiveSystemPrompt,
+            'messages': [
+              {
+                'role': 'user',
+                'content': userPrompt,
+              }
+            ],
+            'temperature': temperature,
+          }),
+        ).timeout(
+          Duration(seconds: _requestTimeoutSeconds),
+          onTimeout: () {
+            throw TimeoutException('La requête a pris trop de temps (>${_requestTimeoutSeconds}s)');
+          },
+        );
+
+        print('AIService: Status code: ${response.statusCode}');
+
+        // ✅ SUCCÈS
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final content = data['content']?[0]?['text'] ?? '';
+          print('AIService: ✅ Réponse reçue: ${content.length} caractères');
+          return content.trim();
         }
+        
+        // ⚠️ ERREUR RETRYABLE (429 = rate limit, 529 = overloaded)
+        if (response.statusCode == 429 || response.statusCode == 529) {
+          if (attempt < _maxRetryAttempts) {
+            final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1)); // 2s, 4s, 8s
+            print('AIService: ⏳ Erreur ${response.statusCode} - Retry dans ${delaySeconds}s (tentative $attempt/$_maxRetryAttempts)');
+            await Future.delayed(Duration(seconds: delaySeconds));
+            continue; // Réessayer
+          }
+          // Dernière tentative échouée
+          final errorMsg = _getErrorMessage(response.statusCode, response.body);
+          print('AIService: ❌ Échec après $_maxRetryAttempts tentatives: $errorMsg');
+          return '[ERREUR_API] $errorMsg';
+        }
+        
+        // ❌ ERREUR NON-RETRYABLE (400, 401, 403, 500, etc.)
+        final errorMsg = _getErrorMessage(response.statusCode, response.body);
+        print('AIService: ❌ Erreur API Claude: ${response.statusCode}');
+        print('AIService: Body: ${response.body}');
+        print('AIService: Message: $errorMsg');
+        return '[ERREUR_API] $errorMsg';
+        
+      } on TimeoutException catch (e) {
+        print('AIService: ❌ Timeout: $e');
+        if (attempt < _maxRetryAttempts) {
+          final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
+          print('AIService: ⏳ Timeout - Retry dans ${delaySeconds}s (tentative $attempt/$_maxRetryAttempts)');
+          await Future.delayed(Duration(seconds: delaySeconds));
+          continue;
+        }
+        return '[ERREUR_API] Délai d\'attente dépassé après $_maxRetryAttempts tentatives. Vérifiez votre connexion internet.';
+      } on FormatException catch (e) {
+        print('AIService: ❌ Erreur parsing JSON: $e');
+        return '[ERREUR_API] Erreur de format dans la réponse du serveur.';
+      } catch (e) {
+        print('AIService: ❌ Erreur requête Claude: $e');
+        
+        // Détecter les erreurs réseau courantes (incluant ClientException)
+        final errorStr = e.toString().toLowerCase();
+        if (errorStr.contains('socketexception') || 
+            errorStr.contains('connection refused') ||
+            errorStr.contains('network is unreachable') ||
+            errorStr.contains('clientexception') ||
+            errorStr.contains('connection abort') ||
+            errorStr.contains('connection reset')) {
+          if (attempt < _maxRetryAttempts) {
+            final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
+            print('AIService: ⏳ Erreur réseau - Retry dans ${delaySeconds}s (tentative $attempt/$_maxRetryAttempts)');
+            await Future.delayed(Duration(seconds: delaySeconds));
+            continue;
+          }
+          return '[ERREUR_API] Cette source n\'a pas pu répondre. Tu peux continuer avec les autres perspectives ou soumettre à nouveau ta pensée un peu plus tard.';
+        }
+        if (errorStr.contains('handshake') || errorStr.contains('certificate')) {
+          return '[ERREUR_API] Erreur de sécurité SSL. Vérifiez la date/heure de votre appareil.';
+        }
+        
+        // Message générique pour les autres erreurs (sans détails techniques)
+        return '[ERREUR_API] Cette source n\'a pas pu répondre. Tu peux continuer avec les autres perspectives ou soumettre à nouveau ta pensée un peu plus tard.';
       }
     }
     
-    return 'questionnement existentiel';
+    // Ne devrait jamais arriver, mais par sécurité
+    return '[ERREUR_API] Erreur inattendue après $_maxRetryAttempts tentatives.';
   }
 
-  /// ==========================================================================
-  /// GENERATION UNIVERSELLE AVEC CONTROLE QUALITE
-  /// ==========================================================================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EXTRACTION DES MÉTADONNÉES DE FIGURE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Extrait les métadonnées de la figure depuis la réponse IA
+  /// Format attendu:
+  /// [FIGURE_META]
+  /// nom: ...
+  /// source: ...
+  /// reference: ...
+  /// motif: ...
+  /// [/FIGURE_META]
+  Map<String, String>? _extractFigureMeta(String response) {
+    final regex = RegExp(
+      r'\[FIGURE_META\]\s*\n'
+      r'nom:\s*(.+)\n'
+      r'source:\s*(.+)\n'
+      r'reference:\s*(.+)\n'
+      r'motif:\s*(.+)\n'
+      r'\[/FIGURE_META\]',
+      multiLine: true,
+    );
+    
+    final match = regex.firstMatch(response);
+    if (match == null) {
+      print('AIService: Métadonnées figure non trouvées dans la réponse');
+      return null;
+    }
+    
+    return {
+      'nom': match.group(1)?.trim() ?? '',
+      'source': match.group(2)?.trim() ?? '',
+      'reference': match.group(3)?.trim() ?? '',
+      'motifUniversel': match.group(4)?.trim() ?? '',
+    };
+  }
+
+  /// Retire le bloc [FIGURE_META] de la réponse affichée à l'utilisateur
+  String _removeMetaBlock(String response) {
+    return response.replaceAll(
+      RegExp(r'\[FIGURE_META\][\s\S]*?\[/FIGURE_META\]'),
+      '',
+    ).trim();
+  }
+
+  /// Sauvegarder le personnage extrait
+  Future<void> _saveExtractedCharacter(Map<String, String>? characterData) async {
+    if (characterData == null || characterData['nom']?.isEmpty == true) return;
+    
+    try {
+      await CharacterTrackingService.instance.saveMultipleCharacters([characterData]);
+      print('AIService: Personnage sauvegardé: ${characterData['nom']}');
+    } catch (e) {
+      print('AIService: Erreur sauvegarde personnage: $e');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GÉNÉRATION UNIVERSELLE (TOUTES LES SOURCES DU PROFIL)
+  // Version simplifiée : 1 seul appel API, auto-contrôle intégré
+  // ═══════════════════════════════════════════════════════════════════════════
   
   Future<String> generateUniversalResponse({
     required String reflectionText,
@@ -204,33 +412,20 @@ class AIService {
     
     await loadUserApproaches();
     
-    // Note: loadUserApproaches() applique automatiquement les sources par defaut si vide
-    
-    // Charger les personnages interdits
+    // Charger les personnages interdits (30 derniers jours)
     final personnagesInterdits = await CharacterTrackingService.instance.getForbiddenCharactersText();
     
-    // Identifier le motif universel
-    final motifUniversel = _identifyUniversalMotif(reflectionText);
-    
-    // Categoriser les approches
+    // Catégoriser les approches
     final categories = _categorizeApproaches(_userApproaches);
     
-    // Calculer l'age depuis la date de naissance si disponible
-    String ageStr = 'Non renseigne';
-    if (userProfile?.dateNaissance != null) {
-      final now = DateTime.now();
-      int age = now.year - userProfile!.dateNaissance!.year;
-      if (now.month < userProfile!.dateNaissance!.month || 
-          (now.month == userProfile!.dateNaissance!.month && now.day < userProfile!.dateNaissance!.day)) {
-        age--;
-      }
-      ageStr = age.toString();
-    } else if (userProfile?.age != null) {
-      ageStr = userProfile!.age.toString();
-    }
+    // Calculer l'âge
+    String ageStr = _calculateAge(userProfile);
     
-    // Construire le prompt
-    final prompt = PromptGeneral.build(
+    // ═══════════════════════════════════════════════════════════════════════
+    // CONSTRUIRE LE PROMPT UNIFIÉ (remplace prompt_general + prompt_control)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    final prompt = PromptUnifie.build(
       userPrenom: userProfile?.prenom,
       userAge: ageStr,
       userValeursSelectionnees: userProfile?.valeursSelectionnees?.join(', '),
@@ -260,67 +455,38 @@ class AIService {
     );
 
     try {
-      var response = await _callOpenAI(prompt);
+      // ═══════════════════════════════════════════════════════════════════════
+      // UN SEUL APPEL API (plus de boucle de régénération)
+      // L'auto-contrôle est intégré dans le prompt système
+      // ═══════════════════════════════════════════════════════════════════════
+      
+      final response = await _callClaude(prompt);
+      
+      // MODIFIÉ: Vérifier si c'est une erreur API
+      if (response.startsWith('[ERREUR_API]')) {
+        return '❌ ${response.replaceFirst('[ERREUR_API] ', '')}';
+      }
       
       if (response.isEmpty) {
-        return 'Erreur lors de la generation de la reponse. Veuillez reessayer.';
+        return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
       }
       
-      // Controle qualite
-      final sourcesList = _userApproaches.join(', ');
-      final controlResult = await _controlResponse(
-        response: response,
-        source: sourcesList,
-        motifUniversel: motifUniversel,
-        penseeUtilisateur: reflectionText,
-      );
+      // Extraire et sauvegarder les métadonnées de la figure
+      final figureMeta = _extractFigureMeta(response);
+      await _saveExtractedCharacter(figureMeta);
       
-      if (controlResult.isValid) {
-        await _saveExtractedCharacters(controlResult.extractedCharacters);
-        return controlResult.correctedResponse ?? response;
-      }
-      
-      // Regeneration si necessaire
-      if (controlResult.needsRegeneration) {
-        for (int attempt = 1; attempt <= _maxRegenerationAttempts; attempt++) {
-          print('AIService: Tentative de regeneration $attempt/$_maxRegenerationAttempts');
-          
-          final constrainedPrompt = '$prompt\n\nCONTRAINTES:\n${controlResult.constraintsToAdd}';
-          response = await _callOpenAI(constrainedPrompt);
-          
-          if (response.isEmpty) continue;
-          
-          final newControlResult = await _controlResponse(
-            response: response,
-            source: sourcesList,
-            motifUniversel: motifUniversel,
-            penseeUtilisateur: reflectionText,
-          );
-          
-          if (newControlResult.isValid) {
-            await _saveExtractedCharacters(newControlResult.extractedCharacters);
-            return newControlResult.correctedResponse ?? response;
-          }
-        }
-        
-        print('AIService: Max tentatives atteintes');
-        await _saveExtractedCharacters(controlResult.extractedCharacters);
-        return controlResult.correctedResponse ?? response;
-      }
-      
-      await _saveExtractedCharacters(controlResult.extractedCharacters);
-      return controlResult.correctedResponse ?? response;
+      // Retourner la réponse sans le bloc de métadonnées
+      return _removeMetaBlock(response);
       
     } catch (e) {
-      print('AIService: Erreur generation universelle: $e');
-      return 'Erreur lors de la generation de la reponse. Veuillez reessayer.';
+      print('AIService: Erreur génération universelle: $e');
+      return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
     }
   }
 
-  /// ==========================================================================
-  /// GENERATION POUR APPROCHE SPECIFIQUE (ROUE DU HASARD)
-  /// CORRIGE: Utilise maintenant les sources du profil + la source de la roue
-  /// ==========================================================================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GÉNÉRATION POUR APPROCHE SPÉCIFIQUE (ROUE DU HASARD)
+  // ═══════════════════════════════════════════════════════════════════════════
   
   Future<String> generateApproachSpecificResponse({
     required String approach,
@@ -332,16 +498,17 @@ class AIService {
     String? souhait,
     String? petitPas,
     required int intensiteEmotionnelle,
+    String? historique30Jours,
   }) async {
     
-    // Trouver la configuration de l'approche selectionnee via la roue
+    // Trouver la configuration de l'approche sélectionnée via la roue
     final approachConfig = ApproachCategories.allApproaches.firstWhere(
       (a) => a.key == approach,
       orElse: () => ApproachConfig(
         key: approach,
         name: approach,
-        description: 'Approche de developpement personnel',
-        credo: 'Chaque difficulte est une opportunite de croissance',
+        description: 'Approche de développement personnel',
+        credo: 'Chaque difficulté est une opportunité de croissance',
         tonEmotionnel: 'Bienveillant et encourageant',
         exemples: ['Sagesse universelle'],
         icon: Icons.psychology,
@@ -350,61 +517,18 @@ class AIService {
       ),
     );
 
-    print('AIService: Generation pour approche specifique: ${approachConfig.name}');
-
-    // =========================================================================
-    // CORRECTION: Utiliser getUserApproaches() qui fonctionne correctement
-    // au lieu des champs du userProfile qui peuvent etre null
-    // =========================================================================
-    List<String> profileSources = await PersistentStorageService.instance.getUserApproaches();
-    
-    print('AIService: Sources du profil utilisateur: $profileSources');
-    
-    // =========================================================================
-    // REGLE: Si AUCUNE source choisie (profil vide), utiliser les sources par defaut
-    // Les sources par defaut ne s'appliquent que si l'utilisateur n'a fait aucun choix
-    // =========================================================================
-    final bool userHasNoSources = profileSources.isEmpty;
-    
-    if (userHasNoSources) {
-      print('AIService: Aucune source utilisateur -> Application des sources par defaut');
-      profileSources = List.from(_defaultSources);
-    }
-    
-    // Ajouter la source de la roue si pas deja presente
-    if (!profileSources.contains(approach)) {
-      profileSources.add(approach);
-    }
-    
-    // Categoriser TOUTES les sources (profil + roue)
-    final categories = _categorizeApproaches(profileSources);
+    print('AIService: Génération pour approche spécifique: ${approachConfig.name}');
 
     // Charger les personnages interdits
     final personnagesInterdits = await CharacterTrackingService.instance.getForbiddenCharactersText();
     
-    // Identifier le motif universel
-    final motifUniversel = _identifyUniversalMotif(reflectionText);
-
-    // Calculer l'age depuis la date de naissance si disponible
-    String ageStr = 'Non renseigne';
-    if (userProfile?.dateNaissance != null) {
-      final now = DateTime.now();
-      int age = now.year - userProfile!.dateNaissance!.year;
-      if (now.month < userProfile!.dateNaissance!.month || 
-          (now.month == userProfile!.dateNaissance!.month && now.day < userProfile!.dateNaissance!.day)) {
-        age--;
-      }
-      ageStr = age.toString();
-    } else if (userProfile?.age != null) {
-      ageStr = userProfile!.age.toString();
-    }
-
-    // =========================================================================
-    // CONSTRUIRE LE PROMPT AVEC UNIQUEMENT LA SOURCE DEMANDEE
-    // Chaque appel traite UNE SEULE source (approche itérative)
-    // =========================================================================
+    // Calculer l'âge
+    String ageStr = _calculateAge(userProfile);
     
-    // Déterminer dans quelle catégorie placer la source demandée
+    // ═══════════════════════════════════════════════════════════════════════
+    // CONSTRUIRE LE PROMPT AVEC UNIQUEMENT LA SOURCE DEMANDÉE
+    // ═══════════════════════════════════════════════════════════════════════
+    
     String religionsStr = 'Aucune';
     String litteraturesStr = 'Aucun';
     String psychologiesStr = 'Aucune';
@@ -429,7 +553,7 @@ class AIService {
         break;
     }
     
-    final prompt = PromptGeneral.build(
+    final prompt = PromptUnifie.build(
       userPrenom: userProfile?.prenom,
       userAge: ageStr,
       userValeursSelectionnees: userProfile?.valeursSelectionnees?.join(', '),
@@ -439,225 +563,56 @@ class AIService {
       declencheur: declencheur,
       souhait: souhait,
       petitPas: petitPas,
-      // CORRECTION: Utilise UNIQUEMENT la source demandée (pas toutes les sources du profil)
       religions: religionsStr,
       litteratures: litteraturesStr,
       psychologies: psychologiesStr,
       philosophies: philosophiesStr,
       philosophes: philosophesStr,
-      historique30Jours: null,
+      historique30Jours: historique30Jours,
       personnagesInterdits: personnagesInterdits,
     );
 
     try {
-      var response = await _callOpenAI(prompt);
+      final response = await _callClaude(prompt);
+      
+      // MODIFIÉ: Vérifier si c'est une erreur API
+      if (response.startsWith('[ERREUR_API]')) {
+        return '❌ ${response.replaceFirst('[ERREUR_API] ', '')}';
+      }
       
       if (response.isEmpty) {
-        return 'Erreur lors de la generation de la reponse. Veuillez reessayer.';
+        return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
       }
       
-      // Controle qualite
-      final controlResult = await _controlResponse(
-        response: response,
-        source: approachConfig.name,
-        motifUniversel: motifUniversel,
-        penseeUtilisateur: reflectionText,
-      );
+      // Extraire et sauvegarder les métadonnées de la figure
+      final figureMeta = _extractFigureMeta(response);
+      await _saveExtractedCharacter(figureMeta);
       
-      if (controlResult.isValid) {
-        await _saveExtractedCharacters(controlResult.extractedCharacters);
-        return controlResult.correctedResponse ?? response;
-      }
-      
-      // Regeneration si necessaire
-      if (controlResult.needsRegeneration) {
-        for (int attempt = 1; attempt <= _maxRegenerationAttempts; attempt++) {
-          print('AIService: Regeneration approche specifique $attempt/$_maxRegenerationAttempts');
-          
-          final constrainedPrompt = '$prompt\n\nCONTRAINTES:\n${controlResult.constraintsToAdd}';
-          response = await _callOpenAI(constrainedPrompt);
-          
-          if (response.isEmpty) continue;
-          
-          final newControlResult = await _controlResponse(
-            response: response,
-            source: approachConfig.name,
-            motifUniversel: motifUniversel,
-            penseeUtilisateur: reflectionText,
-          );
-          
-          if (newControlResult.isValid) {
-            await _saveExtractedCharacters(newControlResult.extractedCharacters);
-            return newControlResult.correctedResponse ?? response;
-          }
-        }
-      }
-      
-      await _saveExtractedCharacters(controlResult.extractedCharacters);
-      return controlResult.correctedResponse ?? response;
+      // Retourner la réponse sans le bloc de métadonnées
+      return _removeMetaBlock(response);
       
     } catch (e) {
-      print('AIService: Erreur generation approche specifique: $e');
-      return 'Erreur lors de la generation de la reponse. Veuillez reessayer.';
+      print('AIService: Erreur génération approche spécifique: $e');
+      return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
     }
   }
 
-  /// Helper pour construire la chaine de sources avec mise en evidence de la source principale
-  String _buildSourceString(List<String> categorySources, ApproachConfig mainApproach, ApproachType targetType) {
-    if (categorySources.isEmpty) {
-      // Si la source de la roue est de ce type, l'utiliser
-      if (mainApproach.type == targetType) {
-        return '${mainApproach.name} (source principale)';
-      }
-      return 'Aucune';
-    }
-    
-    // Si la source de la roue est de ce type, la mettre en evidence
-    if (mainApproach.type == targetType) {
-      final otherSources = categorySources.where((s) => s != mainApproach.name).toList();
-      if (otherSources.isNotEmpty) {
-        return '${mainApproach.name} (source principale), ${otherSources.join(', ')}';
-      }
-      return '${mainApproach.name} (source principale)';
-    }
-    
-    return categorySources.join(', ');
-  }
-
-  /// ==========================================================================
-  /// CONTROLE QUALITE DES REPONSES
-  /// ==========================================================================
-  
-  Future<ControlResult> _controlResponse({
-    required String response,
-    required String source,
-    required String motifUniversel,
-    required String penseeUtilisateur,
-  }) async {
-    final controlPrompt = PromptControl.build(
-      reponseAControler: response,
-      sourceUtilisee: source,
-      motifUniverselAttendu: motifUniversel,
-      penseeUtilisateur: penseeUtilisateur,
-    );
-    
-    try {
-      // Utiliser le system prompt spécifique au contrôle (pas le prompt génératif)
-      final controlResponse = await _callOpenAI(
-        controlPrompt,
-        systemPrompt: PromptSystemControl.content,
-        maxTokens: 2000,
-      );
-      
-      if (controlResponse.isEmpty) {
-        return ControlResult(isValid: true, extractedCharacters: []);
-      }
-      
-      return _parseControlResult(controlResponse, response);
-      
-    } catch (e) {
-      print('AIService: Erreur controle: $e');
-      return ControlResult(isValid: true, extractedCharacters: []);
-    }
-  }
-
-  /// Parser le resultat JSON du controle
-  ControlResult _parseControlResult(String jsonResponse, String originalResponse) {
-    try {
-      var cleanJson = jsonResponse.trim();
-      if (cleanJson.startsWith('```json')) {
-        cleanJson = cleanJson.substring(7);
-      }
-      if (cleanJson.startsWith('```')) {
-        cleanJson = cleanJson.substring(3);
-      }
-      if (cleanJson.endsWith('```')) {
-        cleanJson = cleanJson.substring(0, cleanJson.length - 3);
-      }
-      cleanJson = cleanJson.trim();
-      
-      final data = jsonDecode(cleanJson) as Map<String, dynamic>;
-      
-      final isValid = data['valid'] as bool? ?? true;
-      final problems = (data['problems'] as List<dynamic>?) ?? [];
-      final actions = (data['actions'] as List<dynamic>?) ?? [];
-      final extractedChars = (data['extractedCharacters'] as List<dynamic>?) ?? [];
-      final correctedResponse = data['correctedResponse'] as String?;
-      
-      bool needsRegeneration = false;
-      final constraintsBuffer = StringBuffer();
-      
-      for (final action in actions) {
-        final actionMap = action as Map<String, dynamic>;
-        if (actionMap['type'] == 'REGENERATE') {
-          needsRegeneration = true;
-          constraintsBuffer.writeln('- ${actionMap['detail']}');
-        }
-      }
-      
-      final characters = <Map<String, dynamic>>[];
-      for (final char in extractedChars) {
-        final charMap = char as Map<String, dynamic>;
-        characters.add({
-          'nom': charMap['nom'] ?? '',
-          'source': charMap['source'] ?? '',
-          'reference': charMap['reference'] ?? '',
-          'motifUniversel': charMap['motifUniversel'] ?? '',
-        });
-      }
-      
-      return ControlResult(
-        isValid: isValid,
-        needsRegeneration: needsRegeneration,
-        constraintsToAdd: constraintsBuffer.toString(),
-        extractedCharacters: characters,
-        correctedResponse: correctedResponse ?? (isValid ? originalResponse : null),
-        problems: problems.map((p) => p.toString()).toList(),
-      );
-      
-    } catch (e) {
-      print('AIService: Erreur parsing JSON controle: $e');
-      return ControlResult(
-        isValid: true,
-        extractedCharacters: [],
-        correctedResponse: originalResponse,
-      );
-    }
-  }
-
-  /// Sauvegarder les personnages extraits
-  Future<void> _saveExtractedCharacters(List<Map<String, dynamic>> characters) async {
-    if (characters.isEmpty) return;
-    
-    try {
-      await CharacterTrackingService.instance.saveMultipleCharacters(characters);
-      print('AIService: ${characters.length} personnages sauvegardes');
-    } catch (e) {
-      print('AIService: Erreur sauvegarde personnages: $e');
-    }
-  }
-
-  /// ==========================================================================
-  /// GENERATION PENSEE POSITIVE
-  /// ==========================================================================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GÉNÉRATION PENSÉE POSITIVE
+  // ═══════════════════════════════════════════════════════════════════════════
   
   Future<String> generatePositiveThought({
     UserProfile? userProfile,
     String? penseeOuSituation,
     String? historique7Jours,
   }) async {
-    // =========================================================================
-    // CORRECTION: Utiliser getUserApproaches() qui fonctionne correctement
-    // =========================================================================
+    
     List<String> allSources = await PersistentStorageService.instance.getUserApproaches();
     
-    debugPrint('AIService: Pensee Positive - Sources: ${allSources.length}');
+    debugPrint('AIService: Pensée Positive - Sources: ${allSources.length}');
     
-    // =========================================================================
-    // REGLE: Si AUCUNE source choisie (profil vide), utiliser les sources par defaut
-    // =========================================================================
     if (allSources.isEmpty) {
-      debugPrint('AIService: Pensee Positive - Aucune source -> Application des sources par defaut');
+      debugPrint('AIService: Pensée Positive - Aucune source -> Application des sources par défaut');
       allSources = List.from(_defaultSources);
     }
     
@@ -680,20 +635,7 @@ class AIService {
     );
     
     final categories = _categorizeApproaches(allSources);
-    
-    // Calculer l'age depuis la date de naissance si disponible
-    String ageStr = 'Non renseigne';
-    if (userProfile?.dateNaissance != null) {
-      final now = DateTime.now();
-      int age = now.year - userProfile!.dateNaissance!.year;
-      if (now.month < userProfile!.dateNaissance!.month || 
-          (now.month == userProfile!.dateNaissance!.month && now.day < userProfile!.dateNaissance!.day)) {
-        age--;
-      }
-      ageStr = age.toString();
-    } else if (userProfile?.age != null) {
-      ageStr = userProfile!.age.toString();
-    }
+    String ageStr = _calculateAge(userProfile);
     
     final prompt = PromptPositiveThought.build(
       userPrenom: userProfile?.prenom,
@@ -721,17 +663,145 @@ class AIService {
     );
 
     try {
-      final response = await _callOpenAI(prompt);
+      final response = await _callClaude(prompt, maxTokens: 500);
+      
+      // MODIFIÉ: Vérifier si c'est une erreur API
+      if (response.startsWith('[ERREUR_API]')) {
+        return '❌ ${response.replaceFirst('[ERREUR_API] ', '')}';
+      }
+      
       return response.isNotEmpty 
         ? response 
-        : 'Impossible de generer une pensee positive pour le moment.';
+        : '❌ Impossible de générer une pensée positive pour le moment.';
     } catch (e) {
-      print('AIService: Erreur pensee positive: $e');
-      return 'Impossible de generer une pensee positive pour le moment.';
+      print('AIService: Erreur pensée positive: $e');
+      return '❌ Impossible de générer une pensée positive pour le moment.';
     }
   }
 
-  /// Selection ponderee d'une source
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GÉNÉRATION SYNTHÈSE VOCALE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Générer une synthèse vocale d'un texte
+  /// Utilisé pour condenser une réponse longue en 2-3 phrases
+  /// 
+  /// [model] : Ignoré (utilise le modèle Claude configuré)
+  /// [temperature] : Température pour la génération
+  /// [maxTokens] : Limite de tokens pour la réponse
+  Future<String> generateSynthesis({
+    required String systemPrompt,
+    required String userPrompt,
+    String? model, // Paramètre conservé pour compatibilité, ignoré avec Claude
+    double temperature = 0.3,
+    int maxTokens = 150,
+  }) async {
+    try {
+      final response = await _callClaude(
+        userPrompt,
+        systemPrompt: systemPrompt,
+        maxTokens: maxTokens,
+        temperature: temperature,
+      );
+      
+      // MODIFIÉ: Vérifier si c'est une erreur API
+      if (response.startsWith('[ERREUR_API]')) {
+        throw Exception(response.replaceFirst('[ERREUR_API] ', ''));
+      }
+      
+      if (response.isNotEmpty) {
+        print('✅ Synthèse générée: ${response.length} caractères');
+        return response;
+      } else {
+        throw Exception('Réponse vide');
+      }
+    } catch (e) {
+      print('❌ Erreur requête synthèse: $e');
+      rethrow;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GÉNÉRATION MULTIPLE (PLUSIEURS APPROCHES)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Analyser plusieurs approches
+  Future<Map<String, String>> generateMultipleApproachResponses({
+    required String reflectionText,
+    required ReflectionType reflectionType,
+    required EmotionalState emotionalState,
+    required List<String> selectedApproaches,
+    UserProfile? userProfile,
+    String? declencheur,
+    String? souhait,
+    String? petitPas,
+    int intensiteEmotionnelle = 5,
+    String? historique30Jours,
+  }) async {
+    final responses = <String, String>{};
+    
+    final approachesToProcess = selectedApproaches.take(5).toList();
+    
+    for (final approach in approachesToProcess) {
+      try {
+        final response = await generateApproachSpecificResponse(
+          approach: approach,
+          reflectionText: reflectionText,
+          reflectionType: reflectionType,
+          emotionalState: emotionalState,
+          userProfile: userProfile,
+          declencheur: declencheur,
+          souhait: souhait,
+          petitPas: petitPas,
+          intensiteEmotionnelle: intensiteEmotionnelle,
+          historique30Jours: historique30Jours,
+        );
+        
+        responses[approach] = response;
+      } catch (e) {
+        print('AIService: Erreur pour $approach: $e');
+        responses[approach] = '❌ Une erreur est survenue lors de la génération de cette perspective.';
+      }
+    }
+    
+    return responses;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MÉTHODES UTILITAIRES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Calculer l'âge depuis la date de naissance
+  String _calculateAge(UserProfile? userProfile) {
+    if (userProfile?.dateNaissance != null) {
+      final now = DateTime.now();
+      int age = now.year - userProfile!.dateNaissance!.year;
+      if (now.month < userProfile.dateNaissance!.month || 
+          (now.month == userProfile.dateNaissance!.month && now.day < userProfile.dateNaissance!.day)) {
+        age--;
+      }
+      return age.toString();
+    } else if (userProfile?.age != null) {
+      return userProfile!.age.toString();
+    }
+    return 'Non renseigné';
+  }
+
+  /// Obtenir le nom d'affichage du type de réflexion
+  String _getTypeDisplayName(ReflectionType type) {
+    switch (type) {
+      case ReflectionType.thought:
+        return 'Pensée';
+      case ReflectionType.situation:
+        return 'Situation émotionnelle';
+      case ReflectionType.existential:
+        return 'Question existentielle';
+      case ReflectionType.dilemma:
+        return 'Dilemme';
+    }
+  }
+
+  /// Sélection pondérée d'une source (favorise les moins utilisées)
   String _selectWeightedSource(List<String> sources) {
     if (sources.isEmpty) return '';
     if (sources.length == 1) return sources[0];
@@ -769,205 +839,23 @@ class AIService {
     return sources[0];
   }
 
-  /// Appel a l'API OpenAI avec séparation System/User prompts
-  /// 
-  /// [userPrompt] : La demande spécifique (prompt_general, prompt_positive_thought, etc.)
-  /// [systemPrompt] : L'identité de l'IA (utilise PromptSystem.content par défaut)
-  /// [maxTokens] : Limite de tokens pour la réponse (4096 par défaut, pas de restriction artificielle)
-  Future<String> _callOpenAI(
-    String userPrompt, {
-    String? systemPrompt,
-    int maxTokens = 4096,
-  }) async {
-    try {
-      // Utiliser le system prompt par défaut si non fourni
-      final effectiveSystemPrompt = systemPrompt ?? PromptSystem.content;
-      
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_apiKey',
-        },
-        body: jsonEncode({
-          'model': _model,
-          'messages': [
-            {
-              'role': 'system',
-              'content': effectiveSystemPrompt,
-            },
-            {
-              'role': 'user',
-              'content': userPrompt,
-            }
-          ],
-          'max_tokens': maxTokens,
-          'temperature': 0.7,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices']?[0]?['message']?['content'] ?? '';
-        return content.trim();
-      } else {
-        print('AIService: Erreur API OpenAI: ${response.statusCode}');
-        print('AIService: Body: ${response.body}');
-        return '';
-      }
-    } catch (e) {
-      print('AIService: Erreur requete OpenAI: $e');
-      return '';
-    }
-  }
-
-  /// Obtenir le nom d'affichage du type de reflexion
-  String _getTypeDisplayName(ReflectionType type) {
-    switch (type) {
-      case ReflectionType.thought:
-        return 'Pensee';
-      case ReflectionType.situation:
-        return 'Situation emotionnelle';
-      case ReflectionType.existential:
-        return 'Question existentielle';
-      case ReflectionType.dilemma:
-        return 'Dilemme';
-    }
-  }
-
-  /// Analyser plusieurs approches
-  Future<Map<String, String>> generateMultipleApproachResponses({
-    required String reflectionText,
-    required ReflectionType reflectionType,
-    required EmotionalState emotionalState,
-    required List<String> selectedApproaches,
-    UserProfile? userProfile,
-    String? declencheur,
-    String? souhait,
-    String? petitPas,
-    int intensiteEmotionnelle = 5,
-  }) async {
-    final responses = <String, String>{};
-    
-    final approachesToProcess = selectedApproaches.take(5).toList();
-    
-    for (final approach in approachesToProcess) {
-      try {
-        final response = await generateApproachSpecificResponse(
-          approach: approach,
-          reflectionText: reflectionText,
-          reflectionType: reflectionType,
-          emotionalState: emotionalState,
-          userProfile: userProfile,
-          declencheur: declencheur,
-          souhait: souhait,
-          petitPas: petitPas,
-          intensiteEmotionnelle: intensiteEmotionnelle,
-        );
-        
-        responses[approach] = response;
-      } catch (e) {
-        print('AIService: Erreur pour $approach: $e');
-        responses[approach] = 'Une erreur est survenue lors de la generation de cette perspective.';
-      }
-    }
-    
-    return responses;
-  }
-
   /// Valider la configuration de l'API
   bool isConfigured() {
-    return _apiKey != 'YOUR_OPENAI_API_KEY' && _apiKey.isNotEmpty;
+    return _apiKey != 'VOTRE_CLE_API_ANTHROPIC' && _apiKey.isNotEmpty;
   }
 
-  /// Mettre a jour la cle API
+  /// Mettre à jour la clé API
   void setApiKey(String apiKey) {
     _apiKey = apiKey;
   }
 
-  /// Recuperer l'historique d'utilisation des sources
+  /// Récupérer l'historique d'utilisation des sources
   Map<String, int> getSourceUsageHistory() {
     return Map.from(_sourceUsageHistory);
   }
 
-  /// Reinitialiser l'historique d'utilisation des sources
+  /// Réinitialiser l'historique d'utilisation des sources
   void resetSourceUsageHistory() {
     _sourceUsageHistory.clear();
   }
-  
-  // ═══════════════════════════════════════════════════════════════════════════
-  // AJOUTER CETTE MÉTHODE DANS lib/services/ai_service.dart
-  // À insérer AVANT la méthode isConfigured() (vers ligne 496)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  /// Générer une synthèse vocale d'un texte
-  /// Utilisé pour condenser une réponse longue en 2-3 phrases
-  Future<String> generateSynthesis({
-    required String systemPrompt,
-    required String userPrompt,
-    String model = 'gpt-4o-mini',
-    double temperature = 0.3,
-    int maxTokens = 150,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_apiKey',
-        },
-        body: jsonEncode({
-          'model': model,
-          'messages': [
-            {
-              'role': 'system',
-              'content': systemPrompt,
-            },
-            {
-              'role': 'user',
-              'content': userPrompt,
-            }
-          ],
-          'max_tokens': maxTokens,
-          'temperature': temperature,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices']?[0]?['message']?['content'] ?? '';
-        print('✅ Synthèse générée: ${content.length} caractères');
-        return content.trim();
-      } else {
-        print('❌ Erreur API synthèse: ${response.statusCode} - ${response.body}');
-        throw Exception('Erreur API: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('❌ Erreur requête synthèse: $e');
-      rethrow;
-    }
-  }
 }
-
-/// ==========================================================================
-/// CLASSE RESULTAT DU CONTROLE
-/// ==========================================================================
-
-class ControlResult {
-  final bool isValid;
-  final bool needsRegeneration;
-  final String constraintsToAdd;
-  final List<Map<String, dynamic>> extractedCharacters;
-  final String? correctedResponse;
-  final List<String> problems;
-
-  ControlResult({
-    required this.isValid,
-    this.needsRegeneration = false,
-    this.constraintsToAdd = '',
-    required this.extractedCharacters,
-    this.correctedResponse,
-    this.problems = const [],
-  });
-}
-
