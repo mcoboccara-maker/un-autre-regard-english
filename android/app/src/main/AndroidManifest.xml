@@ -8,6 +8,20 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
                      android:maxSdkVersion="32" />
     
+    <!-- Queries pour Android 11+ (API 30+) - Permet d'ouvrir des apps externes -->
+    <queries>
+        <!-- Pour ouvrir l'app email -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+        <!-- Pour ouvrir des URLs dans le navigateur -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+    
     <application
         android:label="Un Autre Regard"
         android:name="${applicationName}"

@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../services/complete_auth_service.dart';
-import '../services/ai_service.dart'; // AJOUT: Pour clearUserData lors du logout
 import '../widgets/wisdom_wheel_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -113,158 +112,110 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     await _loadProfileSources();
   }
   
-	Future<void> _loadProfileSources() async {
-      try {
-        // ═══════════════════════════════════════════════════════════════════════
-        // MODE INVITÉ : Réinitialiser les sources UNE SEULE FOIS par session
-        // ═══════════════════════════════════════════════════════════════════════
-        if (_isGuest && !_guestSourcesAlreadyCleared) {
-          print('👤 Mode invité: réinitialisation des sources (première fois)');
-          await _clearGuestSources();
-          _guestSourcesAlreadyCleared = true;
-        }
+  /// Charger les sources du profil utilisateur
+  Future<void> _loadProfileSources() async {
+    try {
+      // ═══════════════════════════════════════════════════════════════════════
+      // MODE INVITÉ : Réinitialiser les sources UNE SEULE FOIS par session
+      // ═══════════════════════════════════════════════════════════════════════
+      if (_isGuest && !_guestSourcesAlreadyCleared) {
+        print('👤 Mode invité: réinitialisation des sources (première fois)');
+        await _clearGuestSources();
+        _guestSourcesAlreadyCleared = true;  // Ne plus réinitialiser jusqu'à déconnexion
+      }
       
-        final profileData = await CompleteAuthService.instance.getProfile();
-        if (profileData != null) {
-          // ═══════════════════════════════════════════════════════════════════════
-          // SOURCES PAR DÉFAUT (référence)
-          // ═══════════════════════════════════════════════════════════════════════
-          const defaultSourcesList = ['aristote', 'existentialisme', 'realisme', 'schemas_young'];
-          final defaultSourcesSet = defaultSourcesList.toSet();
+      final profileData = await CompleteAuthService.instance.getProfile();
+      if (profileData != null) {
+        final List<String> sources = [];
+        sources.addAll(List<String>.from(profileData['religionsSelectionnees'] ?? []));
+        sources.addAll(List<String>.from(profileData['courantsLitteraires'] ?? []));
+        sources.addAll(List<String>.from(profileData['approchesPsychologiques'] ?? []));
+        sources.addAll(List<String>.from(profileData['courantsPhilosophiques'] ?? []));
+        sources.addAll(List<String>.from(profileData['philosophesSelectionnes'] ?? []));
         
-          // Charger les sources de chaque catégorie
-          final religions = List<String>.from(profileData['religionsSelectionnees'] ?? []);
-          final litterature = List<String>.from(profileData['courantsLitteraires'] ?? []);
-          final psycho = List<String>.from(profileData['approchesPsychologiques'] ?? []);
-          final philo = List<String>.from(profileData['courantsPhilosophiques'] ?? []);
-          final philosophes = List<String>.from(profileData['philosophesSelectionnes'] ?? []);
+        // ═══════════════════════════════════════════════════════════════════════
+        // SOURCES PAR DÉFAUT
+        // ═══════════════════════════════════════════════════════════════════════
+        const defaultSources = [
+          'aristote',           // Philosophe par défaut
+          'existentialisme',    // Courant philosophique par défaut
+          'realisme',           // Courant littéraire par défaut
+          'schemas_young',      // Approche psychologique par défaut
+        ];
         
-          // Toutes les sources du profil
-          final List<String> allProfileSources = [
-            ...religions,
-            ...litterature,
-            ...psycho,
-            ...philo,
-            ...philosophes,
-          ];
+        // DEBUG: Afficher les sources chargées
+        print('📋 Sources brutes du profil: $sources');
         
-          // ═══════════════════════════════════════════════════════════════════════
-          // SÉPARER: Sources utilisateur vs Sources par défaut
-          // ═══════════════════════════════════════════════════════════════════════
-          final userSources = allProfileSources.where((s) => !defaultSourcesSet.contains(s)).toList();
-          final defaultInProfile = allProfileSources.where((s) => defaultSourcesSet.contains(s)).toList();
-        
-          print('📋 DEBUG Sources:');
-          print('   Total profil: ${allProfileSources.length} → $allProfileSources');
-          print('   User (non défaut): ${userSources.length} → $userSources');
-          print('   Défaut présentes: ${defaultInProfile.length} → $defaultInProfile');
-        
-          if (userSources.isEmpty) {
-            // ═══════════════════════════════════════════════════════════════════
-            // CAS 1: AUCUNE source utilisateur → garder/ajouter les sources par défaut
-            // ═══════════════════════════════════════════════════════════════════
-          
-            bool needsSave = false;
-            if (!litterature.contains('realisme')) {
-              litterature.add('realisme');
-              needsSave = true;
-            }
-            if (!psycho.contains('schemas_young')) {
-              psycho.add('schemas_young');
-              needsSave = true;
-            }
-            if (!philo.contains('existentialisme')) {
-              philo.add('existentialisme');
-              needsSave = true;
-            }
-            if (!philosophes.contains('aristote')) {
-              philosophes.add('aristote');
-              needsSave = true;
-            }
-          
-            if (needsSave) {
-              profileData['courantsLitteraires'] = litterature;
-              profileData['approchesPsychologiques'] = psycho;
-              profileData['courantsPhilosophiques'] = philo;
-              profileData['philosophesSelectionnes'] = philosophes;
-              await CompleteAuthService.instance.saveProfile(profileData);
-              print('📌 Sources par défaut ajoutées au profil');
-            }
-          
-            setState(() {
-              _profileSources = List.from(defaultSourcesList);
-              _isUsingDefaultSources = true;
-            });
-          
-            print('📌 Utilisation des ${_profileSources.length} sources par défaut');
-          
-          } else {
-            // ═══════════════════════════════════════════════════════════════════
-            // CAS 2: L'utilisateur a des sources perso → SUPPRIMER TOUTES les sources par défaut
-            // ═══════════════════════════════════════════════════════════════════
-          
-            bool needsSave = false;
-          
-            // Retirer TOUTES les sources par défaut du profil (peu importe la catégorie)
-            if (litterature.contains('realisme')) {
-              litterature.remove('realisme');
-              needsSave = true;
-            }
-            if (psycho.contains('schemas_young')) {
-              psycho.remove('schemas_young');
-              needsSave = true;
-            }
-            if (philo.contains('existentialisme')) {
-              philo.remove('existentialisme');
-              needsSave = true;
-            }
-            if (philosophes.contains('aristote')) {
-              philosophes.remove('aristote');
-              needsSave = true;
-            }
-          
-            if (needsSave) {
-              profileData['courantsLitteraires'] = litterature;
-              profileData['approchesPsychologiques'] = psycho;
-              profileData['courantsPhilosophiques'] = philo;
-              profileData['philosophesSelectionnes'] = philosophes;
-              await CompleteAuthService.instance.saveProfile(profileData);
-              print('🧹 Sources par défaut retirées du profil');
-            }
-          
-            // Liste finale = UNIQUEMENT les sources utilisateur
-            final List<String> finalSources = [
-              ...religions,
-              ...litterature,
-              ...psycho,
-              ...philo,
-              ...philosophes,
-            ];
-          
-            setState(() {
-              _profileSources = finalSources;
-              _isUsingDefaultSources = false;
-            });
-          
-            print('✅ ${_profileSources.length} sources utilisateur: $_profileSources');
-          }
-        
+        if (sources.isEmpty) {
+          // CORRECTION: Sauvegarder les sources par défaut dans le profil
+          // pour que AIService puisse les lire
+          await _saveDefaultSourcesToProfile(defaultSources);
+          sources.addAll(defaultSources);
+          _isUsingDefaultSources = true;
+          print('📌 Sources par défaut appliquées ET sauvegardées: ${sources.length}');
         } else {
-          // Aucun profil → sources par défaut
-          setState(() {
-            _profileSources = ['aristote', 'existentialisme', 'realisme', 'schemas_young'];
-            _isUsingDefaultSources = true;
-          });
-          print('📌 Pas de profil, sources par défaut appliquées');
+          // ═══════════════════════════════════════════════════════════════════════
+          // CORRECTION BUG : Si le quiz d'orientation est complété, les sources ont
+          // été CHOISIES explicitement par l'utilisateur → ne pas nettoyer !
+          // ═══════════════════════════════════════════════════════════════════════
+          final orientationCompleted = profileData['orientationCompleted'] == true;
+          
+          if (orientationCompleted) {
+            // L'utilisateur a fait le quiz et choisi ses sources → les garder telles quelles
+            _isUsingDefaultSources = false;
+            print('✅ Quiz complété: ${sources.length} sources choisies par l\'utilisateur');
+          } else {
+            // Quiz pas fait → vérifier si ce sont les sources par défaut
+            final sortedSources = List<String>.from(sources)..sort();
+            final sortedDefaults = List<String>.from(defaultSources)..sort();
+            final isExactlyDefaults = sortedSources.length == sortedDefaults.length &&
+                sortedSources.every((s) => sortedDefaults.contains(s));
+            
+            if (isExactlyDefaults) {
+              _isUsingDefaultSources = true;
+              print('📌 Sources par défaut détectées: ${sources.length}');
+            } else {
+              // Quiz pas fait mais sources différentes des défauts (ajout manuel via profil)
+              _isUsingDefaultSources = false;
+              print('📋 Sources personnalisées (sans quiz): ${sources.length}');
+            }
+          }
         }
-      } catch (e) {
-        print('⚠️ Erreur chargement sources profil: $e');
+        
         setState(() {
-          _profileSources = ['aristote', 'existentialisme', 'realisme', 'schemas_young'];
+          _profileSources = sources;
+        });
+        
+        print('🔍 Sources du profil chargées: ${_profileSources.length}');
+      } else {
+        // Aucun profil → appliquer les sources par défaut
+        const defaultSources = [
+          'aristote',
+          'existentialisme',
+          'realisme',
+          'schemas_young',
+        ];
+        
+        setState(() {
+          _profileSources = defaultSources;
           _isUsingDefaultSources = true;
         });
+        
+        print('📌 Pas de profil, sources par défaut appliquées');
       }
+    } catch (e) {
+      print('⚠️ Erreur chargement sources profil: $e');
+      setState(() {
+        _profileSources = [
+          'aristote',
+          'existentialisme',
+          'realisme',
+          'schemas_young',
+        ];
+        _isUsingDefaultSources = true;
+      });
     }
+  }
   
   /// Supprimer les sources par défaut du profil
   Future<void> _removeDefaultSourcesFromProfile() async {
@@ -1754,8 +1705,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Navigator.pop(ctx);
               // Réinitialiser le flag pour la prochaine connexion invité
               _guestSourcesAlreadyCleared = false;
-              // AJOUT: Effacer les données en mémoire de AIService
-              AIService.instance.clearUserData();
               await CompleteAuthService.instance.logout();
               if (mounted) {
                 Navigator.pushNamedAndRemoveUntil(context, '/welcome', (r) => false);

@@ -26,7 +26,7 @@ import '../models/reflection.dart';
 import '../models/emotional_state.dart';
 import '../services/ai_service.dart';
 import '../services/tts_service.dart';
-import '../config/prompts/prompt_synthese.dart';
+import '../config/prompts/fr/prompt_synthese.dart';
 
 class WisdomWheelScreen extends StatefulWidget {
   const WisdomWheelScreen({super.key});
@@ -110,6 +110,12 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
   bool _isSpeakingFull = false;
   bool _isSpeakingSynthesis = false;
   
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: Approfondissement
+  // ═══════════════════════════════════════════════════════════════════════════
+  bool _isDeepening = false;
+  String? _deepenedResponse;
+  
   // Scroll controller pour la vue résultat
   final ScrollController _scrollController = ScrollController();
 
@@ -175,6 +181,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       _selectedSource = null;
       _generatedResponse = null;
       _synthesis = null;
+      _deepenedResponse = null;  // ✅ NOUVEAU: Reset approfondissement
       _errorMessage = null;
     });
     
@@ -416,6 +423,67 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur lors de la synthèse', style: GoogleFonts.inter()),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: APPROFONDISSEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Future<void> _deepen() async {
+    if (_generatedResponse == null || _selectedSource == null) return;
+    if (_isDeepening) return;
+    
+    setState(() {
+      _isDeepening = true;
+    });
+    
+    try {
+      // Extraire le nom de la figure depuis FIGURE_META si possible
+      String figureNom = 'Figure';
+      final metaMatch = RegExp(r'\[FIGURE_META\][\s\S]*?nom:\s*([^\n]+)[\s\S]*?\[/FIGURE_META\]')
+          .firstMatch(_generatedResponse!);
+      if (metaMatch != null) {
+        figureNom = metaMatch.group(1)?.trim() ?? 'Figure';
+      }
+      
+      final deepenedResponse = await AIService.instance.generateDeepening(
+        penseeOriginale: _thoughtController.text.trim(),
+        reponseCourte: _generatedResponse!,
+        sourceNom: _selectedSource!.name,
+        figureNom: figureNom,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _deepenedResponse = deepenedResponse;
+          _isDeepening = false;
+        });
+        
+        // Scroll vers le bas pour voir l'approfondissement
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      print('❌ Erreur approfondissement: $e');
+      if (mounted) {
+        setState(() {
+          _isDeepening = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de l\'approfondissement: $e', style: GoogleFonts.inter()),
             backgroundColor: Colors.red[600],
           ),
         );
@@ -1173,6 +1241,16 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                 
                 const SizedBox(height: 16),
                 
+                // ═══════════════════════════════════════════════════════════════
+                // NOUVEAU: Bouton Approfondir + Affichage approfondissement
+                // ═══════════════════════════════════════════════════════════════
+                if (_deepenedResponse == null)
+                  _buildDeepenButton()
+                else
+                  _buildDeepenedCard(),
+                
+                const SizedBox(height: 16),
+                
                 // Boutons lecture vocale
                 _buildVoiceButtons(),
                 
@@ -1387,6 +1465,130 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
     );
   }
   
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: Bouton Approfondir
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Widget _buildDeepenButton() {
+    return GestureDetector(
+      onTap: _isDeepening ? null : _deepen,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: _isDeepening
+                ? [Colors.grey[400]!, Colors.grey[500]!]
+                : [_selectedSource!.color, _selectedSource!.color.withOpacity(0.8)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: (_isDeepening ? Colors.grey : _selectedSource!.color).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isDeepening)
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                ),
+              )
+            else
+              const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              _isDeepening ? 'Approfondissement en cours...' : 'Approfondir cette perspective',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: Carte d'affichage de l'approfondissement
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Widget _buildDeepenedCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _selectedSource!.color.withOpacity(0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _selectedSource!.color.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header approfondissement
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _selectedSource!.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: _selectedSource!.color,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Approfondissement',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _selectedSource!.color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 14),
+          
+          // Contenu
+          Text(
+            _deepenedResponse ?? '',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: const Color(0xFF1E293B),
+              height: 1.7,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
   Widget _buildVoiceButtons() {
     return Row(
       children: [
@@ -1494,6 +1696,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         setState(() {
           _generatedResponse = null;
           _synthesis = null;
+          _deepenedResponse = null;  // ✅ NOUVEAU: Reset approfondissement
           _selectedSource = null;
           _thoughtController.clear();
           _currentRotation = 0;

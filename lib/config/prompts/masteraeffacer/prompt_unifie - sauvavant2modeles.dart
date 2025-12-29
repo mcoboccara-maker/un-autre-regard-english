@@ -513,7 +513,7 @@ la même figure à l'utilisateur pendant 30 jours.
 
 ════════════════════════════════════════════════════════════════════════════════
 
-Réponds en français.
+Réponds dans la langue utilisée par l'utilisateur.
 ''';
   }
 }

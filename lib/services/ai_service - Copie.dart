@@ -8,15 +8,14 @@ import '../models/emotional_state.dart';
 import '../models/user_profile.dart';
 import '../services/persistent_storage_service.dart';
 import '../services/character_tracking_service.dart';
-import '../services/language_detector.dart'; // NOUVEAU: Détection de langue
 import '../config/approach_config.dart';
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMPORTS PROMPTS MULTILINGUES
+// IMPORTS UNIFIÉS - Remplacent les 4 anciens fichiers prompts
 // ═══════════════════════════════════════════════════════════════════════════════
-import '../config/prompts/prompt_selector.dart'; // NOUVEAU: Sélecteur multilingue
-// Imports directs pour les cas où on n'a pas de texte utilisateur
-import '../config/prompts/fr/prompt_system_unifie.dart';
-import '../config/prompts/fr/prompt_synthese.dart';
+import '../config/prompts/prompt_unifie.dart';
+import '../config/prompts/prompt_system_unifie.dart';
+import '../config/prompts/prompt_positive_thought.dart';
+import '../config/prompts/prompt_approfondissement.dart'; // NOUVEAU
 
 /// SERVICE IA - VERSION CLAUDE (ANTHROPIC)
 /// 
@@ -427,7 +426,6 @@ class AIService {
   // ═══════════════════════════════════════════════════════════════════════════
   // GÉNÉRATION UNIVERSELLE (TOUTES LES SOURCES DU PROFIL)
   // Version simplifiée : 1 seul appel API, auto-contrôle intégré
-  // MODIFIÉ: Utilise PromptSelector pour la détection automatique de langue
   // ═══════════════════════════════════════════════════════════════════════════
   
   Future<String> generateUniversalResponse({
@@ -454,18 +452,10 @@ class AIService {
     String ageStr = _calculateAge(userProfile);
     
     // ═══════════════════════════════════════════════════════════════════════
-    // NOUVEAU: Réinitialiser le cache de langue pour cette nouvelle génération
-    // ═══════════════════════════════════════════════════════════════════════
-    PromptSelector.resetCache();
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // CONSTRUIRE LE PROMPT UNIFIÉ MULTILINGUE
-    // Le PromptSelector détecte la langue du reflectionText et retourne
-    // le prompt dans la langue appropriée (fr, en, ou he)
+    // CONSTRUIRE LE PROMPT UNIFIÉ (remplace prompt_general + prompt_control)
     // ═══════════════════════════════════════════════════════════════════════
     
-    final prompt = PromptSelector.buildUnifiedPrompt(
-      userText: reflectionText,  // NOUVEAU: texte pour détection de langue
+    final prompt = PromptUnifie.build(
       userPrenom: userProfile?.prenom,
       userAge: ageStr,
       userValeursSelectionnees: userProfile?.valeursSelectionnees?.join(', '),
@@ -491,10 +481,6 @@ class AIService {
       historique30Jours: historique30Jours,
       personnagesInterdits: personnagesInterdits,
     );
-    
-    // NOUVEAU: Récupérer le system prompt dans la langue détectée
-    final systemPrompt = PromptSelector.getSystemPrompt(reflectionText);
-    print('AIService: Langue détectée: ${PromptSelector.currentLanguageName}');
 
     try {
       // ═══════════════════════════════════════════════════════════════════════
@@ -504,7 +490,6 @@ class AIService {
       
       final response = await _callClaude(
         prompt,
-        systemPrompt: systemPrompt,  // NOUVEAU: system prompt multilingue
         maxTokens: 800,
         useQualityModel: true, // Génération universelle = qualité
       );
@@ -534,7 +519,6 @@ class AIService {
   // ═══════════════════════════════════════════════════════════════════════════
   // GÉNÉRATION POUR APPROCHE SPÉCIFIQUE (ROUE DU HASARD)
   // MODIFIÉ: Utilise Sonnet pour spiritualités, Haiku pour le reste
-  // MODIFIÉ: Utilise PromptSelector pour la détection automatique de langue
   // ═══════════════════════════════════════════════════════════════════════════
   
   Future<String> generateApproachSpecificResponse({
@@ -574,9 +558,6 @@ class AIService {
     // Calculer l'âge
     String ageStr = _calculateAge(userProfile);
     
-    // NOUVEAU: Réinitialiser le cache de langue pour cette nouvelle génération
-    PromptSelector.resetCache();
-    
     // ═══════════════════════════════════════════════════════════════════════
     // CONSTRUIRE LE PROMPT AVEC UNIQUEMENT LA SOURCE DEMANDÉE
     // ═══════════════════════════════════════════════════════════════════════
@@ -605,9 +586,7 @@ class AIService {
         break;
     }
     
-    // MODIFIÉ: Utilise PromptSelector pour le prompt multilingue
-    final prompt = PromptSelector.buildUnifiedPrompt(
-      userText: reflectionText,  // NOUVEAU: texte pour détection de langue
+    final prompt = PromptUnifie.build(
       userPrenom: userProfile?.prenom,
       userAge: ageStr,
       userValeursSelectionnees: userProfile?.valeursSelectionnees?.join(', '),
@@ -623,10 +602,6 @@ class AIService {
       historique30Jours: historique30Jours,
       personnagesInterdits: personnagesInterdits,
     );
-    
-    // NOUVEAU: Récupérer le system prompt dans la langue détectée
-    final systemPrompt = PromptSelector.getSystemPrompt(reflectionText);
-    print('AIService: Langue détectée: ${PromptSelector.currentLanguageName}');
 
     try {
       // NOUVEAU: Déterminer le modèle selon la source
@@ -635,9 +610,8 @@ class AIService {
       
       final response = await _callClaude(
         prompt,
-        systemPrompt: systemPrompt,  // NOUVEAU: system prompt multilingue
-        maxTokens: 800,
-        useQualityModel: useQuality,
+        maxTokens: 800,                    // MODIFIÉ: 800 au lieu de 4096
+        useQualityModel: useQuality,       // NOUVEAU: choix dynamique du modèle
       );
       
       // MODIFIÉ: Vérifier si c'est une erreur API
@@ -669,7 +643,6 @@ class AIService {
 
   /// Génère un approfondissement d'une perspective
   /// Utilise toujours le modèle de qualité (Sonnet)
-  /// MODIFIÉ: Utilise PromptSelector pour la détection automatique de langue
   Future<String> generateDeepening({
     required String penseeOriginale,
     required String reponseCourte,
@@ -678,26 +651,16 @@ class AIService {
   }) async {
     print('AIService: Approfondissement pour $sourceNom (figure: $figureNom)');
     
-    // NOUVEAU: Réinitialiser le cache de langue
-    PromptSelector.resetCache();
-    
-    // MODIFIÉ: Utilise PromptSelector pour le prompt multilingue
-    final prompt = PromptSelector.buildDeepeningPrompt(
-      userText: penseeOriginale,  // NOUVEAU: texte pour détection de langue
+    final prompt = PromptApprofondissement.build(
       penseeOriginale: penseeOriginale,
       reponseCourte: reponseCourte,
       sourceNom: sourceNom,
       figureNom: figureNom,
     );
     
-    // NOUVEAU: Récupérer le system prompt dans la langue détectée
-    final systemPrompt = PromptSelector.getSystemPrompt(penseeOriginale);
-    print('AIService: Langue détectée: ${PromptSelector.currentLanguageName}');
-    
     try {
       final response = await _callClaude(
         prompt,
-        systemPrompt: systemPrompt,  // NOUVEAU: system prompt multilingue
         maxTokens: 1500,           // Plus long pour l'approfondissement
         useQualityModel: true,     // Toujours Sonnet pour la qualité
       );
@@ -723,7 +686,6 @@ class AIService {
   // ═══════════════════════════════════════════════════════════════════════════
   // GÉNÉRATION PENSÉE POSITIVE
   // ═══════════════════════════════════════════════════════════════════════════
-  // MODIFIÉ: Utilise PromptSelector pour la détection automatique de langue
   
   Future<String> generatePositiveThought({
     UserProfile? userProfile,
@@ -761,16 +723,7 @@ class AIService {
     final categories = _categorizeApproaches(allSources);
     String ageStr = _calculateAge(userProfile);
     
-    // NOUVEAU: Déterminer le texte de référence pour la langue
-    // Si historique disponible, utiliser le premier élément comme référence
-    final langReference = historique7Jours ?? penseeOuSituation ?? 'fr';
-    
-    // NOUVEAU: Réinitialiser le cache de langue
-    PromptSelector.resetCache();
-    
-    // MODIFIÉ: Utilise PromptSelector pour le prompt multilingue
-    final prompt = PromptSelector.buildPositiveThoughtPrompt(
-      userText: langReference,  // NOUVEAU: texte pour détection de langue
+    final prompt = PromptPositiveThought.build(
       userPrenom: userProfile?.prenom,
       userAge: ageStr,
       userValeursSelectionnees: userProfile?.valeursSelectionnees?.join(', '),
@@ -794,17 +747,12 @@ class AIService {
       penseeOuSituation: penseeOuSituation,
       historique7Jours: historique7Jours,
     );
-    
-    // NOUVEAU: Récupérer le system prompt dans la langue détectée
-    final systemPrompt = PromptSelector.getSystemPrompt(langReference);
-    print('AIService: Langue détectée pour pensée positive: ${PromptSelector.currentLanguageName}');
 
     try {
       final response = await _callClaude(
-        prompt,
-        systemPrompt: systemPrompt,  // NOUVEAU: system prompt multilingue
+        prompt, 
         maxTokens: 500,
-        useQualityModel: _requiresQualityModel(selectedSource),
+        useQualityModel: _requiresQualityModel(selectedSource), // NOUVEAU: choix dynamique
       );
       
       // MODIFIÉ: Vérifier si c'est une erreur API
@@ -1000,18 +948,5 @@ class AIService {
   /// Réinitialiser l'historique d'utilisation des sources
   void resetSourceUsageHistory() {
     _sourceUsageHistory.clear();
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RESET COMPLET LORS DU LOGOUT
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  /// Réinitialiser toutes les données utilisateur (appelé lors du logout)
-  /// IMPORTANT: Doit être appelé lors de chaque déconnexion pour éviter
-  /// que les sources de la session précédente persistent en mémoire
-  void clearUserData() {
-    _userApproaches = [];
-    _sourceUsageHistory.clear();
-    print('AIService: Données utilisateur effacées (logout)');
   }
 }

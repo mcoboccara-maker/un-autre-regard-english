@@ -15,13 +15,15 @@ import '../../services/email_service.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/brain_gestation_widget.dart';
 import '../../services/tts_service.dart';
-import '../../config/prompts/prompt_synthese.dart';
+import '../../config/prompts/fr/prompt_synthese.dart';
 
 /// ECRAN STREAMING DES RESULTATS - VERSION FUSIONNEE
 /// 
 /// Fusionne results_generation_step.dart et results_display_screen.dart
 /// Affiche les cartes AU FUR ET A MESURE de leur génération
 /// Inclut le système d'évaluation (note 1-10 + commentaire)
+/// 
+/// VERSION 2.0 : Ajout approfondissement + relance erreurs + partage évaluation
 class StreamingResultsScreen extends StatefulWidget {
   final String reflectionText;
   final String? declencheur;
@@ -84,6 +86,19 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   final Map<String, String> _syntheses = {};           // Synthèses générées
   final Map<String, bool> _isGeneratingSynthesis = {}; // État de génération
   String? _currentSpeakingKey;                          // Clé en cours de lecture
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: APPROFONDISSEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
+  final Map<String, bool> _isDeepening = {};           // État d'approfondissement en cours
+  final Map<String, String> _deepenedResponses = {};   // Réponses approfondies
+  
+  // NOUVEAU: Partage d'évaluation
+  final Map<String, bool> _evaluationShared = {};      // Évaluations partagées
+  
+  // NOUVEAU: Compteur de relance erreurs
+  int _errorRetryCount = 0;
+  static const int _maxErrorRetries = 1;
   
   @override
   void initState() {
@@ -237,6 +252,67 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       
       // Sauvegarder les évaluations initiales (vides) localement
       await _saveEvaluationsLocally();
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // NOUVEAU: Relancer les sources en erreur (une seule fois)
+      // ═══════════════════════════════════════════════════════════════════════
+      if (_errorRetryCount < _maxErrorRetries) {
+        final errorSources = _status.entries
+            .where((e) => e.value == 'error')
+            .map((e) => e.key)
+            .toList();
+        
+        if (errorSources.isNotEmpty) {
+          _errorRetryCount++;
+          print('🔄 Relance des ${errorSources.length} source(s) en erreur...');
+          
+          for (final approachNameOrKey in errorSources) {
+            // Trouver la configuration de l'approche
+            ApproachConfig? approach;
+            try {
+              approach = ApproachCategories.allApproaches
+                  .firstWhere((a) => a.name == approachNameOrKey || a.key == approachNameOrKey);
+            } catch (e) {
+              continue;
+            }
+            
+            final approachKey = approach.key;
+            
+            setState(() {
+              _status[approachNameOrKey] = 'generating';
+            });
+            
+            try {
+              print('🔄 Relance pour: ${approach.name}');
+              
+              final response = await AIService.instance.generateApproachSpecificResponse(
+                approach: approachKey,
+                reflectionText: widget.reflectionText,
+                reflectionType: widget.reflectionType,
+                emotionalState: widget.emotionalState,
+                userProfile: _userProfile,
+                declencheur: widget.declencheur,
+                souhait: widget.souhait,
+                petitPas: widget.petitPas,
+                intensiteEmotionnelle: _calculateEmotionalIntensity(),
+              );
+              
+              setState(() {
+                _responses[approachKey] = response;
+                _status[approachNameOrKey] = 'completed';
+              });
+              
+              print('✅ Relance réussie pour: ${approach.name}');
+              
+            } catch (e) {
+              print('❌ Échec relance pour ${approach.name}: $e');
+              setState(() {
+                _status[approachNameOrKey] = 'error';
+              });
+            }
+          }
+        }
+      }
       
     } catch (e) {
       print('❌ Erreur de génération: $e');
@@ -515,14 +591,15 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   
   /// Scroll vers une carte spécifique par sa clé
   void _scrollToCard(String cardKey) {
-    Future.delayed(const Duration(milliseconds: 300), () {
+    // Délai augmenté pour attendre la fin de l'animation (fadeIn 200ms + slideY)
+    Future.delayed(const Duration(milliseconds: 600), () {
       final key = _cardKeys[cardKey];
       if (key?.currentContext != null) {
         Scrollable.ensureVisible(
           key!.currentContext!,
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeOut,
-          alignment: 0.0, // 0.0 = haut de l'écran
+          alignment: 0.05, // Petite marge pour voir le titre complet
         );
       }
     });
@@ -808,6 +885,10 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     
     // Récupérer l'évaluation existante
     final evaluation = _evaluations[approach.key];
+    
+    // NOUVEAU: Vérifier si approfondissement disponible
+    final hasDeepened = _deepenedResponses.containsKey(approach.key);
+    final isDeepening = _isDeepening[approach.key] == true;
 
     return Container(
       key: cardKey, // Key pour scroll précis
@@ -915,7 +996,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                   ),
                 ),
                 
-                // Badge OpenAI
+                // Badge Claude (au lieu d'OpenAI)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
@@ -929,7 +1010,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                       Icon(Icons.psychology, size: 12, color: approach.color),
                       const SizedBox(width: 4),
                       Text(
-                        'OpenAI',
+                        'Claude',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -972,15 +1053,287 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           ),
           
           // ═══════════════════════════════════════════════════════════════════
+          // NOUVEAU: AFFICHER L'APPROFONDISSEMENT S'IL EXISTE
+          // ═══════════════════════════════════════════════════════════════════
+          if (hasDeepened) ...[
+            const Divider(height: 1),
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: approach.color.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: approach.color.withOpacity(0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.auto_awesome, size: 16, color: approach.color),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Approfondissement',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: approach.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  MarkdownBody(
+                    data: _cleanMarkdown(_deepenedResponses[approach.key]!),
+                    styleSheet: MarkdownStyleSheet(
+                      p: GoogleFonts.inter(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: const Color(0xFF1E293B),
+                      ),
+                      strong: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1E293B),
+                      ),
+                      em: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontStyle: FontStyle.italic,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    selectable: true,
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
+          // ═══════════════════════════════════════════════════════════════════
           // BOUTONS LECTURE VOCALE
           // ═══════════════════════════════════════════════════════════════════
           _buildVoiceButtons(approach, response),
+          
+          // ═══════════════════════════════════════════════════════════════════
+          // NOUVEAU: BOUTONS APPROFONDIR + PARTAGER (layout 50/50)
+          // ═══════════════════════════════════════════════════════════════════
+          _buildActionButtons(approach, evaluation, hasDeepened, isDeepening),
           
           // SECTION ÉVALUATION
           _buildEvaluationSection(approach, evaluation),
         ],
       ),
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: BOUTONS D'ACTION (Approfondir + Partager évaluation)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Widget _buildActionButtons(ApproachConfig approach, SourceEvaluation? evaluation, bool hasDeepened, bool isDeepening) {
+    final hasComment = evaluation?.comment != null && evaluation!.comment!.isNotEmpty;
+    final isShared = _evaluationShared[approach.key] == true;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: approach.color.withOpacity(0.03),
+        border: Border(
+          top: BorderSide(color: approach.color.withOpacity(0.1)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Bouton Approfondir (50%)
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: (isDeepening || hasDeepened) ? null : () => _deepen(approach),
+              icon: isDeepening
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      hasDeepened ? Icons.check : Icons.search,
+                      size: 18,
+                    ),
+              label: Text(
+                isDeepening ? 'En cours...' : (hasDeepened ? 'Approfondi' : 'Approfondir'),
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: hasDeepened 
+                    ? const Color(0xFF94A3B8) 
+                    : approach.color,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(width: 12),
+          
+          // Bouton Partager évaluation (50%)
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: (isShared || !hasComment) ? null : () => _shareEvaluation(approach, evaluation),
+              icon: Icon(
+                isShared ? Icons.check : Icons.send_outlined,
+                size: 18,
+              ),
+              label: Text(
+                isShared ? 'Envoyé' : 'Partager avis',
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: isShared ? const Color(0xFF94A3B8) : approach.color,
+                side: BorderSide(
+                  color: isShared ? const Color(0xFF94A3B8) : approach.color.withOpacity(0.5),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: MÉTHODE APPROFONDISSEMENT
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Future<void> _deepen(ApproachConfig approach) async {
+    setState(() {
+      _isDeepening[approach.key] = true;
+    });
+    
+    try {
+      final reponseCourte = _responses[approach.key] ?? '';
+      
+      // Extraire le nom de la figure depuis FIGURE_META si disponible
+      String figureNom = 'Figure';
+      final metaMatch = RegExp(r'\[FIGURE_META\][\s\S]*?nom:\s*(.+?)[\n\[]').firstMatch(reponseCourte);
+      if (metaMatch != null) {
+        figureNom = metaMatch.group(1)?.trim() ?? 'Figure';
+      }
+      
+      final deepResponse = await AIService.instance.generateDeepening(
+        penseeOriginale: widget.reflectionText,
+        reponseCourte: reponseCourte,
+        sourceNom: approach.name,
+        figureNom: figureNom,
+      );
+      
+      setState(() {
+        _deepenedResponses[approach.key] = deepResponse;
+        _isDeepening[approach.key] = false;
+      });
+      
+    } catch (e) {
+      print('❌ Erreur approfondissement: $e');
+      setState(() {
+        _isDeepening[approach.key] = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'approfondissement'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOUVEAU: MÉTHODE PARTAGE ÉVALUATION
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Future<void> _shareEvaluation(ApproachConfig approach, SourceEvaluation? evaluation) async {
+    if (evaluation?.comment == null || evaluation!.comment!.isEmpty) return;
+    
+    // Afficher un indicateur de chargement
+    setState(() {
+      _evaluationShared[approach.key] = false; // En cours d'envoi
+    });
+    
+    try {
+      print('📧 Envoi évaluation en arrière-plan pour: ${approach.name}');
+      
+      // Utiliser EmailService.sendPerspectives avec les paramètres d'évaluation
+      // On envoie à l'adresse de feedback de l'app
+      final result = await EmailService.instance.sendPerspectives(
+        toEmail: 'appunautreregard@gmail.com',
+        pensee: '[ÉVALUATION] ${approach.name}',
+        perspectives: {
+          approach.name: 'Note: ${evaluation.rating ?? "Non notée"}/10\nCommentaire: ${evaluation.comment}',
+        },
+        evaluations: {approach.name: evaluation.rating ?? 0},
+        commentaires: {approach.name: evaluation.comment ?? ''},
+      );
+      
+      if (mounted) {
+        setState(() {
+          _evaluationShared[approach.key] = result.success;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  result.success ? Icons.check_circle : Icons.error,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    result.success 
+                        ? 'Merci pour votre avis !'
+                        : 'Erreur: ${result.message}',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: result.success ? const Color(0xFF10B981) : Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        
+        if (result.success) {
+          print('✅ Évaluation envoyée avec succès');
+        } else {
+          print('❌ Erreur envoi: ${result.message}');
+        }
+      }
+      
+    } catch (e) {
+      print('❌ Erreur partage évaluation: $e');
+      if (mounted) {
+        setState(() {
+          _evaluationShared[approach.key] = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildEvaluationSection(ApproachConfig approach, SourceEvaluation? evaluation) {
@@ -1221,7 +1574,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     }
   }
   
-  /// Appeler l'API OpenAI pour générer la synthèse
+  /// Appeler l'API pour générer la synthèse
   Future<String> _generateSynthesis(String sourceName, String originalText) async {
     final userPrompt = PromptSynthese.buildUserPrompt(
       sourceName: sourceName,
@@ -1405,88 +1758,61 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
 
   Widget _buildGeneratingCard(ApproachConfig approach) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: approach.color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(approach.icon, size: 20, color: approach.color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              approach.name,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'En cours...',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF6366F1),
-            ),
-          ),
-        ],
-      ),
-    ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1500.ms);
-  }
-
-  Widget _buildPendingCard(ApproachConfig approach) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.7),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: approach.color.withOpacity(0.3)),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(approach.color),
             ),
-            child: Icon(approach.icon, size: 20, color: Colors.grey),
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Génération ${approach.name}...',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: approach.color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate(onPlay: (c) => c.repeat())
+      .shimmer(duration: 1500.ms, color: approach.color.withOpacity(0.1));
+  }
+
+  Widget _buildPendingCard(ApproachConfig approach) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.hourglass_empty, size: 20, color: const Color(0xFF94A3B8)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               approach.name,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
                 color: const Color(0xFF94A3B8),
               ),
             ),
           ),
-          const Icon(Icons.hourglass_empty, size: 18, color: Color(0xFF94A3B8)),
-          const SizedBox(width: 6),
           Text(
             'En attente',
             style: GoogleFonts.inter(
@@ -1501,7 +1827,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
 
   Widget _buildErrorCard(ApproachConfig approach) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.red.withOpacity(0.05),
@@ -1510,33 +1836,28 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(approach.icon, size: 20, color: Colors.red),
-          ),
+          Icon(Icons.error_outline, size: 20, color: Colors.red),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              approach.name,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.red,
-              ),
-            ),
-          ),
-          const Icon(Icons.error_outline, size: 18, color: Colors.red),
-          const SizedBox(width: 6),
-          Text(
-            'Erreur',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.red,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  approach.name,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.red,
+                  ),
+                ),
+                Text(
+                  'Erreur de génération',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Colors.red.withOpacity(0.7),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1544,27 +1865,25 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     );
   }
 
-  // _buildGeneratingIndicator() supprimée - remplacée par _buildBrainGestationWidget() intégré dans _buildResultCards()
-
   Widget _buildExportButton() {
     return Container(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _emailSent || _isSendingEmail ? null : _sendByEmail,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _emailSent ? const Color(0xFF10B981) : const Color(0xFF2563EB),
-          disabledBackgroundColor: _emailSent ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: InkWell(
+        onTap: _emailSent || _isSendingEmail ? null : _sendByEmail,
+        borderRadius: BorderRadius.circular(12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_isSendingEmail) ...[
               const SizedBox(
-                width: 18,
-                height: 18,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
