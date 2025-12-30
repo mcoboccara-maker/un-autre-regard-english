@@ -390,21 +390,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     const SizedBox(height: 18),
                     
                     // ═══════════════════════════════════════════════════════
-                    // 5. BLOC SOURCES HUMANISTES (icônes cliquables)
+                    // 5. BLOC SOURCES HUMANISTES - Quiz & Hasard
                     // ═══════════════════════════════════════════════════════
-                    _buildHumanistIconsBlock(),
+                    _buildHumanistSourcesBlock(),
                     
                     const SizedBox(height: 18),
                     
                     // ═══════════════════════════════════════════════════════
-                    // 6. BLOC QUIZ & HASARD
-                    // ═══════════════════════════════════════════════════════
-                    _buildQuizHasardBlock(),
-                    
-                    const SizedBox(height: 18),
-                    
-                    // ═══════════════════════════════════════════════════════
-                    // 7. HISTORIQUE ET PROFIL
+                    // 6. ACCÈS RAPIDES - Historiques + Profil
                     // ═══════════════════════════════════════════════════════
                     _buildQuickAccessSection(),
                     
@@ -1105,188 +1098,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 5. BLOC SOURCES HUMANISTES - Icônes cliquables
+  // 5. BLOC SOURCES HUMANISTES - Quiz & Hasard côte à côte
   // ═══════════════════════════════════════════════════════════════════════════
   
-  Widget _buildHumanistIconsBlock() {
-    return AnimatedOpacity(
-      opacity: _isTyping ? 0.5 : 1.0,
-      duration: const Duration(milliseconds: 300),
-      child: GestureDetector(
-        onTap: _showSourcesBottomSheet,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF2E8B7B).withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Titre et sous-titre
-              Row(
-                children: [
-                  // Icône sources humanistes
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      'assets/univers_visuel/sources_inspiration.png',
-                      width: 32,
-                      height: 32,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2E8B7B).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.auto_stories, color: Color(0xFF2E8B7B), size: 18),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Sources humanistes',
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF2E8B7B),
-                          ),
-                        ),
-                        Text(
-                          'Choisis tes sources d\'inspiration',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: const Color(0xFF5BA3A8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Flèche
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E8B7B).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward_ios,
-                      color: Color(0xFF2E8B7B),
-                      size: 14,
-                    ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 14),
-              
-              // Rangée des 4 icônes cliquables
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Psychologie
-                  _buildHumanistIconButton(
-                    iconPath: 'psychologie.png',
-                    label: 'PSYCHOLOGIE',
-                    color: const Color(0xFF42A5F5),
-                    onTap: () => Navigator.pushNamed(context, '/sources-psychologiques').then((_) => _loadProfileSources()),
-                  ),
-                  // Littérature
-                  _buildHumanistIconButton(
-                    iconPath: 'litterature.png',
-                    label: 'LITTÉRATURE',
-                    color: const Color(0xFF66BB6A),
-                    onTap: () => Navigator.pushNamed(context, '/sources-litteraires').then((_) => _loadProfileSources()),
-                  ),
-                  // Philosophie
-                  _buildHumanistIconButton(
-                    iconPath: 'philosophie.png',
-                    label: 'PHILOSOPHIE',
-                    color: const Color(0xFFFFB74D),
-                    onTap: () => Navigator.pushNamed(context, '/sources-philosophiques').then((_) => _loadProfileSources()),
-                  ),
-                  // Philosophes
-                  _buildHumanistIconButton(
-                    iconPath: 'philosophes.png',
-                    label: 'PHILOSOPHES',
-                    color: const Color(0xFF5C6BC0),
-                    onTap: () => Navigator.pushNamed(context, '/sources-philosophes').then((_) => _loadProfileSources()),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  
-  /// Icône cliquable pour les sources humanistes
-  Widget _buildHumanistIconButton({
-    required String iconPath,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              'assets/univers_visuel/$iconPath',
-              width: 44,
-              height: 44,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.auto_stories,
-                  color: color,
-                  size: 22,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 8,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 6. BLOC QUIZ & HASARD
-  // ═══════════════════════════════════════════════════════════════════════════
-  
-  Widget _buildQuizHasardBlock() {
+  Widget _buildHumanistSourcesBlock() {
     return AnimatedOpacity(
       opacity: _isTyping ? 0.5 : 1.0,
       duration: const Duration(milliseconds: 300),
@@ -1371,6 +1186,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ],
             ),
+            
+            const SizedBox(height: 12),
+            
+            // Lien vers exploration complète des sources humanistes
+            GestureDetector(
+              onTap: _showSourcesBottomSheet,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E8B7B).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Explore les sources humanistes',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF2E8B7B),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: Color(0xFF2E8B7B),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1443,7 +1291,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 7. HISTORIQUE ET PROFIL
+  // 6. ACCÈS RAPIDES - Historiques + Profil (réduit, profil remonté)
   // ═══════════════════════════════════════════════════════════════════════════
   
   Widget _buildQuickAccessSection() {
@@ -1457,7 +1305,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
-              'Historique et profil',
+              'Accès rapides',
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,

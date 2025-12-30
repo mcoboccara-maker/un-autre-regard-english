@@ -1,32 +1,14 @@
-/// ════════════════════════════════════════════════════════════════════════════
-/// ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
-/// ════════════════════════════════════════════════════════════════════════════
+/// DEEPENING PROMPT - ENGLISH VERSION
 /// 
-/// This file was automatically generated from the French master file.
-/// To modify, edit the French version in fr/prompt_approfondissement.dart
+/// File: lib/config/prompts/prompt_approfondissement_en.dart
+/// Usage: Generate a detailed version of a short perspective (English)
 /// 
-/// Language: ENGLISH
-/// ════════════════════════════════════════════════════════════════════════════
-
-/// DEEPENING PROMPT
-/// 
-/// File: lib/config/prompts/en/prompt_approfondissement.dart
-/// Usage: Generate a detailed version of a short perspective
-/// 
-/// Used when the user clicks "Deepen" on a card
-/// Takes as input the short response (150-200 words) and generates a detailed
-/// version (300-450 words) with enriched context and citations.
-/// 
-/// ALL quality constraints from the unified prompt are MAINTAINED.
+/// IMPORTANT: La classe s'appelle PromptApprofondissement (même nom que FR)
+/// pour permettre l'import avec alias dans prompt_selector.dart
 
 class PromptApprofondissement {
   
-  /// Build the deepening prompt
-  /// 
-  /// [penseeOriginale]: The user's original thought
-  /// [reponseCourte]: The previously generated synthetic response
-  /// [sourceNom]: The source name (e.g., "Stoicism", "Buddhism")
-  /// [figureNom]: The figure name extracted from FIGURE_META
+  /// Builds the deepening prompt in English
   static String build({
     required String penseeOriginale,
     required String reponseCourte,
@@ -34,45 +16,47 @@ class PromptApprofondissement {
     required String figureNom,
   }) {
     return '''
-════════════════════════════════════════════════════════════════════════════════
-ABSOLUTE CONSTRAINTS — TO BE RESPECTED IMPERATIVELY
-════════════════════════════════════════════════════════════════════════════════
+<language_reminder>
+LANGUAGE REMINDER: Respond in the SAME LANGUAGE as the original thought.
+</language_reminder>
+
+<absolute_constraints>
+ABSOLUTE CONSTRAINTS — MUST BE RESPECTED
 
 These rules are NON-NEGOTIABLE. A response that violates them is unusable.
 
-────────────────────────────────────────────────────────────────────────────────
-❌ STRICTLY FORBIDDEN WORDS AND PHRASES
-────────────────────────────────────────────────────────────────────────────────
+<forbidden_words>
+STRICTLY FORBIDDEN WORDS AND PHRASES
 
-INJUNCTIONS (even well-meaning):
-• "you should", "you would have to", "you must", "you need to"
-• "you just have to", "it's enough to"
+DIRECTIVES (even well-meaning):
+• "you should", "you must", "you have to", "you need to"
+• "just do", "simply", "all you need to do"
 • "be positive", "be strong", "be grateful"
-• "let go", "accept", "forgive" (in imperative)
+• "let go", "accept", "forgive" (as imperatives)
 
 JUDGMENTS:
 • "it's your fault", "you are responsible for"
-• "you are too sensitive", "you're exaggerating"
+• "you're too sensitive", "you're overreacting"
 • "others have it worse"
 
 FALSE PROMISES:
-• "you'll get through this", "it will be okay", "courage"
+• "you'll get through this", "it will be okay", "hang in there"
 • "it's an opportunity", "it's for your own good"
 • "everything happens for a reason"
 
 FORCED POSITIVITY:
-• "see the bright side", "stay positive", "it's a chance"
+• "look on the bright side", "stay positive", "it's a blessing"
+</forbidden_words>
 
-────────────────────────────────────────────────────────────────────────────────
-❌ EMOTIONAL PROPORTIONALITY — FUNDAMENTAL RULE
-────────────────────────────────────────────────────────────────────────────────
+<proportionality>
+EMOTIONAL PROPORTIONALITY — FUNDAMENTAL RULE
 
 The deepening must MAINTAIN the proportionality of the short response.
 Do not add references to disproportionate experiences.
 
-FORBIDDEN EXPERIENCES (unless equivalent gravity explicit in the thought):
+FORBIDDEN EXPERIENCES (unless equivalent severity is explicit in the thought):
 • Holocaust, genocides, concentration camps
-• Wars, massacres, attacks
+• Wars, massacres, terrorist attacks
 • Violent death, suicide, murder
 • Cancer, terminal illnesses
 • Major natural disasters
@@ -80,19 +64,19 @@ FORBIDDEN EXPERIENCES (unless equivalent gravity explicit in the thought):
 • Sexual violence
 • Loss of all loved ones
 • Forced exile, persecution
+</proportionality>
 
-────────────────────────────────────────────────────────────────────────────────
-❌ SPECIAL RULE: BYRON KATIE / THE WORK
-────────────────────────────────────────────────────────────────────────────────
+<byron_katie_rule>
+SPECIAL RULE: BYRON KATIE / THE WORK
 
 If source = Byron Katie / The Work:
-• PROHIBITION of the 4 questions ("Is it true?", "Can you be absolutely certain...", etc.)
-• PROHIBITION of turnarounds as exercise
+• PROHIBITION of the 4 questions ("Is it true?", "Can you absolutely know...", etc.)
+• PROHIBITION of turnarounds as exercises
 • ALLOWED: description of the mechanism "believing the thought = suffering", without protocol
+</byron_katie_rule>
 
-────────────────────────────────────────────────────────────────────────────────
-✅ TEXTUAL REFERENCES — MANDATORY
-────────────────────────────────────────────────────────────────────────────────
+<textual_references>
+TEXTUAL REFERENCES — MANDATORY
 
 Added citations must be VERIFIABLE:
 
@@ -108,23 +92,23 @@ Added citations must be VERIFIABLE:
 • Philosophical sources: work + section/passage
   Example: "Nicomachean Ethics, Book II, chapter 6"
 
-⚠️ A vague or invented reference = INVALID
+A vague or invented reference = INVALID
+</textual_references>
 
-────────────────────────────────────────────────────────────────────────────────
-✅ STYLE — MANDATORY
-────────────────────────────────────────────────────────────────────────────────
+<style>
+STYLE — MANDATORY
 
-• Systematic informal address, without excessive familiarity
+• Consistent informal address (you), without excessive familiarity
 • Tone: descriptive, illuminating, never prescriptive
 • No oriented conclusion, no "path to follow"
 
 FORMATTING (Markdown):
-• Put in **bold** key elements to facilitate reading:
+• Use **bold** for key elements to facilitate reading:
   - The figure's name (first mention)
-  - Important concepts of the tradition
+  - Important concepts from the tradition
   - Textual references
   - Essential keywords
-• Use *italics* for direct quotations from texts
+• Use *italics* for direct quotes from texts
 • Don't overload: 5-8 bold elements maximum per response
 
 Stay DESCRIPTIVE:
@@ -132,53 +116,55 @@ Stay DESCRIPTIVE:
 • without judgment
 • without contemporary projection
 
-Adapt style to tradition:
-• elliptical (Zen, Kabbalah)
+Adapt the style to the tradition:
+• elliptical (zen, kabbalah)
 • narrative (Hasidism, Sufism, mythology)
 • clinical (CBT, schemas)
-• conceptual (Stoicism, existentialism)
+• conceptual (stoicism, existentialism)
 • symbolic (Jungian analysis, poetry)
 
-Do NOT seek to uniformize the voices.
+Do NOT try to standardize voices.
+</style>
+</absolute_constraints>
 
-════════════════════════════════════════════════════════════════════════════════
+<context>
 REQUEST CONTEXT
-════════════════════════════════════════════════════════════════════════════════
 
-You previously provided this synthetic illumination:
+You previously provided this synthetic insight:
 
 "$reponseCourte"
 
 In response to this user's thought:
 "$penseeOriginale"
 
-Source used: $sourceNom
-Figure evoked: $figureNom
+LANGUAGE: Respond in THE SAME LANGUAGE as the thought above in quotes.
 
-════════════════════════════════════════════════════════════════════════════════
+Source used: $sourceNom
+Figure mentioned: $figureNom
+</context>
+
+<request>
 DEEPENING REQUEST
-════════════════════════════════════════════════════════════════════════════════
 
 The user wishes to deepen this perspective.
-Develop the illumination by adding depth and details,
-while respecting ALL constraints above.
+Develop the insight by adding depth and details,
+while respecting ALL the constraints above.
 
 The figure ($figureNom) must remain present as an IMPLICIT reference point
 throughout the deepening.
 
-────────────────────────────────────────────────────────────────────────────────
+<section_1>
 1. ENRICHED CONTEXT (100-150 words)
-────────────────────────────────────────────────────────────────────────────────
 
-• Detailed circumstances of the evoked figure
+• Detailed circumstances of the mentioned figure
 • Era, place, tension experienced
 • PRECISE textual citations with exact references
   (chapter, verse, page, work)
-• Stay PROPORTIONATE to the gravity of the original thought
+• Stay PROPORTIONATE to the severity of the original thought
+</section_1>
 
-────────────────────────────────────────────────────────────────────────────────
-2. DEEPENED ILLUMINATION (150-200 words)
-────────────────────────────────────────────────────────────────────────────────
+<section_2>
+2. DEEPENED INSIGHT (150-200 words)
 
 • Key concepts of the tradition explained in detail
 • What the tradition makes VISIBLE in this situation
@@ -190,28 +176,33 @@ Stay DESCRIPTIVE:
 • without excessive psychologizing interpretation
 • without judgment
 • without contemporary projection
+</section_2>
 
-────────────────────────────────────────────────────────────────────────────────
+<section_3>
 3. RESONANCE (50-100 words)
-────────────────────────────────────────────────────────────────────────────────
 
 • Explicit links with the user's situation
 • Without judgment or prescription
 • Opening toward enriched understanding
 • WITHOUT proposing an outcome, direction, or resolution
-• SHIFT the gaze without guiding the path
+• SHIFT the perspective without directing the path
+</section_3>
+</request>
 
-════════════════════════════════════════════════════════════════════════════════
+<format>
 FORMAT CONSTRAINTS
-════════════════════════════════════════════════════════════════════════════════
 
 • Respond in 300-450 words
 • Keep the same tone and informal address
 • Do NOT repeat the short response — enrich it
-• Stay DESCRIPTIVE: no injunctions
-• Citations must be VERIFIABLE (no invention)
-• Maintain emotional PROPORTIONALITY
+• Stay DESCRIPTIVE: no directives
+• Citations must be VERIFIABLE (no inventions)
+• Maintain EMOTIONAL PROPORTIONALITY
 • The figure remains the IMPLICIT reference point throughout
+• DO NOT include visual separators (═══, ───, etc.) in your response
+• DO NOT include titles like "ENRICHED CONTEXT" or "DEEPENED INSIGHT"
+• Write fluid, continuous text
+</format>
 ''';
   }
 }

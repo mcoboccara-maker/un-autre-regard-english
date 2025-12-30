@@ -2,9 +2,10 @@
 // Service de synthèse vocale (Text-to-Speech)
 // Utilise le moteur TTS natif du téléphone (gratuit, hors-ligne)
 // 
-// VERSION 2.0 : Détection automatique de la langue du texte
+// VERSION 2.1 : Logs détaillés pour debug + amélioration détection
 
 import 'package:flutter_tts/flutter_tts.dart';
+import 'dart:math' show min;
 
 /// Service singleton pour la lecture vocale
 /// Détecte automatiquement la langue du texte pour adapter la voix
@@ -51,8 +52,14 @@ class TtsService {
     if (_isInitialized) return;
     
     try {
+      // Lister les langues disponibles pour debug
+      final availableLangs = await _tts.getLanguages;
+      print('🌐 TTS: Langues disponibles sur cet appareil:');
+      print('   $availableLangs');
+      
       // Configuration par défaut en français
-      await _tts.setLanguage('fr-FR');
+      final setResult = await _tts.setLanguage('fr-FR');
+      print('🌐 TTS: setLanguage(fr-FR) result = $setResult');
       _currentLanguage = 'fr-FR';
       
       // Vitesse de lecture (0.0 à 1.0) - 0.45 = calme et posé
@@ -66,6 +73,7 @@ class TtsService {
       
       // Écouter les événements de fin de lecture
       _tts.setCompletionHandler(() {
+        print('✅ TTS: Lecture terminée');
         _isSpeaking = false;
         final key = _currentApproachKey;
         _currentApproachKey = null;
@@ -78,6 +86,11 @@ class TtsService {
         _isSpeaking = false;
         _currentApproachKey = null;
         onStateChanged?.call(null, false);
+      });
+      
+      // Écouter le début de lecture
+      _tts.setStartHandler(() {
+        print('▶️ TTS: Lecture démarrée en $_currentLanguage');
       });
       
       _isInitialized = true;
@@ -94,7 +107,10 @@ class TtsService {
   /// Détecte la langue du texte basé sur les caractères et patterns
   /// Retourne le code langue (fr, en, he, ar, etc.)
   String _detectLanguage(String text) {
-    if (text.isEmpty) return 'fr';
+    if (text.isEmpty) {
+      print('🔍 TTS: Texte vide, défaut FR');
+      return 'fr';
+    }
     
     // Prendre un échantillon du texte (premiers 500 caractères)
     final sample = text.length > 500 ? text.substring(0, 500) : text;
@@ -145,20 +161,43 @@ class TtsService {
       }
     }
     
+    print('🔍 TTS: Analyse caractères - HE:$hebrewCount AR:$arabicCount RU:$cyrillicCount ZH:$chineseCount JA:$japaneseCount KO:$koreanCount LAT:$latinCount');
+    
     // Déterminer la langue dominante par caractères non-latins
-    if (hebrewCount > 10) return 'he';
-    if (arabicCount > 10) return 'ar';
-    if (cyrillicCount > 10) return 'ru';
-    if (chineseCount > 5) return 'zh';
-    if (japaneseCount > 5) return 'ja';
-    if (koreanCount > 5) return 'ko';
+    if (hebrewCount > 10) {
+      print('🔍 TTS: Hébreu détecté (${hebrewCount} caractères)');
+      return 'he';
+    }
+    if (arabicCount > 10) {
+      print('🔍 TTS: Arabe détecté (${arabicCount} caractères)');
+      return 'ar';
+    }
+    if (cyrillicCount > 10) {
+      print('🔍 TTS: Russe détecté (${cyrillicCount} caractères)');
+      return 'ru';
+    }
+    if (chineseCount > 5) {
+      print('🔍 TTS: Chinois détecté (${chineseCount} caractères)');
+      return 'zh';
+    }
+    if (japaneseCount > 5) {
+      print('🔍 TTS: Japonais détecté (${japaneseCount} caractères)');
+      return 'ja';
+    }
+    if (koreanCount > 5) {
+      print('🔍 TTS: Coréen détecté (${koreanCount} caractères)');
+      return 'ko';
+    }
     
     // Pour les langues latines, analyser les patterns de mots
     if (latinCount > 10) {
-      return _detectLatinLanguage(sample.toLowerCase());
+      final latinLang = _detectLatinLanguage(sample.toLowerCase());
+      print('🔍 TTS: Langue latine détectée = $latinLang');
+      return latinLang;
     }
     
     // Défaut : français
+    print('🔍 TTS: Aucune langue détectée, défaut FR');
     return 'fr';
   }
   
@@ -235,6 +274,8 @@ class TtsService {
     int italianScore = _countMatches(text, italianPatterns);
     int portugueseScore = _countMatches(text, portuguesePatterns);
     
+    print('🔍 TTS: Scores - FR:$frenchScore EN:$englishScore ES:$spanishScore DE:$germanScore IT:$italianScore PT:$portugueseScore');
+    
     // Trouver le score maximum
     final scores = {
       'fr': frenchScore,
@@ -257,6 +298,7 @@ class TtsService {
     
     // Si aucun score significatif, défaut français
     if (maxScore < 3) {
+      print('🔍 TTS: Score trop faible ($maxScore < 3), défaut FR');
       return 'fr';
     }
     
@@ -276,16 +318,20 @@ class TtsService {
   Future<void> _setLanguageIfNeeded(String langCode) async {
     final ttsLang = _languageMap[langCode] ?? 'fr-FR';
     
+    print('🌐 TTS: Demande langue $langCode → $ttsLang (actuelle: $_currentLanguage)');
+    
     if (ttsLang != _currentLanguage) {
       try {
         // Vérifier si la langue est disponible
         final result = await _tts.setLanguage(ttsLang);
+        print('🌐 TTS: setLanguage($ttsLang) result = $result');
+        
         if (result == 1) {
           _currentLanguage = ttsLang;
-          print('🌐 TTS: Langue changée vers $ttsLang');
+          print('✅ TTS: Langue changée vers $ttsLang');
         } else {
           // Fallback sur français si langue non disponible
-          print('⚠️ TTS: Langue $ttsLang non disponible, fallback fr-FR');
+          print('⚠️ TTS: Langue $ttsLang non disponible (result=$result), fallback fr-FR');
           await _tts.setLanguage('fr-FR');
           _currentLanguage = 'fr-FR';
         }
@@ -293,6 +339,8 @@ class TtsService {
         print('⚠️ TTS: Erreur changement langue: $e');
         // Garder la langue actuelle
       }
+    } else {
+      print('🌐 TTS: Langue déjà configurée sur $_currentLanguage');
     }
   }
   
@@ -307,26 +355,41 @@ class TtsService {
   Future<void> speak(String text, {String? approachKey}) async {
     if (!_isInitialized) await init();
     
+    print('');
+    print('════════════════════════════════════════════════════════════════');
+    print('🔊 TTS: NOUVELLE DEMANDE DE LECTURE');
+    print('════════════════════════════════════════════════════════════════');
+    print('📝 Texte (${text.length} chars): "${text.substring(0, min(100, text.length))}..."');
+    print('🔑 ApproachKey: $approachKey');
+    print('🎯 État actuel: isSpeaking=$_isSpeaking, currentKey=$_currentApproachKey');
+    
     // Si on clique sur le même bouton, arrêter la lecture
     if (_isSpeaking && _currentApproachKey == approachKey) {
+      print('⏹️ TTS: Même bouton cliqué, arrêt');
       await stop();
       return;
     }
     
     // Arrêter toute lecture en cours
     if (_isSpeaking) {
+      print('⏹️ TTS: Arrêt lecture précédente');
       await stop();
     }
     
     // Détecter la langue et configurer le TTS
     final detectedLang = _detectLanguage(text);
+    print('🌐 TTS: Langue détectée = $detectedLang');
+    
     await _setLanguageIfNeeded(detectedLang);
     
     _isSpeaking = true;
     _currentApproachKey = approachKey;
     onStateChanged?.call(approachKey, true);
     
-    print('🔊 TTS: Lecture de ${text.length} caractères en $_currentLanguage');
+    print('▶️ TTS: Lancement lecture en $_currentLanguage');
+    print('════════════════════════════════════════════════════════════════');
+    print('');
+    
     await _tts.speak(text);
   }
   
@@ -334,6 +397,11 @@ class TtsService {
   /// Utile si on connaît déjà la langue
   Future<void> speakWithLanguage(String text, String langCode, {String? approachKey}) async {
     if (!_isInitialized) await init();
+    
+    print('');
+    print('════════════════════════════════════════════════════════════════');
+    print('🔊 TTS: LECTURE FORCÉE EN $langCode');
+    print('════════════════════════════════════════════════════════════════');
     
     if (_isSpeaking && _currentApproachKey == approachKey) {
       await stop();
@@ -350,7 +418,7 @@ class TtsService {
     _currentApproachKey = approachKey;
     onStateChanged?.call(approachKey, true);
     
-    print('🔊 TTS: Lecture forcée en $_currentLanguage');
+    print('▶️ TTS: Lecture forcée en $_currentLanguage');
     await _tts.speak(text);
   }
   
@@ -405,7 +473,12 @@ class TtsService {
   
   /// Tester la détection de langue (utile pour debug)
   String testLanguageDetection(String text) {
-    return _detectLanguage(text);
+    print('');
+    print('🧪 TEST DÉTECTION LANGUE');
+    print('========================');
+    final result = _detectLanguage(text);
+    print('🏁 Résultat final: $result');
+    return result;
   }
   
   // ═══════════════════════════════════════════════════════════════════════════

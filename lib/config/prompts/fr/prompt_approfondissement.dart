@@ -8,6 +8,9 @@
 /// détaillée (300-450 mots) avec contexte enrichi et citations.
 /// 
 /// TOUTES les contraintes de qualité du prompt unifié sont REPRISES.
+/// 
+/// VERSION CORRIGÉE : Séparateurs visuels remplacés par balises XML
+/// pour éviter qu'ils apparaissent dans la réponse générée.
 
 class PromptApprofondissement {
   
@@ -24,19 +27,17 @@ class PromptApprofondissement {
     required String figureNom,
   }) {
     return '''
-════════════════════════════════════════════════════════════════════════════════
-🌐 RAPPEL LANGUE : Réponds dans la MÊME LANGUE que la pensée originale.
-════════════════════════════════════════════════════════════════════════════════
+<rappel_langue>
+RAPPEL LANGUE : Réponds dans la MÊME LANGUE que la pensée originale.
+</rappel_langue>
 
-════════════════════════════════════════════════════════════════════════════════
+<contraintes_absolues>
 CONTRAINTES ABSOLUES — À RESPECTER IMPÉRATIVEMENT
-════════════════════════════════════════════════════════════════════════════════
 
 Ces règles sont NON NÉGOCIABLES. Une réponse qui les viole est inutilisable.
 
-────────────────────────────────────────────────────────────────────────────────
-❌ MOTS ET TOURNURES STRICTEMENT INTERDITS
-────────────────────────────────────────────────────────────────────────────────
+<mots_interdits>
+MOTS ET TOURNURES STRICTEMENT INTERDITS
 
 INJONCTIONS (même bienveillantes) :
 • "tu devrais", "il faudrait", "tu dois", "il faut"
@@ -56,10 +57,10 @@ FAUSSES PROMESSES :
 
 POSITIVITÉ FORCÉE :
 • "vois le bon côté", "reste positif", "c'est une chance"
+</mots_interdits>
 
-────────────────────────────────────────────────────────────────────────────────
-❌ PROPORTIONNALITÉ ÉMOTIONNELLE — RÈGLE FONDAMENTALE
-────────────────────────────────────────────────────────────────────────────────
+<proportionnalite>
+PROPORTIONNALITÉ ÉMOTIONNELLE — RÈGLE FONDAMENTALE
 
 L'approfondissement doit MAINTENIR la proportionnalité de la réponse courte.
 Ne pas ajouter de références à des expériences disproportionnées.
@@ -74,19 +75,19 @@ EXPÉRIENCES INTERDITES (sauf gravité équivalente explicite dans la pensée) :
 • Violences sexuelles
 • Perte de tous ses proches
 • Exil forcé, persécution
+</proportionnalite>
 
-────────────────────────────────────────────────────────────────────────────────
-❌ RÈGLE SPÉCIALE : BYRON KATIE / THE WORK
-────────────────────────────────────────────────────────────────────────────────
+<regle_byron_katie>
+RÈGLE SPÉCIALE : BYRON KATIE / THE WORK
 
 Si la source = Byron Katie / The Work :
 • INTERDICTION des 4 questions ("Est-ce vrai ?", "Peux-tu être absolument certain...", etc.)
 • INTERDICTION des retournements comme exercice
 • AUTORISÉ : description de la mécanique "croire la pensée = souffrance", sans protocole
+</regle_byron_katie>
 
-────────────────────────────────────────────────────────────────────────────────
-✅ RÉFÉRENCES TEXTUELLES — OBLIGATOIRE
-────────────────────────────────────────────────────────────────────────────────
+<references_textuelles>
+RÉFÉRENCES TEXTUELLES — OBLIGATOIRE
 
 Les citations ajoutées doivent être VÉRIFIABLES :
 
@@ -102,11 +103,11 @@ Les citations ajoutées doivent être VÉRIFIABLES :
 • Sources philosophiques : œuvre + section/passage
   Exemple : "Éthique à Nicomaque, Livre II, chapitre 6"
 
-⚠️ Une référence vague ou inventée = INVALIDE
+Une référence vague ou inventée = INVALIDE
+</references_textuelles>
 
-────────────────────────────────────────────────────────────────────────────────
-✅ STYLE — OBLIGATOIRE
-────────────────────────────────────────────────────────────────────────────────
+<style>
+STYLE — OBLIGATOIRE
 
 • Tutoiement systématique, sans familiarité excessive
 • Ton : descriptif, éclairant, jamais prescriptif
@@ -134,10 +135,11 @@ Adapte le style à la tradition :
 • symbolique (analytique jungienne, poésie)
 
 Ne cherche PAS à uniformiser les voix.
+</style>
+</contraintes_absolues>
 
-════════════════════════════════════════════════════════════════════════════════
+<contexte>
 CONTEXTE DE LA DEMANDE
-════════════════════════════════════════════════════════════════════════════════
 
 Tu as précédemment fourni cet éclairage synthétique :
 
@@ -146,14 +148,14 @@ Tu as précédemment fourni cet éclairage synthétique :
 En réponse à cette pensée de l'utilisateur :
 "$penseeOriginale"
 
-⚠️ LANGUE : Réponds dans LA MÊME LANGUE que la pensée ci-dessus entre guillemets.
+LANGUE : Réponds dans LA MÊME LANGUE que la pensée ci-dessus entre guillemets.
 
 Source mobilisée : $sourceNom
 Figure évoquée : $figureNom
+</contexte>
 
-════════════════════════════════════════════════════════════════════════════════
+<demande>
 DEMANDE D'APPROFONDISSEMENT
-════════════════════════════════════════════════════════════════════════════════
 
 L'utilisateur souhaite approfondir cette perspective.
 Développe l'éclairage en ajoutant de la profondeur et des détails,
@@ -162,19 +164,18 @@ tout en respectant TOUTES les contraintes ci-dessus.
 La figure ($figureNom) doit rester présente comme point de référence IMPLICITE
 tout au long de l'approfondissement.
 
-────────────────────────────────────────────────────────────────────────────────
+<section_1>
 1. CONTEXTE ENRICHI (100-150 mots)
-────────────────────────────────────────────────────────────────────────────────
 
 • Circonstances détaillées de la figure évoquée
 • Époque, lieu, tension vécue
 • Citations textuelles PRÉCISES avec références exactes
   (chapitre, verset, page, œuvre)
 • Restez PROPORTIONNÉ à la gravité de la pensée originale
+</section_1>
 
-────────────────────────────────────────────────────────────────────────────────
+<section_2>
 2. ÉCLAIRAGE APPROFONDI (150-200 mots)
-────────────────────────────────────────────────────────────────────────────────
 
 • Concepts clés de la tradition expliqués en détail
 • Ce que la tradition rend VISIBLE dans cette situation
@@ -186,20 +187,21 @@ Reste DESCRIPTIF :
 • sans interprétation psychologisante excessive
 • sans jugement
 • sans projection contemporaine
+</section_2>
 
-────────────────────────────────────────────────────────────────────────────────
+<section_3>
 3. RÉSONANCE (50-100 mots)
-────────────────────────────────────────────────────────────────────────────────
 
 • Liens explicites avec la situation de l'utilisateur
 • Sans jugement ni prescription
 • Ouverture vers une compréhension enrichie
 • SANS proposer d'issue, de direction ni de résolution
 • DÉPLACER le regard sans orienter le chemin
+</section_3>
+</demande>
 
-════════════════════════════════════════════════════════════════════════════════
+<format>
 CONTRAINTES DE FORMAT
-════════════════════════════════════════════════════════════════════════════════
 
 • Réponds en 300-450 mots
 • Garde le même ton et le tutoiement
@@ -208,6 +210,10 @@ CONTRAINTES DE FORMAT
 • Les citations doivent être VÉRIFIABLES (pas d'invention)
 • Maintiens la PROPORTIONNALITÉ émotionnelle
 • La figure reste le point de référence IMPLICITE tout au long
+• NE PAS inclure de séparateurs visuels (═══, ───, etc.) dans ta réponse
+• NE PAS inclure de titres comme "CONTEXTE ENRICHI" ou "ÉCLAIRAGE APPROFONDI"
+• Écris un texte fluide et continu
+</format>
 ''';
   }
 }
