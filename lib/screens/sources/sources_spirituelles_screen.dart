@@ -16,80 +16,166 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
   Set<String> _selectedSources = {};
   bool _isLoading = true;
 
-  // Données des sources spirituelles
+  // Données des sources spirituelles - VERSION JUDAÏSME ÉTENDUE
   final List<SpiritualSource> _sources = [
+    // ═══════════════════════════════════════════════════════════════
+    // PÉRIODES HISTORIQUES
+    // ═══════════════════════════════════════════════════════════════
     SpiritualSource(
-      id: 'judaisme_rabbinique',
-      name: 'Judaïsme rabbinique',
-      iconPath: 'assets/univers_visuel/judaisme rabbinique akiva.png',
-      description: 'Tradition issue de la Torah et du Talmud, structurée autour de l\'étude, de la loi (Halakha) et de l\'interprétation rabbinique.',
-      modeOfThought: 'Centralité du texte, dialogue entre la loi et l\'expérience humaine ; importance de la responsabilité individuelle et collective.',
-      worldView: 'Le monde est un lieu où l\'être humain participe à réparer l\'imperfection (Tikkoun Olam) ; Dieu agit à travers l\'histoire.',
+      id: 'talmudiques',
+      name: 'Rabbins talmudiques classiques',
+      iconPath: 'assets/univers_visuel/talmud.png',
+      description: 'Les Tannaïm et Amoraïm (Ier-VIe siècle) : Hillel, Shammaï, Rabbi Akiva, Rav, Shmuel. Fondateurs de la Mishna et du Talmud.',
+      modeOfThought: 'Dialectique et débat (mahloket), recherche de la vérité par la confrontation des opinions. "Élu vélu divrei Elohim haïm" - les deux positions sont paroles du Dieu vivant.',
+      worldView: 'La Torah orale complète la Torah écrite ; l\'interprétation humaine est partie intégrante de la révélation divine.',
+      distinctiveContribution: 'Fondement de tout le judaïsme rabbinique. Apporte la méthode d\'étude par questions-réponses et la légitimité du désaccord constructif.',
     ),
     SpiritualSource(
-      id: 'moussar',
-      name: 'Moussar (éthique juive)',
-      iconPath: 'assets/univers_visuel/moussar.png',
-      description: 'Courant éthique du judaïsme né au XIXe siècle, centré sur le raffinement moral et émotionnel.',
-      modeOfThought: 'Travail intérieur, observation de soi, transformation progressive par la conscience et la pratique.',
-      worldView: 'Le monde est un terrain d\'entraînement pour l\'âme ; chaque émotion ou situation révèle une opportunité de croissance.',
+      id: 'midrash',
+      name: 'Midrash',
+      iconPath: 'assets/univers_visuel/midrash.png',
+      description: 'Littérature d\'interprétation créative de la Torah : Midrash Rabba, Tanhuma, Yalkout Shimoni. Récits, paraboles et enseignements homilétiques.',
+      modeOfThought: 'Lecture imaginative et poétique du texte biblique. Chaque mot, lettre, silence recèle un sens caché. Le "blanc" entre les lignes parle autant que le texte.',
+      worldView: 'La Torah a 70 visages ; elle parle à chaque génération différemment. L\'interprétation créative est un acte de révélation continue.',
+      distinctiveContribution: 'Libère l\'imaginaire spirituel. Apporte des récits, des paraboles et une lecture psychologique des personnages bibliques qui enrichit la compréhension au-delà de la loi.',
+    ),
+    SpiritualSource(
+      id: 'gueonim',
+      name: 'Guéonim',
+      iconPath: 'assets/univers_visuel/gueonim.png',
+      description: 'Chefs des académies de Babylone (VIIe-XIe siècle) : Saadia Gaon, Haï Gaon. Période de codification et de responsa.',
+      modeOfThought: 'Systématisation du savoir talmudique, réponses halakhiques aux communautés de la diaspora, philosophie rationnelle.',
+      worldView: 'Le judaïsme comme civilisation structurée autour des académies ; transmission ordonnée de la tradition.',
+      distinctiveContribution: 'Pont entre l\'époque talmudique et le Moyen Âge. Apporte la méthode des responsa (questions-réponses) et la première philosophie juive systématique.',
+    ),
+    SpiritualSource(
+      id: 'rishonim',
+      name: 'Rishonim (Moyen Âge)',
+      iconPath: 'assets/univers_visuel/rishonim.png',
+      description: 'Grands décisionnaires médiévaux (XIe-XVe siècle) : Rachi, Tossafot, Rambam (Maïmonide), Ramban (Nahmanide), Rif, Rosh.',
+      modeOfThought: 'Commentaire systématique, codification de la loi, synthèse entre philosophie grecque et tradition juive (Maïmonide), ou mystique et halakha (Nahmanide).',
+      worldView: 'Recherche de l\'harmonie entre raison et foi ; la Torah contient toute sagesse, accessible par l\'étude rigoureuse.',
+      distinctiveContribution: 'Âge d\'or de la pensée juive. Apporte les grands commentaires (Rachi), la philosophie rationnelle (Maïmonide) et les codes de loi qui structurent encore la pratique.',
+    ),
+    SpiritualSource(
+      id: 'aharonim',
+      name: 'A\'haronim (époque moderne)',
+      iconPath: 'assets/univers_visuel/aharonim.png',
+      description: 'Décisionnaires depuis le Choul\'han Aroukh (XVIe siècle à nos jours) : Caro, Isserles, Hatam Sofer, Hafetz Haïm, Rav Moshe Feinstein.',
+      modeOfThought: 'Responsa adaptés aux réalités modernes, tension entre préservation et adaptation, codification définitive de la halakha.',
+      worldView: 'Fidélité à la tradition face aux défis de la modernité ; "Hadash assour min haTorah" vs innovation mesurée.',
+      distinctiveContribution: 'Application de la halakha aux questions contemporaines (technologie, médecine, éthique). Apporte des réponses pratiques aux défis de chaque époque.',
+    ),
+
+    // ═══════════════════════════════════════════════════════════════
+    // COURANTS SPIRITUELS
+    // ═══════════════════════════════════════════════════════════════
+    SpiritualSource(
+      id: 'hassidisme',
+      name: 'Hassidisme',
+      iconPath: 'assets/univers_visuel/hassidisme.png',
+      description: 'Mouvement mystique populaire fondé par le Baal Shem Tov (XVIIIe siècle). Joie dans le service divin, importance du Tsaddik, accessibilité de la spiritualité.',
+      modeOfThought: 'Dvekoute (attachement à Dieu), hitbonenoute (méditation), importance de l\'intention (kavana) sur l\'acte. Chaque geste quotidien peut être sacré.',
+      worldView: 'Dieu est partout (panenthéisme), même dans le mal apparent ; l\'étincelle divine attend d\'être élevée. La joie est un service divin.',
+      distinctiveContribution: 'Démocratise la spiritualité. Apporte la joie comme valeur religieuse, l\'importance de l\'émotion dans la prière, et l\'idée que chacun peut atteindre des niveaux spirituels élevés.',
+    ),
+    SpiritualSource(
+      id: 'chabad_loubavitch',
+      name: 'Chabad-Loubavitch',
+      iconPath: 'assets/univers_visuel/chabad.png',
+      description: 'Mouvement hassidique fondé par Rabbi Schneur Zalman de Liadi (le Tanya). Le 7e Rabbi, Menachem Mendel Schneerson, a transformé le mouvement en force mondiale d\'outreach.',
+      modeOfThought: 'ChaBaD = Hokhma, Bina, Da\'at (Sagesse, Compréhension, Connaissance). Approche intellectuelle de la mystique, étude du Tanya et des Maamarim. "Comprendre pour ressentir".',
+      worldView: 'Chaque Juif compte, où qu\'il soit. Mission de préparer le monde pour Machia\'h. "Le monde est une demeure pour Dieu" - transformer le matériel en spirituel.',
+      distinctiveContribution: 'Outreach mondial (Shlikhout). Apporte une mystique accessible intellectuellement, un réseau mondial d\'émissaires, et l\'idée que chaque mitsva compte pour la rédemption.',
+    ),
+    SpiritualSource(
+      id: 'breslev',
+      name: 'Breslev',
+      iconPath: 'assets/univers_visuel/breslev.png',
+      description: 'Mouvement fondé par Rabbi Na\'hman de Breslev (arrière-petit-fils du Baal Shem Tov). Connu pour ses contes mystiques, ses enseignements sur la joie et le hitbodedout.',
+      modeOfThought: 'Hitbodedout : parler à Dieu seul, dans ses propres mots, comme à un ami. "Il est interdit de désespérer !" La simplicité et l\'authenticité priment sur l\'érudition.',
+      worldView: 'Le monde est un pont étroit, l\'essentiel est de ne pas avoir peur. Même la chute fait partie du chemin. La joie est une mitsva, la tristesse un obstacle.',
+      distinctiveContribution: 'Liberté spirituelle et résilience. Apporte le hitbodedout (prière personnelle spontanée), une spiritualité accessible sans Rebbe vivant, et l\'idée que chaque épreuve cache une élévation.',
+    ),
+    SpiritualSource(
+      id: 'mitnagdisme',
+      name: 'Mitnagdisme (Lituanien)',
+      iconPath: 'assets/univers_visuel/mitnagdisme.png',
+      description: 'Opposition au hassidisme menée par le Gaon de Vilna. Primat de l\'étude talmudique rigoureuse, méfiance envers l\'émotionnel.',
+      modeOfThought: 'Étude approfondie (iyoun), analyse logique, précision intellectuelle. "Torah lishmah" - l\'étude pour elle-même est la plus haute valeur.',
+      worldView: 'La perfection spirituelle passe par la connaissance ; l\'intellect est le chemin vers Dieu. Les yeshivot lituaniennes comme modèle.',
+      distinctiveContribution: 'Excellence intellectuelle et rigueur analytique. Apporte la méthode d\'étude approfondie du Talmud et l\'idéal de l\'érudit comme modèle de vie.',
     ),
     SpiritualSource(
       id: 'kabbale',
       name: 'Kabbale (mystique juive)',
       iconPath: 'assets/univers_visuel/kabale.png',
-      description: 'Tradition mystique qui explore les dimensions cachées du divin, l\'arbre des Sephirot, et les énergies qui structurent la réalité.',
-      modeOfThought: 'Vision symbolique, recherche des causes invisibles, lecture métaphorique et profonde des expériences.',
-      worldView: 'Le monde est une émanation fragmentée du divin ; l\'être humain participe à l\'unification spirituelle.',
+      description: 'Tradition mystique : Zohar, Isaac Louria (Ari), école de Safed. Explore les Sephirot, les mondes spirituels, et le Tikkoun.',
+      modeOfThought: 'Vision symbolique, lecture des niveaux cachés (Sod), correspondances entre le haut et le bas. Les mots et lettres ont un pouvoir créateur.',
+      worldView: 'Le monde est une émanation du divin (Tsimtsoum) ; l\'être humain participe à la réparation cosmique (Tikkoun Olam).',
+      distinctiveContribution: 'Dimension cosmique et mystique. Apporte une carte de l\'âme et de l\'univers spirituel, des outils de méditation, et le concept de Tikkoun Olam (réparation du monde).',
     ),
     SpiritualSource(
-      id: 'christianisme',
-      name: 'Christianisme',
-      iconPath: 'assets/univers_visuel/christianisme.png',
-      description: 'Tradition fondée sur la vie et l\'enseignement de Jésus, centrée sur l\'amour, le pardon et la relation personnelle avec Dieu.',
-      modeOfThought: 'Perspective morale et relationnelle : transformation par l\'amour, la grâce, la compassion.',
-      worldView: 'Le monde est un chemin vers la réconciliation spirituelle ; la souffrance peut devenir lieu de sens.',
+      id: 'moussar',
+      name: 'Moussar (éthique juive)',
+      iconPath: 'assets/univers_visuel/moussar.png',
+      description: 'Mouvement éthique fondé par Rabbi Israël Salanter (XIXe siècle). Travail sur les middot (traits de caractère), introspection, transformation morale.',
+      modeOfThought: 'Heshbon hanefesh (examen de conscience), pratique délibérée des vertus, étude des textes éthiques avec émotion (hitpa\'alout).',
+      worldView: 'Le perfectionnement moral est le but de la vie ; chaque situation est une opportunité de croissance spirituelle.',
+      distinctiveContribution: 'Psychologie spirituelle avant l\'heure. Apporte des outils concrets de développement personnel, l\'auto-observation, et la transformation progressive des traits de caractère.',
+    ),
+
+    // ═══════════════════════════════════════════════════════════════
+    // COURANTS MODERNES
+    // ═══════════════════════════════════════════════════════════════
+    SpiritualSource(
+      id: 'sionisme_religieux',
+      name: 'Sionisme religieux',
+      iconPath: 'assets/univers_visuel/sionisme_religieux.png',
+      description: 'Synthèse entre nationalisme juif et tradition religieuse. Rav Kook, Bnei Akiva, Gush Emunim. Le retour à Sion comme processus messianique.',
+      modeOfThought: 'La Gueoula (rédemption) se construit concrètement ; sainteté de l\'État d\'Israël ; Torah et travail (Torah im Derekh Eretz).',
+      worldView: 'L\'histoire a un sens divin ; le peuple juif a une mission nationale et spirituelle ; Atchalta deGueoula (début de la rédemption).',
+      distinctiveContribution: 'Sens de l\'histoire et de la mission collective. Apporte une lecture théologique du sionisme, l\'engagement dans la construction nationale, et la sanctification du quotidien en Terre d\'Israël.',
     ),
     SpiritualSource(
-      id: 'islam',
-      name: 'Islam',
-      iconPath: 'assets/univers_visuel/islam.png',
-      description: 'Tradition fondée sur le Coran et les enseignements du Prophète, structurée par une relation harmonieuse entre foi, pratique et communauté (Ummah).',
-      modeOfThought: 'Soumission confiante à Dieu (Allah), discipline intérieure et extérieure, recherche de justice et de paix.',
-      worldView: 'Le monde est signe (ayat), chaque événement porte un enseignement ; l\'équilibre spirituel et moral mène à la paix intérieure.',
+      id: 'orthodoxie_moderne',
+      name: 'Orthodoxie moderne',
+      iconPath: 'assets/univers_visuel/orthodoxie_moderne.png',
+      description: 'Engagement avec le monde moderne tout en maintenant la halakha. Rav Soloveitchik, Yeshiva University. Torah Umadda (Torah et science).',
+      modeOfThought: 'Dialogue entre tradition et modernité, ouverture aux études séculières, participation à la société civile tout en préservant l\'identité.',
+      worldView: 'La Torah s\'applique à tous les domaines de la vie moderne ; être un "Mentsch" dans le monde tout en restant fidèle à la halakha.',
+      distinctiveContribution: 'Pont entre tradition et modernité. Apporte la légitimité des études séculières, l\'engagement professionnel et civique, et une approche nuancée des défis contemporains.',
+    ),
+
+    // ═══════════════════════════════════════════════════════════════
+    // TRADITIONS COMMUNAUTAIRES
+    // ═══════════════════════════════════════════════════════════════
+    SpiritualSource(
+      id: 'sefarade',
+      name: 'Tradition Séfarade',
+      iconPath: 'assets/univers_visuel/sefarade.png',
+      description: 'Héritage des Juifs d\'Espagne et du Portugal. Rav Ovadia Yossef, Ben Ish Haï. Traditions liturgiques et halakhiques distinctes.',
+      modeOfThought: 'Approche halakhique souvent plus souple, importance du Minhag (coutume), harmonie entre rigueur et flexibilité selon Maran (Caro).',
+      worldView: 'Fierté de l\'âge d\'or espagnol, synthèse culturelle méditerranéenne, attachement aux piyoutim et à la poésie liturgique.',
+      distinctiveContribution: 'Élégance et équilibre. Apporte une approche halakhique pragmatique, une riche tradition poétique et musicale, et l\'héritage de la convivencia (coexistence culturelle).',
     ),
     SpiritualSource(
-      id: 'soufisme',
-      name: 'Soufisme (mystique musulmane)',
-      iconPath: 'assets/univers_visuel/soufisme.png',
-      description: 'Courant intérieur de l\'Islam visant la proximité intime avec Dieu par l\'amour, l\'humilité et la purification du cœur.',
-      modeOfThought: 'Vision poétique, symbolique, basée sur la quête intérieure, l\'union au divin et le dépouillement de l\'ego.',
-      worldView: 'Le monde est un miroir ; ce que l\'on vit révèle le chemin vers le cœur. Le divin se trouve dans l\'expérience intime.',
+      id: 'mizrahi',
+      name: 'Tradition Mizrahi',
+      iconPath: 'assets/univers_visuel/mizrahi.png',
+      description: 'Juifs des pays arabes et d\'Orient : Irak, Yémen, Perse, Maroc. Traditions anciennes préservées, liturgie et musique distinctes.',
+      modeOfThought: 'Transmission familiale et communautaire forte, intégration naturelle de la mystique dans le quotidien, respect des anciens.',
+      worldView: 'Continuité millénaire en terre d\'Islam, richesse des traditions locales (Djerba, Fès, Bagdad, Sanaa), nostalgie et renouveau.',
+      distinctiveContribution: 'Authenticité et tradition vivante. Apporte des coutumes préservées depuis des siècles, une spiritualité naturellement intégrée au quotidien, et une richesse musicale unique.',
     ),
     SpiritualSource(
-      id: 'bouddhisme',
-      name: 'Bouddhisme',
-      iconPath: 'assets/univers_visuel/boudhisme.png',
-      description: 'Tradition fondée sur l\'enseignement du Bouddha visant à réduire la souffrance en comprenant la nature de l\'esprit et de l\'attachement.',
-      modeOfThought: 'Observation, non-attachement, pleine conscience, transformation progressive par l\'expérience directe.',
-      worldView: 'Le monde est impermanent ; la souffrance vient de l\'attente, non de l\'événement. La liberté est intérieure.',
-    ),
-    SpiritualSource(
-      id: 'hindouisme',
-      name: 'Hindouisme',
-      iconPath: 'assets/univers_visuel/hindouisme.png',
-      description: 'Ensemble de traditions spirituelles originaires de l\'Inde, centrées sur le dharma, le karma et la quête de libération (moksha).',
-      modeOfThought: 'Acceptation des cycles de vie, recherche de l\'unité entre l\'âme individuelle (Atman) et l\'absolu (Brahman).',
-      worldView: 'Le monde est une manifestation divine (maya) ; chaque être est en chemin vers la réalisation de sa vraie nature.',
-    ),
-    // Stoïcisme retiré - déplacé vers courants philosophiques
-    SpiritualSource(
-      id: 'spiritualite_contemporaine',
-      name: 'Spiritualité contemporaine / laïque',
-      iconPath: 'assets/univers_visuel/contemporaine_et_laique.png',
-      description: 'Ensemble de pratiques modernes non dogmatiques inspirées de psychologie, méditation, développement personnel, symbolisme ou traditions diverses.',
-      modeOfThought: 'Approche expérimentale, introspective, souvent émotionnelle ; priorité donnée au bien-être, à la sensibilité et à la conscience de soi.',
-      worldView: 'Le monde est un espace d\'expérience et d\'évolution personnelle ; l\'important est l\'authenticité et la présence.',
+      id: 'ashkenaze',
+      name: 'Tradition Ashkénaze',
+      iconPath: 'assets/univers_visuel/ashkenaze.png',
+      description: 'Héritage des Juifs d\'Europe centrale et orientale. Rachi, Tossafot, yeshivot lituaniennes, hassidisme polonais et ukrainien.',
+      modeOfThought: 'Rigueur dans l\'étude talmudique, pilpoul (dialectique), importance des coutumes (minhagim) parfois plus strictes que la loi.',
+      worldView: 'Mémoire de la Shoah, culture du shtetl, yiddishkeit, tension entre intégration et préservation de l\'identité.',
+      distinctiveContribution: 'Profondeur intellectuelle et mémoire. Apporte la méthode d\'étude talmudique la plus développée, le hassidisme, et une conscience historique marquée par la résilience.',
     ),
   ];
 
@@ -490,6 +576,26 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                         height: 1.4,
                       ),
                     ),
+                    const SizedBox(height: 14),
+
+                    // Apport distinctif - titre en violet
+                    Text(
+                      'Apport distinctif',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6366F1), // Violet/Indigo
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      source.distinctiveContribution,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: const Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -534,6 +640,7 @@ class SpiritualSource {
   final String description;
   final String modeOfThought;
   final String worldView;
+  final String distinctiveContribution;
 
   SpiritualSource({
     required this.id,
@@ -542,5 +649,6 @@ class SpiritualSource {
     required this.description,
     required this.modeOfThought,
     required this.worldView,
+    required this.distinctiveContribution,
   });
 }

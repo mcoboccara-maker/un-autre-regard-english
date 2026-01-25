@@ -287,4 +287,97 @@ Recommandation: Utiliser des variables d'environnement ou un fichier .env
 
 ---
 
+## Module Sefaria API (25 janv)
+
+**Service créé**: `lib/services/sefaria_api_service.dart`
+
+**Fonctionnalités:**
+- Calendrier (Paracha, Daf Yomi, Haftarah)
+- Textes par référence (Torah, Talmud, Midrash)
+- Commentaires (Rashi, Ramban, Sforno, etc.)
+- Recherche dans tous les textes
+- Table des matières complète
+
+**Endpoints utilisés:**
+- `GET /api/calendars` - Paracha de la semaine
+- `GET /api/v3/texts/{ref}` - Texte par référence
+- `GET /api/related/{ref}` - Commentaires liés
+- `POST /api/search-wrapper` - Recherche
+
+**Widgets créés:**
+- `lib/widgets/paracha_widget.dart`
+  - `ParashaPreviewCard` - Aperçu pour menu principal
+  - `ParashaDetailPage` - Page complète avec onglets
+
+---
+
+## Module Éclairage (25 janv)
+
+**Architecture:**
+```
+Question utilisateur
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│         EclairageService                │
+│  ┌─────────┬─────────┬─────────┐       │
+│  │   LLM   │ Torah   │ Sefaria │       │
+│  │(OpenAI) │ Guide   │   API   │       │
+│  │         │  API    │         │       │
+│  └─────────┴─────────┴─────────┘       │
+└─────────────────────────────────────────┘
+       │
+       ▼
+   EclairageResponse
+   - insight (éclairage existentiel)
+   - historicalContext (Encyclopaedia)
+   - textualSources (Sefaria)
+```
+
+**Fichiers créés:**
+- `lib/services/eclairage_service.dart` - Orchestration des 3 sources
+- `lib/screens/eclairage/eclairage_screen.dart` - Interface utilisateur
+- `lib/widgets/eclairage_widget.dart` - Widgets réutilisables
+
+**Widgets disponibles:**
+- `EclairageQuickCard` - Carte d'accès (menu principal)
+- `EclairageSearchBar` - Barre de recherche style Google
+- `EclairageFab` - Floating Action Button
+- `EclairageMiniButton` - Bouton compact
+
+**Configuration requise:**
+```dart
+// Configurer le service avec la clé OpenAI
+EclairageService.instance.configure(
+  openAiApiKey: 'sk-...',
+);
+
+// Configurer Torah Guide API
+TorahGuideApiService.instance.configure(
+  baseUrl: TorahGuideApiConfig.getPlatformUrl(),
+);
+```
+
+---
+
+## Sources Spirituelles Étendues (25 janv)
+
+**16 sources disponibles:**
+
+| Catégorie | Sources |
+|-----------|---------|
+| Périodes historiques | Talmudiques, Midrash, Guéonim, Rishonim, A'haronim |
+| Hassidisme | Hassidisme général, Chabad-Loubavitch, Breslev |
+| Autres courants | Mitnagdisme, Kabbale, Moussar |
+| Modernes | Sionisme religieux, Orthodoxie moderne |
+| Communautaires | Séfarade, Mizrahi, Ashkénaze |
+
+**Champs par source:**
+- Description
+- Mode de pensée
+- Vision du monde
+- Apport distinctif (nouveau)
+
+---
+
 *Log créé automatiquement par Claude Code - Session 2026-01-25*
