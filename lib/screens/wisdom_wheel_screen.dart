@@ -538,12 +538,14 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
           _buildWheel(),
           
           const SizedBox(height: 16),
-          
-          // ICÔNE APP → Accès à welcome_screen
+
+          // BOUTONS D'ACCÈS (App + Tutoriel) - empilés verticalement
           _buildAppAccessButton(),
-          
+          const SizedBox(height: 10),
+          _buildTutorialButton(),
+
           const SizedBox(height: 16),
-          
+
           // SOURCE SÉLECTIONNÉE
           if (_selectedSource != null) _buildSelectedSource(),
           
@@ -935,6 +937,75 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
     );
   }
   
+  Widget _buildTutorialButton() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/tutorial');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(
+                'assets/univers_visuel/tutoriel.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2FE),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.play_circle_outline, color: Color(0xFF6366F1), size: 20),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tutoriel vidéo',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                Text(
+                  'Découvrir l\'application en 1min30',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.play_arrow, color: Color(0xFF94A3B8), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSelectedSource() {
     return Container(
       padding: const EdgeInsets.all(14),

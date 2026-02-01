@@ -1,6 +1,6 @@
 name: un_autre_regard
 description: Application "Un Autre Regard" - Ecoute et connaissance de soi
-version: 2.1.0+9
+version: 2.1.0+10
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -40,6 +40,9 @@ dependencies:
   
   # Audio - Son de la roue de la sagesse
   audioplayers: ^5.2.1
+
+  # Video - Tutoriel mode d'emploi
+  video_player: ^2.8.1
   
   # Icons
   cupertino_icons: ^1.0.2
@@ -85,9 +88,12 @@ flutter:
     - assets/images/
     - assets/icon/
     - assets/animations/
-    
+
     # Sons (pour la roue de la sagesse)
     - assets/sounds/
+
+    # Video tutoriel
+    - assets/video/
     
     # Univers visuel - TOUS les sous-dossiers
     - assets/univers_visuel/

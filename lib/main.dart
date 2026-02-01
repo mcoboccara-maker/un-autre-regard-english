@@ -21,6 +21,7 @@ import 'screens/sources/sources_philosophes_screen.dart';
 import 'screens/daily_mood/daily_mood_entry_screen.dart';
 import 'screens/timeline/emotion_timeline_screen.dart'; // ✅ Dans timeline/
 import 'screens/orientation/orientation_welcome_screen.dart'; // ✅ ORIENTATION
+import 'screens/tutorial/tutorial_screen.dart'; // ✅ TUTORIEL VIDEO
 // ═══════════════════════════════════════════════════════════════════════════════
 // ✨ AJOUT: ROUE DE LA SAGESSE
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -73,6 +74,7 @@ class UnAutreRegardApp extends StatelessWidget {
 		'/daily-mood': (context) => const DailyMoodEntryScreen(),
 		'/emotion-timeline': (context) => const EmotionTimelineScreen(), // ✅ SUIVI ÉMOTIONS
 		'/orientation': (context) => const OrientationWelcomeScreen(), // ✅ QUIZ ORIENTATION
+		'/tutorial': (context) => const TutorialScreen(), // ✅ TUTORIEL VIDEO
 	  },
     );
   }
