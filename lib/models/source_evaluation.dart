@@ -1,26 +1,27 @@
-import 'dart:convert';
-
 /// MODELE D'EVALUATION D'UNE SOURCE/PERSPECTIVE
-/// 
-/// Stocke l'évaluation d'un utilisateur pour une perspective générée :
-/// - Note de 1 à 10
-/// - Commentaire optionnel
+///
+/// Stocke les données d'un utilisateur pour une perspective générée :
+/// - Note de 1 à 10 (optionnelle)
+/// - Commentaire/note personnelle optionnel
 /// - Timestamp de l'évaluation
+/// - Statut de sauvegarde
 class SourceEvaluation {
   final String sourceKey;      // Clé de la source (ex: 'stoicisme', 'tcc')
   final String sourceName;     // Nom affiché (ex: 'Stoïcisme', 'TCC')
-  final int rating;            // Note de 1 à 10
-  final String? comment;       // Commentaire optionnel
+  final int? rating;           // Note de 1 à 10 (optionnelle)
+  final String? comment;       // Note personnelle optionnelle
   final DateTime evaluatedAt;  // Date de l'évaluation
   final String? responseText;  // Texte de la réponse IA (pour export)
+  final bool isSaved;          // Indique si l'éclairage a été sauvegardé
 
   SourceEvaluation({
     required this.sourceKey,
     required this.sourceName,
-    required this.rating,
+    this.rating,
     this.comment,
     DateTime? evaluatedAt,
     this.responseText,
+    this.isSaved = false,
   }) : evaluatedAt = evaluatedAt ?? DateTime.now();
 
   /// Copie avec modifications
@@ -31,6 +32,7 @@ class SourceEvaluation {
     String? comment,
     DateTime? evaluatedAt,
     String? responseText,
+    bool? isSaved,
   }) {
     return SourceEvaluation(
       sourceKey: sourceKey ?? this.sourceKey,
@@ -39,6 +41,7 @@ class SourceEvaluation {
       comment: comment ?? this.comment,
       evaluatedAt: evaluatedAt ?? this.evaluatedAt,
       responseText: responseText ?? this.responseText,
+      isSaved: isSaved ?? this.isSaved,
     );
   }
 
@@ -51,6 +54,7 @@ class SourceEvaluation {
       'comment': comment,
       'evaluatedAt': evaluatedAt.toIso8601String(),
       'responseText': responseText,
+      'isSaved': isSaved,
     };
   }
 
@@ -59,12 +63,13 @@ class SourceEvaluation {
     return SourceEvaluation(
       sourceKey: json['sourceKey'] ?? '',
       sourceName: json['sourceName'] ?? '',
-      rating: json['rating'] ?? 5,
+      rating: json['rating'],
       comment: json['comment'],
-      evaluatedAt: json['evaluatedAt'] != null 
-          ? DateTime.parse(json['evaluatedAt']) 
+      evaluatedAt: json['evaluatedAt'] != null
+          ? DateTime.parse(json['evaluatedAt'])
           : DateTime.now(),
       responseText: json['responseText'],
+      isSaved: json['isSaved'] ?? false,
     );
   }
 
@@ -131,11 +136,12 @@ class ReflectionEvaluations {
   /// Nombre d'évaluations
   int get evaluationCount => evaluations.length;
 
-  /// Moyenne des notes
+  /// Moyenne des notes (seulement celles qui ont une note)
   double get averageRating {
-    if (evaluations.isEmpty) return 0;
-    final total = evaluations.values.fold<int>(0, (sum, e) => sum + e.rating);
-    return total / evaluations.length;
+    final rated = evaluations.values.where((e) => e.rating != null).toList();
+    if (rated.isEmpty) return 0;
+    final total = rated.fold<int>(0, (sum, e) => sum + (e.rating ?? 0));
+    return total / rated.length;
   }
 
   /// Conversion vers JSON
@@ -209,16 +215,20 @@ class ReflectionEvaluations {
         buffer.writeln();
       }
       
-      buffer.writeln('⭐ Note : ${evaluation.rating}/10');
-      
+      if (evaluation.rating != null) {
+        buffer.writeln('⭐ Note : ${evaluation.rating}/10');
+      }
+
       if (evaluation.comment != null && evaluation.comment!.isNotEmpty) {
-        buffer.writeln('💬 Commentaire : ${evaluation.comment}');
+        buffer.writeln('💬 Note personnelle : ${evaluation.comment}');
       }
       buffer.writeln();
     }
     
     buffer.writeln('───────────────────────────────────────');
-    buffer.writeln('📊 Moyenne globale : ${averageRating.toStringAsFixed(1)}/10');
+    if (averageRating > 0) {
+      buffer.writeln('📊 Moyenne globale : ${averageRating.toStringAsFixed(1)}/10');
+    }
     buffer.writeln('📅 Date : ${createdAt.day}/${createdAt.month}/${createdAt.year}');
     
     return buffer.toString();

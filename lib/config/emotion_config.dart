@@ -181,7 +181,7 @@ class EmotionCategories {
       ],
       icon: Icons.sentiment_very_dissatisfied,
       color: Color(0xFF1E40AF),
-      iconPath: 'assets/univers_visuel/triste.png',
+      iconPath: 'assets/univers_visuel/deprime.png',
     ),
 
     // ❌ EFFRAYE

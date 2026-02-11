@@ -141,6 +141,7 @@ class EmotionalTrackingService {
             source: 'mood',
             nuances: emotionEntry.value.nuances,
             timestamp: entry.createdAt,
+            note: entry.note,
           ),
         );
       }
@@ -210,13 +211,15 @@ class EmotionDataPoint {
   final String source;           // 'mood' ou 'reflection'
   final List<String> nuances;    // Nuances de l'émotion
   final DateTime? timestamp;     // Horodatage exact (avec heure)
-  
+  final String? note;            // Note optionnelle du jour
+
   EmotionDataPoint({
     required this.date,
     required this.intensity,
     required this.source,
     this.nuances = const [],
     this.timestamp,
+    this.note,
   });
 }
 

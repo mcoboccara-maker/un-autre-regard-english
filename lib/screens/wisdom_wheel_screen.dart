@@ -27,6 +27,8 @@ import '../models/emotional_state.dart';
 import '../services/ai_service.dart';
 import '../services/tts_service.dart';
 import '../config/prompts/fr/prompt_synthese.dart';
+import '../theme/lighting_profiles.dart';
+import 'perspective_room_screen.dart';
 
 class WisdomWheelScreen extends StatefulWidget {
   const WisdomWheelScreen({super.key});
@@ -356,6 +358,9 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
           _generatedResponse = response;
           _isGenerating = false;
         });
+
+        // Naviguer vers la PerspectiveRoom (CDC cinématique)
+        _openPerspectiveRoom(response);
       }
     } catch (e) {
       print('❌ Erreur génération: $e');
@@ -365,6 +370,52 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
           _isGenerating = false;
         });
       }
+    }
+  }
+
+  /// Ouvrir la PerspectiveRoom avec la réponse générée
+  void _openPerspectiveRoom(String response) {
+    final perspective = PerspectiveData(
+      approachKey: _selectedSource!.key,
+      approachName: _selectedSource!.name,
+      responseText: response,
+    );
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return PerspectiveRoomScreen(
+            thoughtText: _thoughtController.text.trim(),
+            perspectives: [perspective],
+            onClose: () => Navigator.of(context).pop(),
+            onDeepen: (approachKey) {
+              _deepenInPerspectiveRoom(approachKey, response);
+            },
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
+  }
+
+  /// Approfondissement depuis la PerspectiveRoom
+  Future<void> _deepenInPerspectiveRoom(String approachKey, String originalResponse) async {
+    try {
+      final deepResponse = await AIService.instance.generateDeepening(
+        penseeOriginale: _thoughtController.text.trim(),
+        reponseCourte: originalResponse,
+        sourceNom: _selectedSource!.name,
+        figureNom: 'Figure',
+      );
+      // Note: PerspectiveRoom ne peut pas être mise à jour dynamiquement
+      // car c'est un StatefulWidget indépendant. L'approfondissement sera
+      // géré en rafraîchissant les données.
+      print('✅ Approfondissement généré: ${deepResponse.length} chars');
+    } catch (e) {
+      print('❌ Erreur approfondissement: $e');
     }
   }
   

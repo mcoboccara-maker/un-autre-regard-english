@@ -681,24 +681,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           
           // ═══════════════════════════════════════════════════════════════════
           // Indicateur du TOTAL des sources sélectionnées (profil + roue)
-          // Tooltip au toucher pour montrer les sources par défaut
+          // Tooltip au toucher pour montrer les sources (défaut ou sélectionnées)
           // ═══════════════════════════════════════════════════════════════════
           if (_totalSourcesCount > 0) ...[
-            GestureDetector(
-              onTap: _isUsingDefaultSources ? _showDefaultSourcesDialog : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2E8B7B).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF2E8B7B).withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.auto_awesome, color: Color(0xFF2E8B7B), size: 16),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isUsingDefaultSources 
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E8B7B).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF2E8B7B).withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.auto_awesome, color: Color(0xFF2E8B7B), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _isUsingDefaultSources
                           ? '$_totalSourcesCount sagesse(s) par défaut'
                           : '$_totalSourcesCount sagesse(s) sélectionnée(s)',
                       style: GoogleFonts.inter(
@@ -707,13 +706,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         color: const Color(0xFF2E8B7B),
                       ),
                     ),
-                    // Indicateur tactile pour sources par défaut
-                    if (_isUsingDefaultSources) ...[
-                      const SizedBox(width: 6),
-                      const Icon(Icons.info_outline, color: Color(0xFF2E8B7B), size: 14),
-                    ],
-                  ],
-                ),
+                  ),
+                  // Indicateur tactile - toujours visible et cliquable
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _isUsingDefaultSources
+                        ? _showDefaultSourcesDialog
+                        : _showSelectedSourcesDialog,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E8B7B).withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.info_outline, color: Color(0xFF2E8B7B), size: 14),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 10),
@@ -1686,6 +1695,193 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  /// Dialog affichant les sources sélectionnées par l'utilisateur
+  void _showSelectedSourcesDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.auto_awesome, color: Color(0xFF2E8B7B), size: 24),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Tes sources sélectionnées',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ces sagesses te guideront dans tes réflexions.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._profileSources.map((sourceKey) => _buildSourceTile(sourceKey)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Compris',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF2E8B7B),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Widget pour afficher une source avec son icône (générique)
+  Widget _buildSourceTile(String sourceKey) {
+    // Mapping des clés vers les noms lisibles et catégories
+    final sourceInfo = _getSourceInfo(sourceKey);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/univers_visuel/$sourceKey.png',
+              width: 36,
+              height: 36,
+              errorBuilder: (_, __, ___) => Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E8B7B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.auto_awesome, size: 20, color: Color(0xFF2E8B7B)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  sourceInfo['name']!,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                Text(
+                  sourceInfo['category']!,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Obtenir les infos d'une source à partir de sa clé
+  Map<String, String> _getSourceInfo(String sourceKey) {
+    // Mapping des clés de sources vers leurs noms et catégories
+    const sourceMapping = {
+      // Philosophes
+      'aristote': {'name': 'Aristote', 'category': 'Philosophe'},
+      'socrate': {'name': 'Socrate', 'category': 'Philosophe'},
+      'platon': {'name': 'Platon', 'category': 'Philosophe'},
+      'epictete': {'name': 'Épictète', 'category': 'Philosophe'},
+      'marc_aurele': {'name': 'Marc Aurèle', 'category': 'Philosophe'},
+      'spinoza': {'name': 'Spinoza', 'category': 'Philosophe'},
+      'kant': {'name': 'Kant', 'category': 'Philosophe'},
+      'nietzsche': {'name': 'Nietzsche', 'category': 'Philosophe'},
+      'camus': {'name': 'Albert Camus', 'category': 'Philosophe'},
+      'sartre': {'name': 'Jean-Paul Sartre', 'category': 'Philosophe'},
+      'confucius': {'name': 'Confucius', 'category': 'Philosophe'},
+
+      // Courants philosophiques
+      'existentialisme': {'name': 'Existentialisme', 'category': 'Courant philosophique'},
+      'stoicisme_philo': {'name': 'Stoïcisme', 'category': 'Courant philosophique'},
+      'epicurisme': {'name': 'Épicurisme', 'category': 'Courant philosophique'},
+      'humanisme_philo': {'name': 'Humanisme', 'category': 'Courant philosophique'},
+      'vitalisme': {'name': 'Vitalisme', 'category': 'Courant philosophique'},
+      'absurdisme_philo': {'name': 'Absurdisme', 'category': 'Courant philosophique'},
+      'rationalisme': {'name': 'Rationalisme', 'category': 'Courant philosophique'},
+      'empirisme': {'name': 'Empirisme', 'category': 'Courant philosophique'},
+      'pragmatisme': {'name': 'Pragmatisme', 'category': 'Courant philosophique'},
+      'phenomenologie': {'name': 'Phénoménologie', 'category': 'Courant philosophique'},
+      'idealisme': {'name': 'Idéalisme', 'category': 'Courant philosophique'},
+      'utilitarisme': {'name': 'Utilitarisme', 'category': 'Courant philosophique'},
+      'structuralisme': {'name': 'Structuralisme', 'category': 'Courant philosophique'},
+      'philosophies_orientales': {'name': 'Philosophies orientales', 'category': 'Courant philosophique'},
+
+      // Courants littéraires
+      'realisme': {'name': 'Réalisme', 'category': 'Courant littéraire'},
+      'humanisme': {'name': 'Humanisme', 'category': 'Courant littéraire'},
+      'romantisme': {'name': 'Romantisme', 'category': 'Courant littéraire'},
+      'existentialisme_litt': {'name': 'Existentialisme', 'category': 'Courant littéraire'},
+      'absurdisme': {'name': 'Absurdisme', 'category': 'Courant littéraire'},
+      'poetique': {'name': 'Poétique', 'category': 'Courant littéraire'},
+      'mystique': {'name': 'Mystique', 'category': 'Courant littéraire'},
+      'symboliste_moderne': {'name': 'Symbolisme moderne', 'category': 'Courant littéraire'},
+
+      // Approches psychologiques
+      'schemas_young': {'name': 'Schémas de Young', 'category': 'Approche psychologique'},
+      'jungienne': {'name': 'Psychologie jungienne', 'category': 'Approche psychologique'},
+      'tcc': {'name': 'TCC', 'category': 'Approche psychologique'},
+      'logotherapie': {'name': 'Logothérapie', 'category': 'Approche psychologique'},
+      'act': {'name': 'ACT', 'category': 'Approche psychologique'},
+      'the_work': {'name': 'The Work', 'category': 'Approche psychologique'},
+      'humaniste_rogers': {'name': 'Humaniste Rogers', 'category': 'Approche psychologique'},
+
+      // Religions/Spiritualités
+      'judaisme': {'name': 'Judaïsme', 'category': 'Spiritualité'},
+      'christianisme': {'name': 'Christianisme', 'category': 'Spiritualité'},
+      'islam': {'name': 'Islam', 'category': 'Spiritualité'},
+      'bouddhisme': {'name': 'Bouddhisme', 'category': 'Spiritualité'},
+      'hindouisme': {'name': 'Hindouisme', 'category': 'Spiritualité'},
+    };
+
+    return sourceMapping[sourceKey] ?? {
+      'name': _formatSourceName(sourceKey),
+      'category': 'Source',
+    };
+  }
+
+  /// Formate un nom de source à partir de sa clé (fallback)
+  String _formatSourceName(String key) {
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word.isNotEmpty
+            ? '${word[0].toUpperCase()}${word.substring(1)}'
+            : '')
+        .join(' ');
+  }
+
   /// Indicateur mode invité
   Widget _buildGuestIndicator() {
     return Container(
@@ -1835,12 +2031,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Récupérer le profil actuel
       final profileData = await CompleteAuthService.instance.getProfile() ?? {};
       
-      // Mettre à jour avec les nouvelles sources (REMPLACE, n'ajoute pas)
+      // Mettre à jour avec les nouvelles sources (REMPLACE les humanistes, PRÉSERVE les spiritualités)
       profileData['courantsLitteraires'] = selectedLitteraires;
       profileData['approchesPsychologiques'] = selectedPsycho;
       profileData['philosophesSelectionnes'] = selectedPhilosophes;
       profileData['courantsPhilosophiques'] = selectedCourantsPhilo;
-      profileData['religionsSelectionnees'] = <String>[]; // Pas de spirituelles dans la roue
+      // Note: religionsSelectionnees n'est PAS modifié - les spiritualités sont préservées
       profileData['lastUpdated'] = DateTime.now().toIso8601String();
       
       await CompleteAuthService.instance.saveProfile(profileData);

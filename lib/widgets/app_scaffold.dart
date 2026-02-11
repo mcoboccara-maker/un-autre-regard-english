@@ -21,6 +21,7 @@ class AppScaffold extends StatelessWidget {
   final Widget? bottomAction;     // Widget personnalisé en bas (remplace le bouton retour)
   final String? headerIconPath;   // Icône à afficher dans le header (logo de la page)
   final bool showTitle;           // Afficher le titre texte ou non
+  final bool transparentBackground; // Fond transparent (pour effets visuels custom)
 
   const AppScaffold({
     super.key,
@@ -36,32 +37,36 @@ class AppScaffold extends StatelessWidget {
     this.bottomAction,
     this.headerIconPath,          // Nouveau paramètre
     this.showTitle = true,        // Par défaut on affiche le titre
+    this.transparentBackground = false, // Par défaut on affiche le gradient
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: false,
+      extendBodyBehindAppBar: transparentBackground,
+      backgroundColor: transparentBackground ? Colors.transparent : null,
       appBar: _buildAppBar(context),
       body: Container(
-        // Fond bleu très évanescent - presque blanc avec touche de bleu
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF8FBFE),  // Blanc avec infime touche de bleu
-              Color(0xFFF5F9FD),  // Très légèrement plus bleuté
-              Color(0xFFF8FBFE),  // Retour quasi blanc
-            ],
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
+        // Fond transparent ou dégradé bleu selon le paramètre
+        decoration: transparentBackground
+            ? null
+            : const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFF8FBFE),  // Blanc avec infime touche de bleu
+                    Color(0xFFF5F9FD),  // Très légèrement plus bleuté
+                    Color(0xFFF8FBFE),  // Retour quasi blanc
+                  ],
+                  stops: [0.0, 0.5, 1.0],
+                ),
+              ),
         child: Column(
           children: [
             // Corps principal
             Expanded(child: body),
-            
+
             // Zone du bas: soit bottomAction personnalisé, soit bouton retour
             if (bottomAction != null)
               _buildBottomActionContainer(bottomAction!)
@@ -77,7 +82,7 @@ class AppScaffold extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: transparentBackground ? Colors.transparent : Colors.white,
       elevation: 0,
       leading: null,
       automaticallyImplyLeading: false,
@@ -270,7 +275,7 @@ class AppScaffold extends StatelessWidget {
   void _goToHome(BuildContext context) {
     Navigator.pushNamedAndRemoveUntil(
       context,
-      '/home',
+      '/menu',
       (route) => false,
     );
   }

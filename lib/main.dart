@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'services/storage_service.dart';
 import 'screens/welcome/welcome_screen.dart';
+import 'screens/introduction_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/main_app/main_screen.dart';
 import 'screens/profile/profile_screen.dart';
@@ -23,9 +24,17 @@ import 'screens/timeline/emotion_timeline_screen.dart'; // ✅ Dans timeline/
 import 'screens/orientation/orientation_welcome_screen.dart'; // ✅ ORIENTATION
 import 'screens/tutorial/tutorial_screen.dart'; // ✅ TUTORIEL VIDEO
 // ═══════════════════════════════════════════════════════════════════════════════
-// ✨ AJOUT: ROUE DE LA SAGESSE
+// ✨ MANÈGE 3D - Nouveau paradigme de navigation (CDC)
 // ═══════════════════════════════════════════════════════════════════════════════
-import 'screens/wisdom_wheel_screen.dart';
+import 'screens/home_carousel_screen.dart';
+import 'screens/menu_carousel_screen.dart';
+import 'screens/emotion_carousel_screen.dart';
+import 'screens/emotion_wheel_screen.dart';
+import 'screens/thought_input_screen.dart';
+import 'screens/eclairages_carousel_screen.dart';
+import 'screens/emotion_selection_screen.dart';
+import 'screens/demo/carousel_demo_screen.dart';
+import 'screens/sources_explorer_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,30 +61,35 @@ class UnAutreRegardApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
       // ═══════════════════════════════════════════════════════════════════════
-      // ✨ MODIFIÉ: PREMIER ÉCRAN = ROUE DE LA SAGESSE
-      // (Ancien: const AppInitializer())
+      // Écran d'introduction — premier écran au lancement
       // ═══════════════════════════════════════════════════════════════════════
-      home: const WisdomWheelScreen(),
+      home: const IntroductionScreen(),
       routes: {
-	    '/welcome': (context) => const WelcomeScreen(),
-		'/login': (context) => const LoginScreen(),
-		'/email': (context) => const EmailSelectionScreen(),
-	    '/onboarding': (context) => const OnboardingScreen(),
-	    '/main': (context) => const MainScreen(),
-	    '/profile': (context) => ProfileScreen(),
-		'/history': (context) => const HistoryScreen(),	
-		'/change-password': (context) => const ChangePasswordScreen(),
-		'/home': (context) => const HomeScreen(),
-		'/sources-spirituelles': (context) => const SourcesSpirituellesScreen(), // ✅ NOUVEAU
-		'/sources-litteraires': (context) => const SourcesLitterairesScreen(), // ✅ NOUVEAU
-		'/sources-psychologiques': (context) => const SourcesPsychologiquesScreen(), // ✅ NOUVEAU
-		'/sources-philosophiques': (context) => const SourcesPhilosophiquesScreen(), // ✅ NOUVEAU
-		'/sources-philosophes': (context) => const SourcesPhilosophesScreen(), // ✅ NOUVEAU
-		'/daily-mood': (context) => const DailyMoodEntryScreen(),
-		'/emotion-timeline': (context) => const EmotionTimelineScreen(), // ✅ SUIVI ÉMOTIONS
-		'/orientation': (context) => const OrientationWelcomeScreen(), // ✅ QUIZ ORIENTATION
-		'/tutorial': (context) => const TutorialScreen(), // ✅ TUTORIEL VIDEO
-	  },
+        '/welcome': (context) => const IntroductionScreen(),
+        '/home-carousel': (context) => const HomeCarouselScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/email': (context) => const EmailSelectionScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
+        '/main': (context) => const MainScreen(),
+        '/profile': (context) => ProfileScreen(),
+        '/history': (context) => const HistoryScreen(),
+        '/change-password': (context) => const ChangePasswordScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/menu': (context) => const MenuCarouselScreen(),
+        '/emotions': (context) => const EmotionWheelScreen(),
+        '/thought-input': (context) => const ThoughtInputScreen(),
+        '/sources-spirituelles': (context) => const SourcesSpirituellesScreen(),
+        '/sources-litteraires': (context) => const SourcesLitterairesScreen(),
+        '/sources-psychologiques': (context) => const SourcesPsychologiquesScreen(),
+        '/sources-philosophiques': (context) => const SourcesPhilosophiquesScreen(),
+        '/sources-philosophes': (context) => const SourcesPhilosophesScreen(),
+        '/daily-mood': (context) => const DailyMoodEntryScreen(),
+        '/emotion-timeline': (context) => const EmotionTimelineScreen(),
+        '/orientation': (context) => const OrientationWelcomeScreen(),
+        '/tutorial': (context) => const TutorialScreen(),
+        '/sources-explorer': (context) => const SourcesExplorerScreen(),
+        '/carousel-demo': (context) => const CarouselDemoScreen(),
+      },
     );
   }
 

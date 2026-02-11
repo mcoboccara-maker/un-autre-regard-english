@@ -345,81 +345,163 @@ class TtsService {
   }
   
   // ═══════════════════════════════════════════════════════════════════════════
+  // NETTOYAGE DU TEXTE POUR LA LECTURE VOCALE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Nettoie le texte des éléments Markdown et ponctuations non vocalisables
+  /// pour une lecture vocale naturelle
+  String _cleanTextForSpeech(String text) {
+    String result = text;
+
+    // Supprimer les blocs FIGURE_META
+    result = result.replaceAll(RegExp(r'\[FIGURE_META\][\s\S]*?\[/FIGURE_META\]'), '');
+    // Supprimer les titres Markdown ## X. TITRE
+    result = result.replaceAll(RegExp(r'##\s*\d*\.?\s*[A-ZÉÈÊËÀÂÄÙÛÜÔÖÎÏ\s]+\n'), '');
+    // Supprimer les lignes de séparation (underscores multiples)
+    result = result.replaceAll(RegExp(r'_{3,}'), '');
+
+    // IMPORTANT: En Dart, replaceAll avec $1 ne fonctionne PAS !
+    // Il faut utiliser replaceAllMapped pour les groupes de capture
+
+    // Supprimer le gras **texte** -> texte (garder le contenu)
+    result = result.replaceAllMapped(
+      RegExp(r'\*\*(.+?)\*\*'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Supprimer l'italique *texte* -> texte (garder le contenu)
+    result = result.replaceAllMapped(
+      RegExp(r'\*(.+?)\*'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Supprimer les astérisques isolées restantes
+    result = result.replaceAll('*', '');
+
+    // Supprimer les underscores _texte_ -> texte (garder le contenu)
+    result = result.replaceAllMapped(
+      RegExp(r'_(.+?)_'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Supprimer les # des titres
+    result = result.replaceAll(RegExp(r'^#+\s*', multiLine: true), '');
+    // Supprimer les puces Markdown
+    result = result.replaceAll(RegExp(r'^\s*[-•]\s*', multiLine: true), '');
+    // Supprimer les numérotations Markdown
+    result = result.replaceAll(RegExp(r'^\s*\d+\.\s*', multiLine: true), '');
+
+    // Supprimer les liens Markdown [texte](url) -> texte
+    result = result.replaceAllMapped(
+      RegExp(r'\[([^\]]+)\]\([^)]+\)'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Supprimer les blocs de code multiligne
+    result = result.replaceAll(RegExp(r'```[\s\S]*?```'), '');
+
+    // Supprimer le code inline `texte` -> texte
+    result = result.replaceAllMapped(
+      RegExp(r'`([^`]+)`'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Supprimer les backticks restants
+    result = result.replaceAll('`', '');
+
+    // Supprimer les guillemets doubles excessifs
+    result = result.replaceAll('""', '"');
+    // Nettoyer les espaces multiples
+    result = result.replaceAll(RegExp(r' {2,}'), ' ');
+    // Nettoyer les lignes vides multiples
+    result = result.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+
+    return result.trim();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // LECTURE
   // ═══════════════════════════════════════════════════════════════════════════
-  
+
   /// Lire un texte à voix haute
   /// [approachKey] : identifiant de la source (pour l'UI)
   /// [text] : texte à lire
   /// La langue est détectée automatiquement
   Future<void> speak(String text, {String? approachKey}) async {
     if (!_isInitialized) await init();
-    
+
+    // Nettoyer le texte pour la lecture vocale
+    final cleanedText = _cleanTextForSpeech(text);
+
     print('');
     print('════════════════════════════════════════════════════════════════');
     print('🔊 TTS: NOUVELLE DEMANDE DE LECTURE');
     print('════════════════════════════════════════════════════════════════');
-    print('📝 Texte (${text.length} chars): "${text.substring(0, min(100, text.length))}..."');
+    print('📝 Texte original (${text.length} chars)');
+    print('📝 Texte nettoyé (${cleanedText.length} chars): "${cleanedText.substring(0, min(100, cleanedText.length))}..."');
     print('🔑 ApproachKey: $approachKey');
     print('🎯 État actuel: isSpeaking=$_isSpeaking, currentKey=$_currentApproachKey');
-    
+
     // Si on clique sur le même bouton, arrêter la lecture
     if (_isSpeaking && _currentApproachKey == approachKey) {
       print('⏹️ TTS: Même bouton cliqué, arrêt');
       await stop();
       return;
     }
-    
+
     // Arrêter toute lecture en cours
     if (_isSpeaking) {
       print('⏹️ TTS: Arrêt lecture précédente');
       await stop();
     }
-    
+
     // Détecter la langue et configurer le TTS
-    final detectedLang = _detectLanguage(text);
+    final detectedLang = _detectLanguage(cleanedText);
     print('🌐 TTS: Langue détectée = $detectedLang');
-    
+
     await _setLanguageIfNeeded(detectedLang);
-    
+
     _isSpeaking = true;
     _currentApproachKey = approachKey;
     onStateChanged?.call(approachKey, true);
-    
+
     print('▶️ TTS: Lancement lecture en $_currentLanguage');
     print('════════════════════════════════════════════════════════════════');
     print('');
-    
-    await _tts.speak(text);
+
+    await _tts.speak(cleanedText);
   }
   
   /// Lire un texte avec une langue forcée (sans détection automatique)
   /// Utile si on connaît déjà la langue
   Future<void> speakWithLanguage(String text, String langCode, {String? approachKey}) async {
     if (!_isInitialized) await init();
-    
+
+    // Nettoyer le texte pour la lecture vocale
+    final cleanedText = _cleanTextForSpeech(text);
+
     print('');
     print('════════════════════════════════════════════════════════════════');
     print('🔊 TTS: LECTURE FORCÉE EN $langCode');
     print('════════════════════════════════════════════════════════════════');
-    
+
     if (_isSpeaking && _currentApproachKey == approachKey) {
       await stop();
       return;
     }
-    
+
     if (_isSpeaking) {
       await stop();
     }
-    
+
     await _setLanguageIfNeeded(langCode);
-    
+
     _isSpeaking = true;
     _currentApproachKey = approachKey;
     onStateChanged?.call(approachKey, true);
-    
+
     print('▶️ TTS: Lecture forcée en $_currentLanguage');
-    await _tts.speak(text);
+    await _tts.speak(cleanedText);
   }
   
   /// Arrêter la lecture en cours

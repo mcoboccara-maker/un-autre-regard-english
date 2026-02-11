@@ -79,13 +79,13 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
       ..sort((a, b) => b.value.intensity.compareTo(a.value.intensity));
   }
 
-  // Top 3 emotions toutes categories confondues
+  // Toutes les emotions actives triees par intensite
   List<MapEntry<String, EmotionDetail>> get _topEmotions {
     final sorted = widget.emotions.entries
         .where((e) => e.value.intensity > 0)
         .toList()
       ..sort((a, b) => b.value.intensity.compareTo(a.value.intensity));
-    return sorted.take(3).toList();
+    return sorted; // Retourner TOUTES les emotions actives
   }
 
   @override
@@ -406,18 +406,25 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
   Widget _buildTopEmotionsDisplay() {
     if (_topEmotions.isEmpty) return const SizedBox.shrink();
 
+    // Ajuster la taille selon le nombre d'emotions
+    final fontSize = _topEmotions.length > 5 ? 14.0 : (_topEmotions.length > 3 ? 18.0 : 22.0);
+    final verticalPadding = _topEmotions.length > 5 ? 2.0 : 4.0;
+
     return Column(
       children: _topEmotions.map((entry) {
         final config = _getEmotionConfig(entry.key);
         final name = config?.name ?? entry.key;
+        final isResource = _isResourceEmotion(entry.key);
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: EdgeInsets.symmetric(vertical: verticalPadding),
           child: Text(
-            '$name : ${entry.value.intensity}',
+            '$name : ${entry.value.intensity}%',
             style: GoogleFonts.poppins(
-              fontSize: 22,
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: isResource
+                  ? const Color(0xFF86EFAC) // Vert pour ressources
+                  : const Color(0xFFFCA5A5), // Rouge pour difficiles
             ),
           ),
         );
@@ -490,23 +497,23 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Colonne Ressources
+        // Colonne Appui (ressources)
         Expanded(
           child: _buildScoreColumn(
-            title: 'Ressources',
-            emoji: '🌱',
+            title: 'Appui',
+            iconPath: 'assets/univers_visuel/appui.png',
             color: const Color(0xFF10B981),
             emotions: _resourceEmotions.take(3).toList(),
           ),
         ),
-        
+
         const SizedBox(width: 12),
-        
-        // Colonne Difficiles
+
+        // Colonne Tensions (difficiles)
         Expanded(
           child: _buildScoreColumn(
-            title: 'A observer',
-            emoji: '💭',
+            title: 'Tensions',
+            iconPath: 'assets/univers_visuel/tension.png',
             color: const Color(0xFFF59E0B),
             emotions: _difficultEmotions.take(3).toList(),
           ),
@@ -517,7 +524,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
 
   Widget _buildScoreColumn({
     required String title,
-    required String emoji,
+    required String iconPath,
     required Color color,
     required List<MapEntry<String, EmotionDetail>> emotions,
   }) {
@@ -533,7 +540,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 14)),
+              Image.asset(iconPath, width: 18, height: 18),
               const SizedBox(width: 4),
               Text(
                 title,
@@ -679,10 +686,11 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
                             color: emotion.color.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            emotion.icon,
-                            color: emotion.color,
-                            size: 20,
+                          child: Image.asset(
+                            emotion.iconPath,
+                            width: 24,
+                            height: 24,
+                            errorBuilder: (_, __, ___) => Icon(emotion.icon, color: emotion.color, size: 20),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -881,16 +889,32 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Erreur capture: $e');
+      print('❌ Stack: $stackTrace');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erreur lors du partage: $e',
-              style: GoogleFonts.poppins(),
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(width: 8),
+                Expanded(child: Text('Erreur de partage')),
+              ],
             ),
-            backgroundColor: Colors.red,
+            content: SingleChildScrollView(
+              child: SelectableText(
+                'Détails:\n$e\n\nStack:\n$stackTrace',
+                style: GoogleFonts.poppins(fontSize: 12),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
           ),
         );
       }

@@ -652,10 +652,11 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
       child: ElevatedButton(
         onPressed: _saveEntry,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFD4A574),  // Ambre/doré cohérent
+          backgroundColor: const Color(0xFF10B981),  // Vert clair
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.only(bottom: 4),  // Remonter le texte
         ),
         child: Text(
           'Enregistrer et voir ma roue émotionnelle',

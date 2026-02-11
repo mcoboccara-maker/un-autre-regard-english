@@ -81,13 +81,42 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
     'VIVANT': 'vivant.png',
   };
 
-  // Top 3 émotions pour l'affichage en bas de la carte
+  // Couleurs spécifiques pour la roue des émotions - Palette distinctive
+  static const Map<String, Color> _wheelEmotionColors = {
+    // 🔴 Émotions difficiles / en tension
+    'EFFRAYE': Color(0xFFC0392B),      // Rouge sombre - Alerte, danger
+    'EN_COLERE': Color(0xFFE74C3C),    // Rouge vif - Explosion, feu
+    'DEPRIME': Color(0xFF2C3E50),      // Bleu nuit - Retrait, lourdeur
+    'IMPUISSANT': Color(0xFF4A4A4A),   // Gris anthracite - Blocage
+    'BLESSE': Color(0xFF8E1B3A),       // Bordeaux - Douleur émotionnelle
+    'CONFUS': Color(0xFF6C3483),       // Violet sombre - Brouillage cognitif
+    'CRITIQUE': Color(0xFF6E2C00),     // Brun foncé - Dureté, rigidité
+    'TRISTE': Color(0xFF34495E),       // Bleu gris foncé - Chagrin
+    'INDIFFERENT': Color(0xFF7F8C8D),  // Gris bleuté - Neutralité
+    // 🟢 Ressources / en appui
+    'PAISIBLE': Color(0xFF27AE60),     // Vert doux - Apaisement
+    'AIMANT': Color(0xFF2ECC71),       // Vert émeraude - Soutien
+    'OUVERT': Color(0xFF1ABC9C),       // Turquoise - Disponibilité
+    'DETENDU': Color(0xFF58D68D),      // Vert clair lumineux - Détente
+    'INTERESSE': Color(0xFF5DADE2),    // Bleu clair - Attention sereine
+    'POSITIF': Color(0xFFF7DC6F),      // Jaune clair - Optimisme
+    'FORT': Color(0xFF1F618D),         // Bleu profond - Solidité
+    'HEUREUX': Color(0xFFF4D03F),      // Jaune solaire - Joie
+    'VIVANT': Color(0xFFF1C40F),       // Jaune doré - Énergie vitale
+  };
+
+  // Helper pour obtenir la couleur de la roue
+  static Color _getWheelColor(String key) {
+    return _wheelEmotionColors[key] ?? Colors.grey;
+  }
+
+  // Toutes les émotions actives triées par intensité
   List<MapEntry<String, EmotionDetail>> get _topEmotions {
     final sorted = widget.emotions.entries
         .where((e) => e.value.intensity > 0)
         .toList()
       ..sort((a, b) => b.value.intensity.compareTo(a.value.intensity));
-    return sorted.take(3).toList();
+    return sorted; // Retourner TOUTES les émotions actives
   }
 
   @override
@@ -167,7 +196,7 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
     return RepaintBoundary(
       key: _chartKey,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -181,85 +210,59 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
         ),
         child: Column(
           children: [
-            // Indicateurs demi-cercles
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(child: _buildHalfCircleLabel('😔 Difficiles', const Color(0xFFDC2626))),
-                const SizedBox(width: 8),
-                Flexible(child: _buildHalfCircleLabel('😊 Ressources', const Color(0xFF10B981))),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Radar Chart
-            SizedBox(
-              height: 380,
-              child: RadarChart(
-                RadarChartData(
-                  radarShape: RadarShape.polygon,
-                  tickCount: 5,
-                  ticksTextStyle: GoogleFonts.poppins(
-                    fontSize: 9,
-                    color: Colors.grey[400],
-                  ),
-                  radarBorderData: BorderSide(
-                    color: Colors.grey[300]!,
-                    width: 2,
-                  ),
-                  gridBorderData: BorderSide(
-                    color: Colors.grey[200]!,
-                    width: 1,
-                  ),
-                  tickBorderData: BorderSide(
-                    color: Colors.grey[300]!,
-                    width: 1,
-                  ),
-                  getTitle: (index, angle) {
-                    if (index >= _emotionOrder.length) {
-                      return RadarChartTitle(text: '');
-                    }
-                    
-                    final emotionKey = _emotionOrder[index];
-                    final emotion = EmotionCategories.findByKey(emotionKey);
-                    if (emotion == null) return RadarChartTitle(text: '');
-                    
-                    return RadarChartTitle(
-                      text: emotion.name,
-                      angle: angle,
-                      positionPercentageOffset: 0.15,
-                    );
-                  },
-                  titleTextStyle: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
-                  dataSets: [
-                    RadarDataSet(
-                      fillColor: _buildGradientColor(),
-                      borderColor: const Color(0xFF6366F1),
-                      borderWidth: 2,
-                      entryRadius: 4,
-                      dataEntries: _buildDataEntries(),
-                    ),
-                  ],
-                  radarTouchData: RadarTouchData(
-                    enabled: true,
-                    touchCallback: (FlTouchEvent event, RadarTouchResponse? response) {
-                      if (response != null && response.touchedSpot != null) {
-                        if (event is FlTapUpEvent) {
-                          _showNuancesPopup(response.touchedSpot!.touchedRadarEntryIndex);
-                        }
-                      }
-                    },
-                  ),
-                ),
+            // Indicateurs demi-cercles (Ressources à GAUCHE, Difficiles à DROITE)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: _buildHalfCircleLabelWithIcon('Appui', const Color(0xFF10B981), 'assets/univers_visuel/appui.png')),
+                  const SizedBox(width: 8),
+                  Flexible(child: _buildHalfCircleLabelWithIcon('Tensions', const Color(0xFFDC2626), 'assets/univers_visuel/tension.png')),
+                ],
               ),
             ),
-            
-            const SizedBox(height: 12),
-            
+            const SizedBox(height: 8),
+
+            // Roue personnalisée avec CustomPainter - responsive et centrée
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Utiliser toute la largeur disponible
+                final availableWidth = constraints.maxWidth;
+                // Roue plus petite pour laisser de la place aux labels
+                final wheelSize = (availableWidth * 0.55).clamp(180.0, 260.0);
+                // Rayon des icônes - plus éloigné de la roue
+                final iconRadius = wheelSize * 0.62;
+                const iconSize = 28.0;
+
+                return SizedBox(
+                  width: availableWidth,
+                  height: availableWidth * 0.95,
+                  child: GestureDetector(
+                    onTapUp: (details) => _handleWheelTapResponsive(details, wheelSize, availableWidth),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Le radar dessiné avec CustomPaint - centré
+                        CustomPaint(
+                          size: Size(wheelSize, wheelSize),
+                          painter: _InteractiveWheelPainter(
+                            emotions: widget.emotions,
+                            emotionOrder: _emotionOrder,
+                            wheelColors: _wheelEmotionColors,
+                          ),
+                        ),
+                        // Les icônes positionnées autour - centrées sur availableWidth
+                        ..._buildWheelIconsCentered(availableWidth / 2, availableWidth * 0.95 / 2, iconRadius, iconSize),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 8),
+
             // Instruction
             Text(
               'Touchez une émotion pour voir ses nuances',
@@ -273,6 +276,218 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
         ),
       ),
     );
+  }
+
+  // Gestion du tap sur la roue (ancienne version)
+  void _handleWheelTap(TapUpDetails details, double wheelSize) {
+    final containerSize = wheelSize + 80;
+    final center = Offset(containerSize / 2, containerSize / 2);
+    final tapPosition = details.localPosition;
+
+    final dx = tapPosition.dx - center.dx;
+    final dy = tapPosition.dy - center.dy;
+    final distance = math.sqrt(dx * dx + dy * dy);
+
+    final maxTapRadius = wheelSize * 0.55;
+    if (distance < 30 || distance > maxTapRadius) return;
+
+    var angle = math.atan2(dy, dx) + math.pi / 2;
+    if (angle < 0) angle += 2 * math.pi;
+
+    final segmentAngle = 2 * math.pi / _emotionOrder.length;
+    final index = (angle / segmentAngle).floor() % _emotionOrder.length;
+
+    _showNuancesPopup(index);
+  }
+
+  // Gestion du tap - version responsive centrée
+  void _handleWheelTapResponsive(TapUpDetails details, double wheelSize, double containerWidth) {
+    final centerX = containerWidth / 2;
+    final centerY = containerWidth * 0.95 / 2;
+    final center = Offset(centerX, centerY);
+    final tapPosition = details.localPosition;
+
+    final dx = tapPosition.dx - center.dx;
+    final dy = tapPosition.dy - center.dy;
+    final distance = math.sqrt(dx * dx + dy * dy);
+
+    final maxTapRadius = wheelSize * 0.7;
+    if (distance < 20 || distance > maxTapRadius) return;
+
+    var angle = math.atan2(dy, dx) + math.pi / 2;
+    if (angle < 0) angle += 2 * math.pi;
+
+    final segmentAngle = 2 * math.pi / _emotionOrder.length;
+    final index = (angle / segmentAngle).floor() % _emotionOrder.length;
+
+    _showNuancesPopup(index);
+  }
+
+  // Construire les icônes autour de la roue
+  List<Widget> _buildWheelIcons(double containerHalfSize, double iconRadius, double iconSize) {
+    final List<Widget> icons = [];
+    // Le centre est au milieu du conteneur
+    final double centerX = containerHalfSize;
+    final double centerY = containerHalfSize;
+
+    for (int i = 0; i < _emotionOrder.length; i++) {
+      final key = _emotionOrder[i];
+      final angle = -math.pi / 2 + (2 * math.pi * i / _emotionOrder.length);
+
+      final x = centerX + iconRadius * math.cos(angle) - iconSize / 2;
+      final y = centerY + iconRadius * math.sin(angle) - iconSize / 2;
+
+      final iconFile = _emotionIcons[key] ?? 'pensee.png';
+      final data = widget.emotions[key];
+      final isActive = data != null && data.intensity > 0;
+      final color = _getWheelColor(key);
+      final emotionName = _getEmotionName(key);
+
+      icons.add(
+        Positioned(
+          left: x,
+          top: y,
+          child: GestureDetector(
+            onTap: () => _showNuancesPopup(i),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: iconSize,
+                  height: iconSize,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isActive ? color : Colors.grey[300]!,
+                      width: isActive ? 3 : 1,
+                    ),
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: color.withOpacity(0.4),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/univers_visuel/$iconFile',
+                      width: iconSize - 4,
+                      height: iconSize - 4,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.emoji_emotions,
+                          size: iconSize - 8,
+                          color: color,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  emotionName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 9,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                    color: color, // Toujours la couleur de l'émotion
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return icons;
+  }
+
+  // Version centrée des icônes autour de la roue
+  List<Widget> _buildWheelIconsCentered(double centerX, double centerY, double iconRadius, double iconSize) {
+    final List<Widget> icons = [];
+
+    for (int i = 0; i < _emotionOrder.length; i++) {
+      final key = _emotionOrder[i];
+      final angle = -math.pi / 2 + (2 * math.pi * i / _emotionOrder.length);
+
+      final x = centerX + iconRadius * math.cos(angle) - iconSize / 2;
+      final y = centerY + iconRadius * math.sin(angle) - iconSize / 2;
+
+      final iconFile = _emotionIcons[key] ?? 'pensee.png';
+      final data = widget.emotions[key];
+      final isActive = data != null && data.intensity > 0;
+      final color = _getWheelColor(key);
+      final emotionName = _getEmotionName(key);
+
+      icons.add(
+        Positioned(
+          left: x,
+          top: y,
+          child: GestureDetector(
+            onTap: () => _showNuancesPopup(i),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: iconSize,
+                  height: iconSize,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isActive ? color : Colors.grey[300]!,
+                      width: isActive ? 2.5 : 1,
+                    ),
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: color.withOpacity(0.4),
+                              blurRadius: 6,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/univers_visuel/$iconFile',
+                      width: iconSize - 4,
+                      height: iconSize - 4,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.emoji_emotions,
+                          size: iconSize - 8,
+                          color: color,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  emotionName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 8,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                    color: color,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return icons;
   }
 
   Widget _buildHalfCircleLabel(String text, Color color) {
@@ -290,6 +505,41 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
           fontWeight: FontWeight.w600,
           color: color,
         ),
+      ),
+    );
+  }
+
+  Widget _buildHalfCircleLabelWithIcon(String text, Color color, String iconPath) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            iconPath,
+            width: 18,
+            height: 18,
+            errorBuilder: (_, __, ___) => Icon(
+              text == 'Appui' ? Icons.sentiment_satisfied : Icons.sentiment_dissatisfied,
+              size: 16,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -532,7 +782,12 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
               color: emotion.color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(emotion.icon, color: emotion.color, size: 20),
+            child: Image.asset(
+              emotion.iconPath,
+              width: 24,
+              height: 24,
+              errorBuilder: (_, __, ___) => Icon(emotion.icon, color: emotion.color, size: 20),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -724,20 +979,23 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
     final List<Widget> icons = [];
     final double centerX = 190;
     final double centerY = 190;
-    final double iconRadius = 165; // Distance du centre aux icônes
-    final double iconSize = 28;
-    
+    final double iconRadius = 160; // Distance du centre aux icônes
+    final double iconSize = 30;
+
     for (int i = 0; i < _emotionOrder.length; i++) {
       final key = _emotionOrder[i];
       final angle = -math.pi / 2 + (2 * math.pi * i / _emotionOrder.length);
-      
+
+      // Décalage pour centrer l'ensemble icône + texte
       final x = centerX + iconRadius * math.cos(angle) - iconSize / 2;
       final y = centerY + iconRadius * math.sin(angle) - iconSize / 2;
-      
+
       final iconFile = _emotionIcons[key] ?? 'pensee.png';
       final data = widget.emotions[key];
       final isActive = data != null && data.intensity > 0;
-      
+      final emotionColor = _wheelEmotionColors[key] ?? Colors.white;
+      final emotionName = _getEmotionName(key);
+
       icons.add(
         Positioned(
           left: x,
@@ -745,15 +1003,19 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icône PNG
+              // Icône PNG avec bordure colorée
               Container(
                 width: iconSize,
                 height: iconSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isActive ? emotionColor : Colors.white38,
+                    width: isActive ? 2 : 1,
+                  ),
                   boxShadow: isActive ? [
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.3),
+                      color: emotionColor.withOpacity(0.5),
                       blurRadius: 8,
                       spreadRadius: 2,
                     ),
@@ -761,24 +1023,25 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    'univers_visuel/$iconFile',
-                    width: iconSize,
-                    height: iconSize,
+                    'assets/univers_visuel/$iconFile',
+                    width: iconSize - 4,
+                    height: iconSize - 4,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
+                      // Fallback: cercle avec première lettre
                       return Container(
                         width: iconSize,
                         height: iconSize,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
+                          color: emotionColor.withOpacity(0.3),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: Text(
-                            key[0],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                            emotionName.substring(0, 1),
+                            style: TextStyle(
+                              color: isActive ? emotionColor : Colors.white70,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -788,16 +1051,14 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
                   ),
                 ),
               ),
-              // Nom de l'émotion en dessous (petit)
+              // Nom de l'émotion avec sa couleur spécifique
               const SizedBox(height: 2),
               Text(
-                _getEmotionName(key),
+                emotionName,
                 style: GoogleFonts.poppins(
-                  fontSize: 8,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                  color: isActive 
-                      ? (_isResourceEmotion(key) ? const Color(0xFF86EFAC) : const Color(0xFFFCA5A5))
-                      : Colors.white54,
+                  fontSize: 7,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                  color: isActive ? emotionColor : Colors.white54,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -806,7 +1067,7 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
         ),
       );
     }
-    
+
     return icons;
   }
 
@@ -821,16 +1082,20 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
       );
     }
 
+    // Ajuster la taille selon le nombre d'émotions
+    final fontSize = _topEmotions.length > 5 ? 14.0 : (_topEmotions.length > 3 ? 16.0 : 18.0);
+    final verticalPadding = _topEmotions.length > 5 ? 2.0 : 3.0;
+
     return Column(
       children: _topEmotions.map((entry) {
         final name = _getEmotionName(entry.key);
         final isResource = _isResourceEmotion(entry.key);
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
+          padding: EdgeInsets.symmetric(vertical: verticalPadding),
           child: Text(
             '$name : ${entry.value.intensity}%',
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
               color: isResource ? const Color(0xFF86EFAC) : const Color(0xFFFCA5A5),
             ),
@@ -932,18 +1197,22 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
     setState(() => _isCapturing = true);
 
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Attendre que le widget soit complètement rendu
+      await Future.delayed(const Duration(milliseconds: 800));
 
       if (_shareCardKey.currentContext == null) {
         throw Exception('Widget de partage non disponible');
       }
 
-      RenderRepaintBoundary boundary = _shareCardKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary;
-
-      if (boundary.debugNeedsPaint) {
-        await Future.delayed(const Duration(milliseconds: 300));
+      final renderObject = _shareCardKey.currentContext!.findRenderObject();
+      if (renderObject == null || renderObject is! RenderRepaintBoundary) {
+        throw Exception('RenderRepaintBoundary non disponible');
       }
+
+      RenderRepaintBoundary boundary = renderObject;
+
+      // Attendre un peu plus pour s'assurer que le rendu est terminé
+      await Future.delayed(const Duration(milliseconds: 200));
 
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -972,16 +1241,32 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Erreur capture: $e');
+      print('❌ Stack: $stackTrace');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '❌ Erreur: ${e.toString()}',
-              style: GoogleFonts.poppins(),
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(width: 8),
+                Expanded(child: Text('Erreur de partage')),
+              ],
             ),
-            backgroundColor: Colors.red[600],
+            content: SingleChildScrollView(
+              child: SelectableText(
+                'Détails:\n$e\n\nStack:\n$stackTrace',
+                style: GoogleFonts.poppins(fontSize: 12),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
           ),
         );
       }
@@ -990,6 +1275,172 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
         setState(() => _isCapturing = false);
       }
     }
+  }
+}
+
+// ============================================================
+// CustomPainter pour la roue interactive avec segments colorés
+// ============================================================
+
+class _InteractiveWheelPainter extends CustomPainter {
+  final Map<String, EmotionDetail> emotions;
+  final List<String> emotionOrder;
+  final Map<String, Color> wheelColors;
+
+  _InteractiveWheelPainter({
+    required this.emotions,
+    required this.emotionOrder,
+    required this.wheelColors,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width / 2 - 20;
+
+    // Dessiner la grille
+    _drawGrid(canvas, center, maxRadius);
+
+    // Dessiner le polygone rempli avec couleurs par secteur
+    _drawFilledPolygonWithColors(canvas, center, maxRadius);
+
+    // PAS de contour bleu - supprimé pour clarté visuelle
+
+    // Dessiner les points sur les sommets (gris neutre)
+    _drawPoints(canvas, center, maxRadius);
+  }
+
+  void _drawGrid(Canvas canvas, Offset center, double maxRadius) {
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    // Cercles concentriques (5 niveaux)
+    for (int i = 1; i <= 5; i++) {
+      canvas.drawCircle(center, maxRadius * i / 5, gridPaint);
+    }
+
+    // Lignes radiales
+    final angleStep = 2 * math.pi / emotionOrder.length;
+    for (int i = 0; i < emotionOrder.length; i++) {
+      final angle = -math.pi / 2 + i * angleStep;
+      final x = center.dx + maxRadius * math.cos(angle);
+      final y = center.dy + maxRadius * math.sin(angle);
+      canvas.drawLine(center, Offset(x, y), gridPaint);
+    }
+  }
+
+  void _drawFilledPolygonWithColors(Canvas canvas, Offset center, double maxRadius) {
+    final angleStep = 2 * math.pi / emotionOrder.length;
+    final halfAngleStep = angleStep / 2;
+
+    // Pour chaque émotion, dessiner un secteur (arc de tarte) coloré
+    for (int i = 0; i < emotionOrder.length; i++) {
+      final key = emotionOrder[i];
+      final data = emotions[key];
+      final intensity = (data?.intensity ?? 0) / 100;
+
+      if (intensity > 0) {
+        final color = wheelColors[key] ?? Colors.grey;
+        final angle = -math.pi / 2 + i * angleStep;
+        final radius = maxRadius * intensity;
+
+        // Calculer les angles de début et fin du secteur
+        final startAngle = angle - halfAngleStep;
+        final endAngle = angle + halfAngleStep;
+
+        // Points du secteur (forme de "part de gâteau")
+        final startX = center.dx + radius * math.cos(startAngle);
+        final startY = center.dy + radius * math.sin(startAngle);
+        final endX = center.dx + radius * math.cos(endAngle);
+        final endY = center.dy + radius * math.sin(endAngle);
+        final peakX = center.dx + radius * math.cos(angle);
+        final peakY = center.dy + radius * math.sin(angle);
+
+        // Dessiner le secteur comme un triangle arrondi
+        final sectorPath = Path()
+          ..moveTo(center.dx, center.dy)
+          ..lineTo(startX, startY)
+          ..lineTo(peakX, peakY)
+          ..lineTo(endX, endY)
+          ..close();
+
+        final sectorPaint = Paint()
+          ..color = color.withOpacity(0.70)
+          ..style = PaintingStyle.fill;
+
+        canvas.drawPath(sectorPath, sectorPaint);
+      }
+    }
+  }
+
+  void _drawPolygonOutline(Canvas canvas, Offset center, double maxRadius) {
+    final angleStep = 2 * math.pi / emotionOrder.length;
+    final path = Path();
+    final points = <Offset>[];
+
+    for (int i = 0; i < emotionOrder.length; i++) {
+      final key = emotionOrder[i];
+      final data = emotions[key];
+      final intensity = (data?.intensity ?? 0) / 100;
+
+      final angle = -math.pi / 2 + i * angleStep;
+      final radius = maxRadius * intensity;
+      final x = center.dx + radius * math.cos(angle);
+      final y = center.dy + radius * math.sin(angle);
+      points.add(Offset(x, y));
+    }
+
+    if (points.isNotEmpty) {
+      path.moveTo(points.first.dx, points.first.dy);
+      for (int i = 1; i < points.length; i++) {
+        path.lineTo(points[i].dx, points[i].dy);
+      }
+      path.close();
+
+      // Contour avec couleur violette
+      final strokePaint = Paint()
+        ..color = const Color(0xFF6366F1)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5;
+      canvas.drawPath(path, strokePaint);
+    }
+  }
+
+  void _drawPoints(Canvas canvas, Offset center, double maxRadius) {
+    final angleStep = 2 * math.pi / emotionOrder.length;
+    const bleuNuit = Color(0xFF2C3E50); // Bleu nuit pour les points
+
+    for (int i = 0; i < emotionOrder.length; i++) {
+      final key = emotionOrder[i];
+      final data = emotions[key];
+
+      if (data != null && data.intensity > 0) {
+        final intensity = data.intensity / 100;
+        final angle = -math.pi / 2 + i * angleStep;
+        final radius = maxRadius * intensity;
+        final x = center.dx + radius * math.cos(angle);
+        final y = center.dy + radius * math.sin(angle);
+
+        // Point bleu nuit avec bordure blanche
+        final pointPaint = Paint()
+          ..color = bleuNuit
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(Offset(x, y), 6, pointPaint);
+
+        final borderPaint = Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
+        canvas.drawCircle(Offset(x, y), 6, borderPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _InteractiveWheelPainter oldDelegate) {
+    return oldDelegate.emotions != emotions;
   }
 }
 

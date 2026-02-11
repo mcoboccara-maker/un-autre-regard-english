@@ -38,12 +38,17 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
       print('   - ${entry.key}: ${entry.value.length} points de données');
     }
     
+    print('🎯 Timeline: Toutes les émotions seront affichées par défaut');
+
     setState(() {
       _emotionTimelines = timelines;
-      // Par défaut, afficher les 3 émotions les plus fréquentes
-      _visibleEmotions = _getTopEmotions(3);
+      // Par défaut, afficher TOUTES les émotions de la période
+      _visibleEmotions = timelines.keys.toSet();
       _isLoading = false;
     });
+
+    print('📈 Timeline: visibleEmotions = $_visibleEmotions');
+    print('📈 Timeline: emotionTimelines isEmpty? ${_emotionTimelines.isEmpty}');
   }
 
   Set<String> _getTopEmotions(int count) {
@@ -70,6 +75,205 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
         return null;
       }
     }
+  }
+
+  // Afficher le dialogue des détails d'une émotion
+  void _showEmotionDetailsDialog(String emotionKey) {
+    final emotion = _findEmotion(emotionKey);
+    if (emotion == null) return;
+
+    final dataPoints = _emotionTimelines[emotionKey] ?? [];
+    if (dataPoints.isEmpty) return;
+
+    // Calculer les statistiques
+    final intensities = dataPoints.map((p) => p.intensity).toList();
+    final avgIntensity = intensities.reduce((a, b) => a + b) / intensities.length;
+    final maxIntensity = intensities.reduce((a, b) => a > b ? a : b);
+    final minIntensity = intensities.reduce((a, b) => a < b ? a : b);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Image.asset(
+              emotion.iconPath,
+              width: 28,
+              height: 28,
+              errorBuilder: (_, __, ___) => Icon(emotion.icon, color: emotion.color, size: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                emotion.name,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: emotion.color,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Statistiques
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: emotion.color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildStatRow('📊 Moyenne', '${avgIntensity.toStringAsFixed(0)}%'),
+                      _buildStatRow('⬆️ Maximum', '$maxIntensity%'),
+                      _buildStatRow('⬇️ Minimum', '$minIntensity%'),
+                      _buildStatRow('📅 Occurrences', '${dataPoints.length}'),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Liste des dates
+                Text(
+                  '📅 Dates enregistrées :',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Liste des points avec dates
+                ...dataPoints.reversed.take(20).map((point) {
+                  final dateStr = '${point.date.day}/${point.date.month}/${point.date.year}';
+                  String timeStr = '';
+                  if (point.timestamp != null) {
+                    timeStr = ' à ${point.timestamp!.hour.toString().padLeft(2, '0')}:${point.timestamp!.minute.toString().padLeft(2, '0')}';
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '$dateStr$timeStr',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: emotion.color,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${point.intensity}%',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (point.nuances.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '💭 ${point.nuances.join(", ")}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                        if (point.note != null && point.note!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '📝 ${point.note}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontStyle: FontStyle.italic,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }),
+
+                if (dataPoints.length > 20)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      '... et ${dataPoints.length - 20} autres entrées',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Fermer',
+              style: GoogleFonts.poppins(color: emotion.color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(fontSize: 13),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -106,13 +310,18 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _emotionTimelines.isEmpty
               ? _buildEmptyState()
-              : Column(
-                  children: [
-                    _buildPeriodSelector(),
-                    _buildEmotionLegend(),
-                    Expanded(child: _buildChart()),
-                    _buildStatistics(),
-                  ],
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildPeriodSelector(),
+                      _buildEmotionLegend(),
+                      SizedBox(
+                        height: 300,  // Hauteur fixe pour le graphique
+                        child: _buildChart(),
+                      ),
+                      _buildStatistics(),
+                    ],
+                  ),
                 ),
     );
   }
@@ -174,9 +383,9 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '🎨 Émotions affichées (cliquez pour sélectionner)',
+            '🎨 Émotions (tap = afficher/masquer, appui long = détails)',
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -187,49 +396,58 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
             children: _emotionTimelines.keys.map((emotionKey) {
               final emotion = _findEmotion(emotionKey);
               if (emotion == null) return const SizedBox.shrink();
-              
+
               final isVisible = _visibleEmotions.contains(emotionKey);
-              
-              return FilterChip(
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(emotion.icon, size: 16, color: isVisible ? emotion.color : Colors.grey),
-                    const SizedBox(width: 6),
-                    Text(
-                      emotion.name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: isVisible ? emotion.color : Colors.grey[600],
-                        fontWeight: isVisible ? FontWeight.w600 : FontWeight.normal,
+
+              return GestureDetector(
+                onLongPress: () => _showEmotionDetailsDialog(emotionKey),
+                child: FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        emotion.iconPath,
+                        width: 16,
+                        height: 16,
+                        color: isVisible ? null : Colors.grey,
+                        errorBuilder: (_, __, ___) => Icon(emotion.icon, size: 16, color: isVisible ? emotion.color : Colors.grey),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '(${_emotionTimelines[emotionKey]!.length})',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: Colors.grey[500],
+                      const SizedBox(width: 6),
+                      Text(
+                        emotion.name,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: isVisible ? emotion.color : Colors.grey[600],
+                          fontWeight: isVisible ? FontWeight.w600 : FontWeight.normal,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                selected: isVisible,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _visibleEmotions.add(emotionKey);
-                    } else {
-                      _visibleEmotions.remove(emotionKey);
-                    }
-                  });
-                },
-                backgroundColor: Colors.grey[100],
-                selectedColor: emotion.color.withOpacity(0.2),
-                checkmarkColor: emotion.color,
-                side: BorderSide(
-                  color: isVisible ? emotion.color : Colors.grey[300]!,
-                  width: isVisible ? 2 : 1,
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${_emotionTimelines[emotionKey]!.length})',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                  selected: isVisible,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _visibleEmotions.add(emotionKey);
+                      } else {
+                        _visibleEmotions.remove(emotionKey);
+                      }
+                    });
+                  },
+                  backgroundColor: Colors.grey[100],
+                  selectedColor: emotion.color.withOpacity(0.2),
+                  checkmarkColor: emotion.color,
+                  side: BorderSide(
+                    color: isVisible ? emotion.color : Colors.grey[300]!,
+                    width: isVisible ? 2 : 1,
+                  ),
                 ),
               );
             }).toList(),
@@ -381,7 +599,12 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
                       tooltipText += '\n• +${exactPoint.nuances.length - 3} autres...';
                     }
                   }
-                  
+
+                  // Ajouter la note si disponible
+                  if (exactPoint.note != null && exactPoint.note!.isNotEmpty) {
+                    tooltipText += '\n\n📝 Note: ${exactPoint.note!.length > 50 ? '${exactPoint.note!.substring(0, 50)}...' : exactPoint.note}';
+                  }
+
                   return LineTooltipItem(
                     tooltipText,
                     GoogleFonts.poppins(
@@ -525,7 +748,12 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(emotion.icon, size: 24, color: emotion.color),
+                  Image.asset(
+                    emotion.iconPath,
+                    width: 24,
+                    height: 24,
+                    errorBuilder: (_, __, ___) => Icon(emotion.icon, size: 24, color: emotion.color),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

@@ -11,10 +11,12 @@ import '../../config/approach_config.dart';
 import '../../services/ai_service.dart';
 import '../../services/persistent_storage_service.dart';
 import '../../services/complete_auth_service.dart';
-import '../../services/email_service.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/brain_gestation_widget.dart';
+import '../../widgets/eclairage_content_widget.dart';  // Widget de mise en scène
 import '../../services/tts_service.dart';
+import '../perspective_room_screen.dart';  // Perspective Room
+import '../lighting_screen.dart';  // Lighting Screen (nappe lumineuse)
 import '../../config/prompts/fr/prompt_synthese.dart';
 
 /// ECRAN STREAMING DES RESULTATS - VERSION FUSIONNEE
@@ -54,7 +56,23 @@ class StreamingResultsScreen extends StatefulWidget {
 
 class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     with SingleTickerProviderStateMixin {
-  
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MISE EN SCENE DU CONTENU - TESTEZ LES DIFFERENTS STYLES ICI:
+  //
+  //   'classic'          → Affichage original (markdown simple)
+  //   'carousel'         → Cartes horizontales SWIPEABLE avec indicateurs
+  //   'story'            → Style Instagram stories (tap gauche/droite)
+  //   'flip'             → Carte qui se RETOURNE au tap (accroche/développement)
+  //   'typewriter'       → Texte qui S'ÉCRIT lettre par lettre
+  //   'stack'            → Cartes EMPILÉES qu'on jette (style Tinder)
+  //   'manege'           → Carrousel 3D rotatif
+  //   'perspective_room' → Pièce immersive avec éclairages par source
+  //   'lighting'         → NOUVEAU: Nappe lumineuse qui glisse (CDC 04/02/2026)
+  //
+  // ═══════════════════════════════════════════════════════════════════════════
+  static const String _contentStyle = 'perspective_room';  // ← CDC cinématique: pièce immersive
+
   late AnimationController _pulseController;
   
   // État de génération
@@ -72,14 +90,21 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   
   bool _isGenerating = false;
   bool _isComplete = false;
-  bool _emailSent = false;
   bool _isSendingEmail = false;
   String? _errorMessage;
   UserProfile? _userProfile;
   
   // Contrôleur pour le scroll automatique
   final ScrollController _scrollController = ScrollController();
-  
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NAPPE LUMINEUSE (CDC 04/02/2026)
+  // ═══════════════════════════════════════════════════════════════════════════
+  double _spotlightY = 0;           // Position Y actuelle du spotlight
+  double _targetSpotlightY = 0;     // Position cible
+  int _activeCardIndex = 0;         // Index de la carte active (la plus proche du focus)
+  bool _useStrongSpotlight = false; // Flash lors du changement de carte
+
   // ═══════════════════════════════════════════════════════════════════════════
   // TTS & SYNTHÈSE VOCALE
   // ═══════════════════════════════════════════════════════════════════════════
@@ -93,8 +118,6 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   final Map<String, bool> _isDeepening = {};           // État d'approfondissement en cours
   final Map<String, String> _deepenedResponses = {};   // Réponses approfondies
   
-  // NOUVEAU: Partage d'évaluation
-  final Map<String, bool> _evaluationShared = {};      // Évaluations partagées
   
   // NOUVEAU: Compteur de relance erreurs
   int _errorRetryCount = 0;
@@ -103,21 +126,76 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   @override
   void initState() {
     super.initState();
-    
+
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
+
     // Initialiser les statuts
     for (final approach in widget.selectedApproaches) {
       _status[approach] = 'pending';
     }
-    
+
+    // Scroll listener pour la nappe lumineuse
+    _scrollController.addListener(_onScrollForSpotlight);
+
     // Démarrer la génération
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startGeneration();
       _initTts();
+      _initSpotlight();
+    });
+  }
+
+  /// Initialiser le spotlight au centre de l'écran
+  void _initSpotlight() {
+    if (!mounted) return;
+    final screenHeight = MediaQuery.of(context).size.height;
+    setState(() {
+      _spotlightY = screenHeight * 0.3;
+      _targetSpotlightY = _spotlightY;
+    });
+  }
+
+  /// Scroll listener pour mettre à jour la position du spotlight
+  void _onScrollForSpotlight() {
+    if (!mounted) return;
+
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final spotSize = screenWidth * 1.2;
+
+    // Utiliser l'offset du scroll pour positionner le spotlight
+    final scrollOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
+
+    // Le spotlight suit le scroll avec un décalage pour rester dans la zone de lecture
+    final baseY = screenHeight * 0.2; // Position de base
+    final scrollFactor = 0.3; // Le spotlight bouge moins vite que le scroll
+
+    setState(() {
+      _targetSpotlightY = baseY + (scrollOffset * scrollFactor);
+
+      // Lerp smooth vers la cible (mouvement fluide)
+      _spotlightY = _spotlightY + (_targetSpotlightY - _spotlightY) * 0.15;
+
+      // Déterminer quelle carte est active basé sur le scroll
+      final cardHeight = 400; // Hauteur approximative d'une carte
+      final newActiveIndex = (scrollOffset / cardHeight).floor().clamp(0, 3);
+
+      // Flash si changement de carte
+      if (_activeCardIndex != newActiveIndex) {
+        _activeCardIndex = newActiveIndex;
+        _flashSpotlight();
+      }
+    });
+  }
+
+  /// Flash bref du spotlight lors du changement de carte
+  void _flashSpotlight() {
+    setState(() => _useStrongSpotlight = true);
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) setState(() => _useStrongSpotlight = false);
     });
   }
   
@@ -135,6 +213,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScrollForSpotlight);
     _pulseController.dispose();
     _scrollController.dispose();
     TtsService.instance.stop();  // Arrêter la lecture en cours
@@ -217,13 +296,12 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           setState(() {
             _responses[approachKey] = response;
             _status[approachNameOrKey] = 'completed';
-            
+
             // OPTION C : Révéler automatiquement la PREMIÈRE perspective
             if (_isFirstReveal) {
               _revealedKeys.add(approachKey);
               _isFirstReveal = false;
-              // Scroll seulement pour la première carte
-              _scrollToBottom();
+              // Pas de scroll - le premier éclairage s'affiche en haut
             }
             // Les suivantes restent en attente - pas de scroll auto
           });
@@ -324,31 +402,28 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     }
   }
 
-  /// Scroll automatique vers le bas
-  void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
+  /// Mettre à jour une évaluation (commentaire personnel)
+  void _updateEvaluation(String sourceKey, String sourceName, String? comment) {
+    final currentEval = _evaluations[sourceKey];
 
-  /// Mettre à jour une évaluation
-  void _updateEvaluation(String sourceKey, String sourceName, int rating, String? comment) {
+    // Construire le texte complet (réponse + approfondissement si disponible)
+    final response = _responses[sourceKey] ?? '';
+    final deepenedText = _deepenedResponses[sourceKey];
+    final fullResponseText = deepenedText != null
+        ? '$response\n\n--- Approfondissement ---\n$deepenedText'
+        : response;
+
     setState(() {
       _evaluations[sourceKey] = SourceEvaluation(
         sourceKey: sourceKey,
         sourceName: sourceName,
-        rating: rating,
+        rating: currentEval?.rating,
         comment: comment,
-        responseText: _responses[sourceKey],
+        responseText: fullResponseText,
+        isSaved: currentEval?.isSaved ?? false,
       );
     });
-    
+
     // Sauvegarder immédiatement
     _saveEvaluationsLocally();
   }
@@ -429,74 +504,384 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
 
   @override
   Widget build(BuildContext context) {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MODE LIGHTING : Nappe lumineuse qui glisse (CDC 04/02/2026)
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (_contentStyle == 'lighting' && _responses.isNotEmpty) {
+      return _buildLightingScreen(context);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MODE PERSPECTIVE ROOM : Affichage immersif plein écran
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (_contentStyle == 'perspective_room' && _responses.isNotEmpty) {
+      return _buildPerspectiveRoom(context);
+    }
+
     // Calculer le nombre de perspectives en attente
     final pendingCount = _responses.keys.where((key) => !_revealedKeys.contains(key)).length;
-    
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final spotSize = screenWidth * 1.2;
+
     return AppScaffold(
       title: 'Tes perspectives',
       headerIconPath: 'assets/univers_visuel/perspectives.png',
       showTitle: false,
       showBackButton: false,
-      bottomAction: _isComplete ? _buildNavigationButtons(context) : null,
+      transparentBackground: true,  // ACTIVER les effets visuels CDC
+      bottomAction: _buildBottomSection(context, pendingCount),
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // CONTENU PRINCIPAL
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFE8F4F8),
-                  Color(0xFFD0E8F0),
-                  Color(0xFFB8DCE8),
-                  Color(0xFFD8EEF5),
-                  Color(0xFFE0F0F5),
-                ],
-                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
-              ),
+          // ══════════════════════════════════════════════════════════════
+          // COUCHE 1: Fond perceptif (image gradient bleu-vert)
+          // ══════════════════════════════════════════════════════════════
+          Image.asset(
+            'assets/univers_visuel/bg_perception_blue_green.png',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+
+          // ══════════════════════════════════════════════════════════════
+          // COUCHE 2: Texture grain (overlay léger)
+          // ══════════════════════════════════════════════════════════════
+          Opacity(
+            opacity: 0.08,
+            child: Image.asset(
+              'assets/univers_visuel/grain_tile.png',
+              fit: BoxFit.cover,
+              repeat: ImageRepeat.repeat,
+              width: double.infinity,
+              height: double.infinity,
             ),
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 24),
-                  
-                  if (_errorMessage != null) ...[
-                    _buildError(),
-                    const SizedBox(height: 24),
-                  ],
-                  
-                  // Afficher les cartes générées (incluant le widget BrainGestation qui descend)
-                  ..._buildResultCards(),
-                  
-                  // Bouton d'export si terminé
-                  if (_isComplete && _responses.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    _buildExportButton(),
-                  ],
-                  
-                  const SizedBox(height: 100), // Espace pour le bottomAction
-                ],
+          ),
+
+          // ══════════════════════════════════════════════════════════════
+          // COUCHE 3: Nappe lumineuse TRÈS VISIBLE qui glisse avec le scroll
+          // ══════════════════════════════════════════════════════════════
+          IgnorePointer(
+            child: Transform.translate(
+              offset: Offset(0, _spotlightY),
+              child: Container(
+                width: screenWidth * 1.5,
+                height: screenWidth * 0.8,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 0.8,
+                    colors: [
+                      // Centre lumineux - très visible
+                      Color(_useStrongSpotlight ? 0xFFFFFFF0 : 0xFFE8FFF8).withOpacity(_useStrongSpotlight ? 0.50 : 0.35),
+                      const Color(0xFF80D0C0).withOpacity(0.25),
+                      const Color(0xFF40A090).withOpacity(0.10),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.35, 0.65, 1.0],
+                  ),
+                ),
               ),
             ),
           ),
-          
-          // ═══════════════════════════════════════════════════════════════════
-          // BOUTON FLOTTANT "X perspectives disponibles" (Option C)
-          // ═══════════════════════════════════════════════════════════════════
-          if (pendingCount > 0)
-            Positioned(
-              bottom: _isComplete ? 180 : 20,
-              left: 20,
-              right: 20,
-              child: _buildPendingPerspectivesButton(pendingCount),
+
+          // ══════════════════════════════════════════════════════════════
+          // COUCHE 4: Vignette douce sur les bords
+          // ══════════════════════════════════════════════════════════════
+          IgnorePointer(
+            child: Image.asset(
+              'assets/univers_visuel/vignette_soft.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
             ),
+          ),
+
+          // ══════════════════════════════════════════════════════════════
+          // COUCHE 4: Contenu scrollable
+          // ══════════════════════════════════════════════════════════════
+          SingleChildScrollView(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+              const SizedBox(height: 24),
+
+              if (_errorMessage != null) ...[
+                _buildError(),
+                const SizedBox(height: 24),
+              ],
+
+              // Afficher les cartes générées (incluant le widget BrainGestation qui descend)
+              ..._buildResultCards(),
+
+              // Bouton d'export si terminé
+              if (_isComplete && _responses.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _buildExportButton(),
+              ],
+
+              const SizedBox(height: 20), // Espace pour le bottomAction
+            ],
+          ),
+        ),
         ],
       ),
+    );
+  }
+
+  /// Construit l'écran Perspective Room immersif
+  Widget _buildPerspectiveRoom(BuildContext context) {
+    // Convertir les réponses en PerspectiveData avec état d'approfondissement
+    final perspectives = _responses.entries.map((entry) {
+      final approach = ApproachCategories.findByKey(entry.key);
+
+      // Déterminer l'état d'approfondissement
+      DeepeningState deepState;
+      if (_isDeepening[entry.key] == true) {
+        deepState = DeepeningState.loading;
+      } else if (_deepenedResponses.containsKey(entry.key)) {
+        deepState = DeepeningState.ready;
+      } else {
+        deepState = DeepeningState.notRequested;
+      }
+
+      return PerspectiveData(
+        approachKey: entry.key,
+        approachName: approach?.name ?? entry.key,
+        responseText: _cleanMarkdown(entry.value),
+        deepeningText: _deepenedResponses[entry.key] != null
+            ? _cleanMarkdown(_deepenedResponses[entry.key]!)
+            : null,
+        deepeningState: deepState,
+      );
+    }).toList();
+
+    // Si génération en cours, afficher un écran de chargement
+    if (_isGenerating && perspectives.isEmpty) {
+      return Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1F2937), Color(0xFF111827)],
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const BrainGestationWidget(
+                  isComplete: false,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Préparation de la perspective...',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return PerspectiveRoomScreen(
+      thoughtText: widget.reflectionText,
+      perspectives: perspectives,
+      onClose: () => Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false),
+      onEvaluate: (approachKey, rating) {
+        final approach = ApproachCategories.findByKey(approachKey);
+        if (approach != null) {
+          _saveEclairage(approach);
+        }
+      },
+      onSave: (approachKey) {
+        final approach = ApproachCategories.findByKey(approachKey);
+        if (approach != null) {
+          _saveEclairage(approach);
+        }
+      },
+      onReject: (approachKey) {
+        // Marquer comme rejeté (pas de sauvegarde)
+        print('❌ Éclairage écarté: $approachKey');
+      },
+      onDeepen: (approachKey) {
+        final approach = ApproachCategories.findByKey(approachKey);
+        if (approach != null) {
+          _deepen(approach);
+        }
+      },
+    );
+  }
+
+  /// Construit l'écran Lighting (nappe lumineuse glissante) - CDC 04/02/2026
+  Widget _buildLightingScreen(BuildContext context) {
+    // Prendre la première réponse pour l'affichage initial
+    // TODO: Ajouter navigation entre sources si plusieurs
+    final firstEntry = _responses.entries.first;
+    final approach = ApproachCategories.findByKey(firstEntry.key);
+
+    // Parser le texte en sections (Motif, Personnage, Contexte, Perspective)
+    final sections = _parseResponseToSections(firstEntry.value);
+
+    // Si génération en cours et pas encore de contenu, afficher chargement
+    if (_isGenerating && sections.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF1A3A4A),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Fond
+            Image.asset(
+              'assets/univers_visuel/bg_perception_blue_green.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: const Color(0xFF1A3A4A),
+              ),
+            ),
+            // Chargement
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const BrainGestationWidget(isComplete: false),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Préparation de l\'éclairage...',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return LightingScreen(
+      thoughtText: widget.reflectionText,
+      perspective: LightingPerspective(
+        approachKey: firstEntry.key,
+        approachName: approach?.name ?? firstEntry.key,
+        iconPath: 'assets/univers_visuel/${firstEntry.key}.png',
+        sections: sections,
+        isLoading: _isGenerating,
+        hasDeepening: _deepenedResponses.containsKey(firstEntry.key),
+        deepeningContent: _deepenedResponses[firstEntry.key],
+      ),
+      onClose: () => Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false),
+      onHome: () => Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false),
+      onNewThought: widget.onNewReflection,
+      onDeepen: () {
+        if (approach != null) {
+          _deepen(approach);
+        }
+      },
+    );
+  }
+
+  /// Parse une réponse en sections structurées
+  List<LightingSection> _parseResponseToSections(String response) {
+    final sections = <LightingSection>[];
+    final cleanText = _cleanMarkdown(response);
+
+    // Patterns pour détecter les sections
+    final patterns = {
+      'motif': RegExp(r'(?:motif|accroche)[:\s]*(.+?)(?=(?:personnage|contexte|perspective|$))', caseSensitive: false, dotAll: true),
+      'personnage': RegExp(r'(?:personnage|figure)[:\s]*(.+?)(?=(?:contexte|perspective|$))', caseSensitive: false, dotAll: true),
+      'contexte': RegExp(r'(?:contexte)[:\s]*(.+?)(?=(?:perspective|$))', caseSensitive: false, dotAll: true),
+      'perspective': RegExp(r'(?:perspective|accompagnement)[:\s]*(.+?)$', caseSensitive: false, dotAll: true),
+    };
+
+    // Essayer de parser avec les patterns
+    bool foundAny = false;
+    for (final entry in patterns.entries) {
+      final match = entry.value.firstMatch(cleanText);
+      if (match != null && match.group(1)?.trim().isNotEmpty == true) {
+        foundAny = true;
+        sections.add(LightingSection(
+          id: entry.key,
+          title: _sectionTitle(entry.key),
+          content: match.group(1)!.trim(),
+        ));
+      }
+    }
+
+    // Si pas de structure détectée, créer une section unique
+    if (!foundAny) {
+      // Diviser le texte en paragraphes
+      final paragraphs = cleanText.split(RegExp(r'\n\n+')).where((p) => p.trim().isNotEmpty).toList();
+
+      if (paragraphs.length >= 4) {
+        sections.add(LightingSection(id: 'motif', title: 'Motif', content: paragraphs[0]));
+        sections.add(LightingSection(id: 'personnage', title: 'Personnage', content: paragraphs[1]));
+        sections.add(LightingSection(id: 'contexte', title: 'Contexte', content: paragraphs[2]));
+        sections.add(LightingSection(id: 'perspective', title: 'Perspective', content: paragraphs.sublist(3).join('\n\n')));
+      } else {
+        // Texte court: une seule section
+        sections.add(LightingSection(id: 'perspective', title: 'Éclairage', content: cleanText));
+      }
+    }
+
+    return sections;
+  }
+
+  String _sectionTitle(String id) {
+    switch (id) {
+      case 'motif': return 'Motif';
+      case 'personnage': return 'Personnage';
+      case 'contexte': return 'Contexte';
+      case 'perspective': return 'Perspective';
+      default: return id;
+    }
+  }
+
+  /// Section fixe en bas de l'écran : bouton violet + retour menu
+  Widget _buildBottomSection(BuildContext context, int pendingCount) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Bouton violet "Nouvelles perspectives disponibles" - fixe en bas
+        if (pendingCount > 0) ...[
+          _buildPendingPerspectivesButton(pendingCount),
+          const SizedBox(height: 12),
+        ],
+
+        // Bouton retour au menu (toujours visible quand génération terminée)
+        if (_isComplete)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false),
+              icon: Image.asset(
+                'assets/univers_visuel/menu_principal.png',
+                width: 18,
+                height: 18,
+                errorBuilder: (_, __, ___) => const Icon(Icons.home, size: 18),
+              ),
+              label: Text(
+                'Retour au menu',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF2E8B7B),
+                side: const BorderSide(color: Color(0xFF2E8B7B), width: 1.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+      ],
     );
   }
   
@@ -624,8 +1009,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     final completedCount = _status.values.where((s) => s == 'completed').length;
     final revealedCount = _revealedKeys.length;
     final totalCount = widget.selectedApproaches.length;
-    final pendingToReveal = completedCount - revealedCount;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -691,7 +1075,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
         if (_isComplete) ...[
           const SizedBox(height: 8),
           Text(
-            'Tu peux noter chaque perspective (optionnel)',
+            'Tu peux ajouter une note personnelle et sauvegarder',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF64748B),
@@ -800,7 +1184,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     );
   }
   
-  /// Widget final quand tout est terminé - Invitation à partager
+  /// Widget final quand tout est terminé
   Widget _buildFinalBrainWidget() {
     return Container(
       margin: const EdgeInsets.only(top: 24, bottom: 16),
@@ -840,21 +1224,9 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 24),
-            // Icône email d'invitation à partager
-            Image.asset(
-              'assets/univers_visuel/evaluation/envmail.png',
-              width: 60,
-              height: 60,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.email_outlined,
-                size: 50,
-                color: Color(0xFF2563EB),
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
-              'Merci de partager tes évaluations',
+              'Tu peux sauvegarder tes éclairages',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF64748B),
@@ -894,15 +1266,13 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       key: cardKey, // Key pour scroll précis
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        // CDC: Fond transparent avec légère bordure lumineuse
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: approach.color.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(
+          color: Colors.white.withOpacity(0.15),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -911,7 +1281,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: approach.color.withOpacity(0.08),
+              color: approach.color.withOpacity(0.15),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(
@@ -953,14 +1323,9 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: approach.color.withOpacity(0.2),
-                        blurRadius: 4,
-                      ),
-                    ],
+                    border: Border.all(color: Colors.white24),
                   ),
                   child: Image.asset(
                     'assets/univers_visuel/${approach.key}.png',
@@ -989,7 +1354,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                         'Éclairage IA',
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          color: const Color(0xFF64748B),
+                          color: Colors.white70,
                         ),
                       ),
                     ],
@@ -1000,21 +1365,21 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: approach.color.withOpacity(0.3)),
+                    border: Border.all(color: Colors.white30),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.psychology, size: 12, color: approach.color),
+                      const Icon(Icons.psychology, size: 12, color: Colors.white70),
                       const SizedBox(width: 4),
                       Text(
                         'Claude',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: approach.color,
+                          color: Colors.white70,
                         ),
                       ),
                     ],
@@ -1024,32 +1389,12 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ),
           ),
           
-          // CONTENU - Rendu Markdown (gras, italique)
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: MarkdownBody(
-              data: _cleanMarkdown(response),
-              styleSheet: MarkdownStyleSheet(
-                p: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: const Color(0xFF1E293B),
-                  height: 1.7,
-                ),
-                strong: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1E293B),
-                  height: 1.7,
-                ),
-                em: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontStyle: FontStyle.italic,
-                  color: const Color(0xFF1E293B),
-                  height: 1.7,
-                ),
-              ),
-              selectable: true,
-            ),
+          // CONTENU - Mise en scène via widget dédié
+          EclairageContentWidget(
+            response: response,
+            accentColor: approach.color,
+            cleanMarkdown: _cleanMarkdown,
+            style: _contentStyle,  // 'classic', 'progressive', ou 'cards'
           ),
           
           // ═══════════════════════════════════════════════════════════════════
@@ -1131,9 +1476,8 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   // ═══════════════════════════════════════════════════════════════════════════
   
   Widget _buildActionButtons(ApproachConfig approach, SourceEvaluation? evaluation, bool hasDeepened, bool isDeepening) {
-    final hasComment = evaluation?.comment != null && evaluation!.comment!.isNotEmpty;
-    final isShared = _evaluationShared[approach.key] == true;
-    
+    final isSaved = evaluation?.isSaved == true;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -1166,8 +1510,8 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: hasDeepened 
-                    ? const Color(0xFF94A3B8) 
+                backgroundColor: hasDeepened
+                    ? const Color(0xFF94A3B8)
                     : approach.color,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1177,25 +1521,25 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
               ),
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
-          // Bouton Partager évaluation (50%)
+
+          // Bouton Sauvegarder (50%)
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: (isShared || !hasComment) ? null : () => _shareEvaluation(approach, evaluation),
+              onPressed: isSaved ? null : () => _saveEclairage(approach),
               icon: Icon(
-                isShared ? Icons.check : Icons.send_outlined,
+                isSaved ? Icons.check : Icons.save_outlined,
                 size: 18,
               ),
               label: Text(
-                isShared ? 'Envoyé' : 'Partager avis',
+                isSaved ? 'Sauvegardé' : 'Sauvegarder',
                 style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: isShared ? const Color(0xFF94A3B8) : approach.color,
+                foregroundColor: isSaved ? const Color(0xFF94A3B8) : approach.color,
                 side: BorderSide(
-                  color: isShared ? const Color(0xFF94A3B8) : approach.color.withOpacity(0.5),
+                  color: isSaved ? const Color(0xFF94A3B8) : approach.color.withOpacity(0.5),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -1234,11 +1578,14 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
         sourceNom: approach.name,
         figureNom: figureNom,
       );
-      
+
       setState(() {
         _deepenedResponses[approach.key] = deepResponse;
         _isDeepening[approach.key] = false;
       });
+
+      // Scroll vers le haut de la carte pour afficher l'approfondissement
+      _scrollToCard(approach.key);
       
     } catch (e) {
       print('❌ Erreur approfondissement: $e');
@@ -1258,77 +1605,68 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // NOUVEAU: MÉTHODE PARTAGE ÉVALUATION
+  // SAUVEGARDE D'UN ÉCLAIRAGE INDIVIDUEL
   // ═══════════════════════════════════════════════════════════════════════════
-  
-  Future<void> _shareEvaluation(ApproachConfig approach, SourceEvaluation? evaluation) async {
-    if (evaluation?.comment == null || evaluation!.comment!.isEmpty) return;
-    
-    // Afficher un indicateur de chargement
-    setState(() {
-      _evaluationShared[approach.key] = false; // En cours d'envoi
-    });
-    
+
+  Future<void> _saveEclairage(ApproachConfig approach) async {
     try {
-      print('📧 Envoi évaluation en arrière-plan pour: ${approach.name}');
-      
-      // Utiliser EmailService.sendPerspectives avec les paramètres d'évaluation
-      // On envoie à l'adresse de feedback de l'app
-      final result = await EmailService.instance.sendPerspectives(
-        toEmail: 'appunautreregard@gmail.com',
-        pensee: '[ÉVALUATION] ${approach.name}',
-        perspectives: {
-          approach.name: 'Note: ${evaluation.rating ?? "Non notée"}/10\nCommentaire: ${evaluation.comment}',
-        },
-        evaluations: {approach.name: evaluation.rating ?? 0},
-        commentaires: {approach.name: evaluation.comment ?? ''},
+      print('💾 Sauvegarde éclairage: ${approach.name}');
+
+      // Construire le texte complet (réponse + approfondissement si disponible)
+      final response = _responses[approach.key] ?? '';
+      final deepenedText = _deepenedResponses[approach.key];
+      final fullResponseText = deepenedText != null
+          ? '$response\n\n--- Approfondissement ---\n$deepenedText'
+          : response;
+
+      // Mettre à jour l'évaluation avec isSaved = true
+      final currentEval = _evaluations[approach.key];
+      final updatedEval = SourceEvaluation(
+        sourceKey: approach.key,
+        sourceName: approach.name,
+        rating: currentEval?.rating,
+        comment: currentEval?.comment,
+        responseText: fullResponseText,
+        isSaved: true,
       );
-      
+
+      setState(() {
+        _evaluations[approach.key] = updatedEval;
+      });
+
+      // Sauvegarder localement
+      await _saveEvaluationsLocally();
+
       if (mounted) {
-        setState(() {
-          _evaluationShared[approach.key] = result.success;
-        });
-        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
-                Icon(
-                  result.success ? Icons.check_circle : Icons.error,
+                const Icon(
+                  Icons.check_circle,
                   color: Colors.white,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    result.success 
-                        ? 'Merci pour votre avis !'
-                        : 'Erreur: ${result.message}',
-                  ),
+                  child: Text('${approach.name} sauvegardé'),
                 ),
               ],
             ),
-            backgroundColor: result.success ? const Color(0xFF10B981) : Colors.red,
+            backgroundColor: const Color(0xFF10B981),
             duration: const Duration(seconds: 2),
           ),
         );
-        
-        if (result.success) {
-          print('✅ Évaluation envoyée avec succès');
-        } else {
-          print('❌ Erreur envoi: ${result.message}');
-        }
+
+        print('✅ Éclairage sauvegardé: ${approach.name}');
       }
-      
+
     } catch (e) {
-      print('❌ Erreur partage évaluation: $e');
+      print('❌ Erreur sauvegarde éclairage: $e');
       if (mounted) {
-        setState(() {
-          _evaluationShared[approach.key] = false;
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Erreur de sauvegarde: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1349,13 +1687,13 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Titre section
+          // Titre section - Note personnelle
           Row(
             children: [
-              Icon(Icons.star_outline, size: 16, color: const Color(0xFF64748B)),
+              Icon(Icons.edit_note, size: 16, color: const Color(0xFF64748B)),
               const SizedBox(width: 6),
               Text(
-                'Ton avis sur cet éclairage (optionnel)',
+                'Ma note personnelle (optionnel)',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -1364,15 +1702,10 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
-          // Échelle de notation 1-10
-          _buildRatingScale(approach, evaluation?.rating),
-          
-          const SizedBox(height: 12),
-          
-          // Champ commentaire
+
+          // Champ commentaire personnel
           _buildCommentField(approach, evaluation?.comment),
         ],
       ),
@@ -1387,8 +1720,13 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     final isSpeakingFull = _currentSpeakingKey == '${approach.key}_full';
     final isSpeakingSynthesis = _currentSpeakingKey == '${approach.key}_synthesis';
     final isGenerating = _isGeneratingSynthesis[approach.key] == true;
-    final hasSynthesis = _syntheses.containsKey(approach.key);
-    
+
+    // Construire le texte complet (réponse + approfondissement si disponible)
+    final deepenedText = _deepenedResponses[approach.key];
+    final fullText = deepenedText != null
+        ? '$response\n\nApprofondissement:\n$deepenedText'
+        : response;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -1415,32 +1753,32 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ),
           ),
           const Spacer(),
-          
+
           // Bouton "Texte complet"
           _buildVoiceButton(
             label: isSpeakingFull ? 'Stop' : 'Complet',
             icon: isSpeakingFull ? Icons.stop_rounded : Icons.play_arrow_rounded,
             isActive: isSpeakingFull,
             color: approach.color,
-            onTap: () => _speakFullText(approach.key, response),
+            onTap: () => _speakFullText(approach.key, fullText),
           ),
-          
+
           const SizedBox(width: 8),
-          
+
           // Bouton "Synthèse"
           _buildVoiceButton(
-            label: isGenerating 
-                ? '...' 
+            label: isGenerating
+                ? '...'
                 : (isSpeakingSynthesis ? 'Stop' : 'Synthèse'),
-            icon: isGenerating 
+            icon: isGenerating
                 ? Icons.hourglass_top_rounded
                 : (isSpeakingSynthesis ? Icons.stop_rounded : Icons.auto_awesome),
             isActive: isSpeakingSynthesis,
             isLoading: isGenerating,
             color: approach.color,
-            onTap: isGenerating 
-                ? null 
-                : () => _speakSynthesis(approach, response),
+            onTap: isGenerating
+                ? null
+                : () => _speakSynthesis(approach, fullText),
           ),
         ],
       ),
@@ -1593,136 +1931,11 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     return synthesis;
   }
 
-  Widget _buildRatingScale(ApproachConfig approach, int? currentRating) {
-    final rating = currentRating ?? 5;
-    
-    return Column(
-      children: [
-        // Icône evaluation qui change selon la valeur
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/univers_visuel/evaluation/evaluation$rating.png',
-              width: 48,
-              height: 48,
-              errorBuilder: (_, __, ___) => Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: approach.color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '$rating',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: approach.color,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        
-        const SizedBox(height: 8),
-        
-        // Slider (curseur) - Couleurs BLEU PÉTROLE (actif) et VERT MENTHE (inactif) des icônes
-        Row(
-          children: [
-            Text(
-              '0',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                color: const Color(0xFF94A3B8),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Expanded(
-              child: SliderTheme(
-                data: SliderThemeData(
-                  activeTrackColor: const Color(0xFF2E7D8A),  // Bleu pétrole (icône evaluation)
-                  inactiveTrackColor: const Color(0xFF9FD5A1).withOpacity(0.3),  // Vert menthe
-                  thumbColor: const Color(0xFF2E7D8A),  // Bleu pétrole
-                  overlayColor: const Color(0xFF2E7D8A).withOpacity(0.1),
-                  trackHeight: 6,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
-                ),
-                child: Slider(
-                  value: rating.toDouble(),
-                  min: 0,
-                  max: 10,
-                  divisions: 10,
-                  onChanged: (value) {
-                    _updateEvaluation(
-                      approach.key,
-                      approach.name,
-                      value.round(),
-                      _evaluations[approach.key]?.comment,
-                    );
-                  },
-                ),
-              ),
-            ),
-            Text(
-              '10',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                color: const Color(0xFF94A3B8),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        
-        // Raccourcis rapides - Couleur BLEU PÉTROLE
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [0, 5, 10].map((quickValue) {
-            final isSelected = rating == quickValue;
-            return GestureDetector(
-              onTap: () {
-                _updateEvaluation(
-                  approach.key,
-                  approach.name,
-                  quickValue,
-                  _evaluations[approach.key]?.comment,
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF2E7D8A) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? const Color(0xFF2E7D8A) : const Color(0xFFE2E8F0),
-                  ),
-                ),
-                child: Text(
-                  '$quickValue',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
 
   Widget _buildCommentField(ApproachConfig approach, String? currentComment) {
     return TextField(
       decoration: InputDecoration(
-        hintText: 'Commentaire (optionnel)...',
+        hintText: 'Ma note personnelle sur cet éclairage...',
         hintStyle: GoogleFonts.inter(
           fontSize: 13,
           color: const Color(0xFF94A3B8),
@@ -1746,8 +1959,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF1E293B)),
       maxLines: 2,
       onChanged: (value) {
-        final currentRating = _evaluations[approach.key]?.rating ?? 5;
-        _updateEvaluation(approach.key, approach.name, currentRating, value);
+        _updateEvaluation(approach.key, approach.name, value);
       },
       controller: TextEditingController(text: currentComment)
         ..selection = TextSelection.fromPosition(
@@ -1866,6 +2078,9 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   }
 
   Widget _buildExportButton() {
+    // Vérifier si tous les éclairages sont déjà sauvegardés
+    final allSaved = _responses.keys.every((key) => _evaluations[key]?.isSaved == true);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -1875,7 +2090,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: InkWell(
-        onTap: _emailSent || _isSendingEmail ? null : _sendByEmail,
+        onTap: allSaved || _isSendingEmail ? null : _saveAll,
         borderRadius: BorderRadius.circular(12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1886,28 +2101,28 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2E8B7B)),
                 ),
               ),
             ] else ...[
-              Image.asset(
-                'assets/univers_visuel/evaluation/envmail.png',
-                width: 24,
-                height: 24,
-                errorBuilder: (_, __, ___) => Icon(
-                  _emailSent ? Icons.check_circle : Icons.email,
-                  size: 20,
-                ),
+              Icon(
+                allSaved ? Icons.check_circle : Icons.save,
+                size: 24,
+                color: allSaved ? const Color(0xFF10B981) : const Color(0xFF2E8B7B),
               ),
             ],
             const SizedBox(width: 10),
             Text(
-              _emailSent 
-                  ? 'Évaluations partagées ✓'
+              allSaved
+                  ? 'Tout sauvegardé ✓'
                   : _isSendingEmail
-                      ? 'Envoi en cours...'
-                      : 'Partager mes évaluations par email',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                      ? 'Sauvegarde en cours...'
+                      : 'Tout sauvegarder',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: allSaved ? const Color(0xFF10B981) : const Color(0xFF1E293B),
+              ),
             ),
           ],
         ),
@@ -1915,103 +2130,84 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     );
   }
   
-  /// Envoyer les perspectives par email via Brevo
-  Future<void> _sendByEmail() async {
-    // Récupérer l'email de l'utilisateur connecté
-    final userEmail = CompleteAuthService.instance.currentUserEmail;
-    
-    if (userEmail == null || userEmail.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Aucun email utilisateur trouvé. Connecte-toi d\'abord.'),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      return;
-    }
-    
+  /// Sauvegarder tous les éclairages en une seule fois
+  Future<void> _saveAll() async {
     setState(() {
       _isSendingEmail = true;
     });
-    
+
     try {
-      // Préparer les données pour l'email
-      final Map<String, String> perspectives = {};
-      final Map<String, int> evaluationsMap = {};
-      final Map<String, String> commentairesMap = {};
-      
-      for (final entry in _responses.entries) {
-        // Trouver le nom de la source
+      print('💾 Sauvegarde de tous les éclairages...');
+
+      // Marquer tous les éclairages comme sauvegardés
+      for (final key in _responses.keys) {
         final approach = ApproachCategories.allApproaches
-            .where((a) => a.key == entry.key)
+            .where((a) => a.key == key)
             .firstOrNull;
-        final sourceName = approach?.name ?? entry.key;
-        
-        perspectives[sourceName] = entry.value;
-        
-        // Ajouter l'évaluation si elle existe
-        final evaluation = _evaluations[entry.key];
-        if (evaluation != null) {
-          evaluationsMap[sourceName] = evaluation.rating;
-          if (evaluation.comment != null && evaluation.comment!.isNotEmpty) {
-            commentairesMap[sourceName] = evaluation.comment!;
-          }
+
+        if (approach != null) {
+          // Construire le texte complet (réponse + approfondissement si disponible)
+          final response = _responses[key] ?? '';
+          final deepenedText = _deepenedResponses[key];
+          final fullResponseText = deepenedText != null
+              ? '$response\n\n--- Approfondissement ---\n$deepenedText'
+              : response;
+
+          final currentEval = _evaluations[key];
+          _evaluations[key] = SourceEvaluation(
+            sourceKey: key,
+            sourceName: approach.name,
+            rating: currentEval?.rating,
+            comment: currentEval?.comment,
+            responseText: fullResponseText,
+            isSaved: true,
+          );
         }
       }
-      
-      // Envoyer via EmailService
-      final result = await EmailService.instance.sendPerspectives(
-        toEmail: userEmail,
-        pensee: widget.reflectionText,
-        perspectives: perspectives,
-        evaluations: evaluationsMap.isNotEmpty ? evaluationsMap : null,
-        commentaires: commentairesMap.isNotEmpty ? commentairesMap : null,
-      );
-      
+
+      // Sauvegarder localement
+      await _saveEvaluationsLocally();
+
       if (mounted) {
         setState(() {
           _isSendingEmail = false;
-          _emailSent = result.success;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
-                Icon(
-                  result.success ? Icons.check_circle : Icons.error,
+                const Icon(
+                  Icons.check_circle,
                   color: Colors.white,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    result.success 
-                        ? 'Email envoyé à $userEmail'
-                        : 'Erreur: ${result.message}',
+                    '${_responses.length} éclairages sauvegardés',
                   ),
                 ),
               ],
             ),
-            backgroundColor: result.success ? const Color(0xFF10B981) : Colors.red,
+            backgroundColor: const Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: result.success ? 3 : 5),
+            duration: const Duration(seconds: 3),
           ),
         );
+
+        print('✅ Tous les éclairages sauvegardés');
       }
     } catch (e) {
-      print('❌ Exception envoi email: $e');
+      print('❌ Erreur sauvegarde globale: $e');
       if (mounted) {
         setState(() {
           _isSendingEmail = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur d\'envoi: $e'),
+            content: Text('Erreur de sauvegarde: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -2067,57 +2263,4 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     );
   }
 
-  Widget _buildNavigationButtons(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Bouton nouvelle réflexion - VA VERS HOME
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-            icon: const Icon(Icons.refresh, size: 20),
-            label: Text(
-              'Nouvelle réflexion',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E8B7B),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 3,
-              shadowColor: const Color(0xFF2E8B7B).withOpacity(0.4),
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 12),
-        
-        // Bouton retour accueil
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
-            icon: Image.asset(
-              'assets/univers_visuel/menu_principal.png',
-              width: 18,
-              height: 18,
-              errorBuilder: (_, __, ___) => const Icon(Icons.home, size: 18),
-            ),
-            label: Text(
-              'Retour au menu',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF2E8B7B),
-              side: const BorderSide(color: Color(0xFF2E8B7B), width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

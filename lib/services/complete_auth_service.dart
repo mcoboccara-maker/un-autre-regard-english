@@ -106,7 +106,71 @@ class CompleteAuthService {
     await init();
     return _prefs!.containsKey('password_${email.toLowerCase().trim()}');
   }
-  
+
+  /// Réinitialiser le mot de passe et retourner le nouveau mot de passe temporaire
+  Future<String?> resetPassword(String email) async {
+    await init();
+
+    final emailKey = email.toLowerCase().trim();
+
+    // Vérifier si l'email existe
+    if (!await emailExists(emailKey)) {
+      print('❌ Réinitialisation échouée - Email inexistant: $emailKey');
+      return null;
+    }
+
+    // Générer un mot de passe temporaire (8 caractères)
+    final tempPassword = _generateTempPassword();
+
+    // Hasher et sauvegarder le nouveau mot de passe
+    final hash = sha256.convert(utf8.encode(tempPassword)).toString();
+    await _prefs!.setString('password_$emailKey', hash);
+
+    print('✅ Mot de passe réinitialisé pour: $emailKey');
+    return tempPassword;
+  }
+
+  /// Générer un mot de passe temporaire
+  String _generateTempPassword() {
+    const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    final random = DateTime.now().millisecondsSinceEpoch;
+    final buffer = StringBuffer();
+    for (int i = 0; i < 8; i++) {
+      buffer.write(chars[(random + i * 7) % chars.length]);
+    }
+    return buffer.toString();
+  }
+
+  /// Vérifier le mot de passe temporaire et définir un nouveau mot de passe
+  /// Retourne true si succès, false si le mot de passe temporaire est incorrect
+  Future<bool> verifyTempAndSetNewPassword(String email, String tempPassword, String newPassword) async {
+    await init();
+
+    final emailKey = email.toLowerCase().trim();
+
+    // Vérifier si l'email existe
+    if (!await emailExists(emailKey)) {
+      print('❌ Changement mot de passe échoué - Email inexistant: $emailKey');
+      return false;
+    }
+
+    // Vérifier le mot de passe temporaire
+    final tempHash = sha256.convert(utf8.encode(tempPassword)).toString();
+    final storedHash = _prefs!.getString('password_$emailKey');
+
+    if (storedHash != tempHash) {
+      print('❌ Mot de passe temporaire incorrect pour: $emailKey');
+      return false;
+    }
+
+    // Hasher et sauvegarder le nouveau mot de passe
+    final newHash = sha256.convert(utf8.encode(newPassword)).toString();
+    await _prefs!.setString('password_$emailKey', newHash);
+
+    print('✅ Nouveau mot de passe défini pour: $emailKey');
+    return true;
+  }
+
   /// DÃ©finir l'utilisateur actuel
   Future<void> _setCurrentUser(String email) async {
     final emailKey = email.toLowerCase().trim();

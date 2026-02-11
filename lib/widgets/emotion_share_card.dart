@@ -61,13 +61,13 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
     'indifferent': '😐',
   };
 
-  // Top 3 emotions pour l'affichage en bas
+  // Toutes les émotions actives triées par intensité (pour l'affichage en bas)
   List<MapEntry<String, EmotionDetail>> get _topEmotions {
     final sorted = widget.emotions.entries
         .where((e) => e.value.intensity > 0)
         .toList()
       ..sort((a, b) => b.value.intensity.compareTo(a.value.intensity));
-    return sorted.take(3).toList();
+    return sorted; // Retourner TOUTES les émotions actives, pas juste le top 3
   }
 
   @override
@@ -282,17 +282,29 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
   Widget _buildTopEmotions() {
     if (_topEmotions.isEmpty) return const SizedBox.shrink();
 
+    // Couleurs pour les émotions ressources vs difficiles
+    Color _getEmotionColor(String key) {
+      const resourceKeys = [
+        'paisible', 'vivant', 'aimant', 'detendu', 'ouvert',
+        'positif', 'interesse', 'heureux', 'fort',
+      ];
+      return resourceKeys.contains(key)
+          ? const Color(0xFF86EFAC) // Vert clair pour ressources
+          : const Color(0xFFFCA5A5); // Rouge clair pour difficiles
+    }
+
     return Column(
       children: _topEmotions.map((entry) {
         final name = _getEmotionName(entry.key);
+        final color = _getEmotionColor(entry.key);
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 3),
           child: Text(
-            '$name : ${entry.value.intensity}',
+            '$name : ${entry.value.intensity}%',
             style: GoogleFonts.poppins(
-              fontSize: 22,
+              fontSize: _topEmotions.length > 4 ? 16 : 20, // Police plus petite si beaucoup d'émotions
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: color,
             ),
           ),
         );
@@ -353,30 +365,58 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
   }
 
   Future<void> _shareCard() async {
+    print('📤 SHARE: Début du partage de la carte émotionnelle');
+
     // Garder l'emotion dominante affichee pour la capture
     if (_topEmotions.isNotEmpty) {
       setState(() => _selectedEmotionKey = _topEmotions.first.key);
+      print('📤 SHARE: Émotion dominante sélectionnée: $_selectedEmotionKey');
     }
-    
+
     await Future.delayed(const Duration(milliseconds: 100));
-    
+
     setState(() => _isSharing = true);
 
     try {
+      // Vérifier que le context existe
+      if (_cardKey.currentContext == null) {
+        throw Exception('Le widget n\'est pas encore rendu (currentContext est null)');
+      }
+
+      print('📤 SHARE: Capture du widget...');
       RenderRepaintBoundary boundary = _cardKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
 
+      // Vérifier que le boundary est prêt
+      if (boundary.debugNeedsPaint) {
+        print('⚠️ SHARE: Le widget n\'a pas encore été peint, attente...');
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      print('📤 SHARE: Image capturée (${image.width}x${image.height})');
+
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
+      if (byteData == null) {
+        throw Exception('Échec de la conversion en PNG (byteData est null)');
+      }
+
+      Uint8List pngBytes = byteData.buffer.asUint8List();
+      print('📤 SHARE: PNG créé (${pngBytes.length} bytes)');
 
       final tempDir = await getTemporaryDirectory();
       final fileName = 'etat_emotionnel_${widget.date.day}_${widget.date.month}_${widget.date.year}.png';
-      final file = await File('${tempDir.path}/$fileName').create();
+      final filePath = '${tempDir.path}/$fileName';
+      print('📤 SHARE: Sauvegarde dans: $filePath');
+
+      final file = await File(filePath).create();
       await file.writeAsBytes(pngBytes);
+      print('📤 SHARE: Fichier sauvegardé');
 
       // Partager UNIQUEMENT l'image - PAS de texte = PAS de pave vert
+      print('📤 SHARE: Ouverture du dialogue de partage...');
       await Share.shareXFiles([XFile(file.path)]);
+      print('📤 SHARE: Partage terminé avec succès');
 
       widget.onShareComplete?.call();
 
@@ -388,12 +428,34 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ SHARE ERROR: $e');
+      print('❌ SHARE STACK: $stackTrace');
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: $e', style: GoogleFonts.poppins()),
-            backgroundColor: Colors.red,
+        // Afficher l'erreur dans un Dialog pour qu'elle soit lisible
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.red),
+                const SizedBox(width: 8),
+                const Text('Erreur de partage'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: SelectableText(
+                'Détails:\n$e',
+                style: GoogleFonts.poppins(fontSize: 14),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
           ),
         );
       }

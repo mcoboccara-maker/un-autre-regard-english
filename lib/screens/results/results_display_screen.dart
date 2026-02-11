@@ -717,7 +717,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+            onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false),
             icon: Image.asset(
               'assets/univers_visuel/menu_principal.png',
               width: 18,

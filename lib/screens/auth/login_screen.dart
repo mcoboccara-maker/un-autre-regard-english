@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/user_profile.dart';
 import '../../services/complete_auth_service.dart';
+import '../../services/email_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -95,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
           );
           
           await Future.delayed(const Duration(milliseconds: 500));
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/menu');
         }
       } else {
         throw Exception('Échec de la connexion invité');
@@ -711,9 +712,29 @@ class _LoginScreenState extends State<LoginScreen> {
               },
             ),
           ),
-          
+
+          // Lien "Mot de passe oublié ?" (seulement en mode connexion)
+          if (!_isNewUser) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: GestureDetector(
+                onTap: _handleForgotPassword,
+                child: Text(
+                  'Mot de passe oublié ?',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF2E8B7B),
+                    fontWeight: FontWeight.w500,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ],
+
           const SizedBox(height: 24),
-          
+
           // Bouton d'action
           SizedBox(
             width: double.infinity,
@@ -892,7 +913,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _isNewUser = false;
       _showForm = true;
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -903,6 +924,352 @@ class _LoginScreenState extends State<LoginScreen> {
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  /// Gestion du mot de passe oublié
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+
+    // Vérifier si un email est saisi
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Veuillez d\'abord saisir votre adresse email',
+                  style: GoogleFonts.inter(),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFF59E0B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      return;
+    }
+
+    // Afficher dialogue de confirmation
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.lock_reset, color: Color(0xFF2E8B7B)),
+            const SizedBox(width: 12),
+            Text(
+              'Mot de passe oublié',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        content: Text(
+          'Un nouveau mot de passe temporaire sera envoyé à :\n\n$email\n\nVoulez-vous continuer ?',
+          style: GoogleFonts.inter(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Annuler',
+              style: GoogleFonts.inter(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E8B7B),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'Envoyer',
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Afficher indicateur de chargement
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF2E8B7B)),
+      ),
+    );
+
+    try {
+      // Réinitialiser le mot de passe
+      final tempPassword = await CompleteAuthService.instance.resetPassword(email);
+
+      if (tempPassword == null) {
+        if (!mounted) return;
+        Navigator.pop(context); // Fermer le loader
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Aucun compte trouvé avec cet email',
+                    style: GoogleFonts.inter(),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+        return;
+      }
+
+      // Envoyer l'email avec le nouveau mot de passe
+      final result = await EmailService.instance.sendPasswordReset(
+        toEmail: email,
+        tempPassword: tempPassword,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // Fermer le loader
+
+      if (result.success) {
+        // Afficher le dialogue pour définir un nouveau mot de passe
+        await _showSetNewPasswordDialog(email);
+      } else {
+        // Afficher le message d'erreur détaillé
+        print('❌ Erreur envoi email mot de passe: ${result.message}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Erreur: ${result.message}',
+                    style: GoogleFonts.inter(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Fermer le loader
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: $e', style: GoogleFonts.inter()),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+    }
+  }
+
+  /// Dialogue pour définir un nouveau mot de passe après réception du temporaire
+  Future<void> _showSetNewPasswordDialog(String email) async {
+    final tempPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    bool isLoading = false;
+    String? errorMessage;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.lock_reset, color: Color(0xFF2E8B7B)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Définir un nouveau mot de passe',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Un mot de passe temporaire a été envoyé à $email',
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 20),
+
+                // Champ mot de passe temporaire
+                Text(
+                  'Mot de passe temporaire',
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: tempPasswordController,
+                  decoration: InputDecoration(
+                    hintText: 'Entrez le mot de passe reçu par email',
+                    hintStyle: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  style: GoogleFonts.inter(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+
+                // Champ nouveau mot de passe
+                Text(
+                  'Nouveau mot de passe',
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: newPasswordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'Choisissez votre nouveau mot de passe',
+                    hintStyle: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  style: GoogleFonts.inter(fontSize: 14),
+                ),
+
+                // Message d'erreur
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    errorMessage!,
+                    style: GoogleFonts.inter(fontSize: 12, color: Colors.red),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+              child: Text(
+                'Annuler',
+                style: GoogleFonts.inter(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      final tempPwd = tempPasswordController.text.trim();
+                      final newPwd = newPasswordController.text.trim();
+
+                      if (tempPwd.isEmpty || newPwd.isEmpty) {
+                        setDialogState(() {
+                          errorMessage = 'Veuillez remplir les deux champs';
+                        });
+                        return;
+                      }
+
+                      if (newPwd.length < 4) {
+                        setDialogState(() {
+                          errorMessage = 'Le nouveau mot de passe doit faire au moins 4 caractères';
+                        });
+                        return;
+                      }
+
+                      setDialogState(() {
+                        isLoading = true;
+                        errorMessage = null;
+                      });
+
+                      final success = await CompleteAuthService.instance
+                          .verifyTempAndSetNewPassword(email, tempPwd, newPwd);
+
+                      if (success) {
+                        Navigator.pop(dialogContext);
+                        if (mounted) {
+                          ScaffoldMessenger.of(this.context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  const Icon(Icons.check_circle, color: Colors.white),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Mot de passe modifié avec succès !',
+                                      style: GoogleFonts.inter(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: const Color(0xFF10B981),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                          );
+                        }
+                      } else {
+                        setDialogState(() {
+                          isLoading = false;
+                          errorMessage = 'Mot de passe temporaire incorrect';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E8B7B),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      'Valider',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -947,7 +1314,7 @@ class _LoginScreenState extends State<LoginScreen> {
             );
             
             await Future.delayed(const Duration(milliseconds: 1000));
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacementNamed(context, '/menu');
           }
         } else {
           if (mounted) {
@@ -991,7 +1358,7 @@ class _LoginScreenState extends State<LoginScreen> {
             );
             
             await Future.delayed(const Duration(milliseconds: 1000));
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacementNamed(context, '/menu');
           }
         } else {
           if (mounted) {

@@ -136,7 +136,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
         Future.delayed(const Duration(milliseconds: 1500), () {
           if (mounted) {
             Navigator.of(context).pushNamedAndRemoveUntil(
-              '/home',
+              '/menu',
               (route) => false,
             );
           }

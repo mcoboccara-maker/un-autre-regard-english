@@ -681,7 +681,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
             child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false);
               },
               icon: Image.asset(
                 'assets/univers_visuel/menu_principal.png',

@@ -27,7 +27,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   late AnimationController _progressController;
-  
+
   int _currentStep = 0;
   static const int _totalSteps = 3;
 

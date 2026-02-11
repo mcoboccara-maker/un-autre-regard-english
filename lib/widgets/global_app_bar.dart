@@ -107,7 +107,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
         // Bouton Menu principal avec icône PNG
         GestureDetector(
           onTap: () {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false);
           },
           child: Container(
             width: 40,

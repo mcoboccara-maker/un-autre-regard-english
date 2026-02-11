@@ -304,6 +304,165 @@ class EmailService {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // ENVOI MOT DE PASSE OUBLIÉ
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Envoie le nouveau mot de passe temporaire à l'utilisateur
+  Future<EmailResult> sendPasswordReset({
+    required String toEmail,
+    required String tempPassword,
+  }) async {
+    try {
+      final htmlContent = '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1E293B;
+      background-color: #F8FAFC;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #2E8B7B 0%, #3A9D8C 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 30px;
+      text-align: center;
+    }
+    .password-box {
+      background: #F0FDF9;
+      border: 2px dashed #2E8B7B;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .password {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2E8B7B;
+      letter-spacing: 3px;
+      font-family: monospace;
+    }
+    .warning {
+      background: #FEF3C7;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #92400E;
+      margin-top: 20px;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #64748B;
+      font-size: 12px;
+      border-top: 1px solid #E2E8F0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Réinitialisation de mot de passe</h1>
+    </div>
+    <div class="content">
+      <p>Bonjour,</p>
+      <p>Voici votre nouveau mot de passe temporaire pour <strong>Un Autre Regard</strong> :</p>
+
+      <div class="password-box">
+        <div class="password">$tempPassword</div>
+      </div>
+
+      <p>Utilisez ce mot de passe pour vous connecter.</p>
+
+      <div class="warning">
+        ⚠️ <strong>Conseil :</strong> Pour plus de sécurité, nous vous recommandons de changer ce mot de passe après votre connexion.
+      </div>
+    </div>
+    <div class="footer">
+      <p>Un Autre Regard - Votre compagnon de réflexion</p>
+    </div>
+  </div>
+</body>
+</html>
+''';
+
+      final body = jsonEncode({
+        'sender': {
+          'name': _senderName,
+          'email': _senderEmail,
+        },
+        'to': [
+          {'email': toEmail}  // Envoi direct à l'utilisateur
+        ],
+        'subject': '🔐 Votre nouveau mot de passe - Un Autre Regard',
+        'htmlContent': htmlContent,
+      });
+
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {
+          'api-key': _apiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: body,
+      );
+
+      print('📧 Envoi email à: $toEmail');
+      print('📧 Status code: ${response.statusCode}');
+      print('📧 Response body: ${response.body}');
+
+      if (response.statusCode == 201) {
+        print('✅ Email de réinitialisation envoyé à $toEmail');
+        return EmailResult(success: true, message: 'Email envoyé avec succès');
+      } else {
+        print('❌ Erreur envoi email: ${response.statusCode}');
+        print('❌ Détails: ${response.body}');
+
+        // Parser le message d'erreur Brevo pour un message plus clair
+        String errorMsg = 'Erreur ${response.statusCode}';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData['message'] != null) {
+            errorMsg = errorData['message'];
+          }
+        } catch (_) {}
+
+        return EmailResult(
+          success: false,
+          message: errorMsg,
+        );
+      }
+    } catch (e) {
+      print('❌ Exception envoi email: $e');
+      return EmailResult(success: false, message: 'Erreur réseau: $e');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TEST DE CONNEXION
   // ═══════════════════════════════════════════════════════════════════════════
 

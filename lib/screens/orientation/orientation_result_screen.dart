@@ -423,7 +423,7 @@ Découvre ton profil sur l'app Un Autre Regard ✨
         OutlinedButton.icon(
           onPressed: () {
             Navigator.of(context).pushNamedAndRemoveUntil(
-              '/home',
+              '/menu',
               (route) => false,
             );
           },
