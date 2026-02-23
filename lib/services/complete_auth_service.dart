@@ -228,6 +228,8 @@ class CompleteAuthService {
       'religionsSelectionnees': <String>[],
       'courantsLitteraires': <String>[],
       'approchesPsychologiques': <String>[],
+      'courantsPhilosophiques': <String>[],
+      'philosophesSelectionnes': <String>[],
       'tonalitePrefere': null,
       'ouJenSuis': null,
       'ceQuiPese': null,
@@ -287,9 +289,125 @@ class CompleteAuthService {
     }
   }
   
-  // ========== RÃ‰FLEXIONS/HISTORIQUE ==========
-  
-  /// Sauvegarder une rÃ©flexion pour l'utilisateur connectÃ©
+  // ========== SAUVEGARDE DES SOURCES SÉLECTIONNÉES ==========
+
+  /// Sauvegarder les sources sélectionnées dans le profil utilisateur
+  /// Catégorise automatiquement par type (littéraire, psycho, philo, philosophe)
+  /// et met à jour le profil existant sans écraser les autres champs
+  Future<bool> saveSelectedSources(List<String> sourceIds) async {
+    await init();
+
+    if (_currentUser == null) {
+      print('❌ Sauvegarde sources échouée - Aucun utilisateur connecté');
+      return false;
+    }
+
+    // Récupérer le profil existant
+    final profile = await getProfile() ?? {};
+
+    // Catégoriser les sources par type via approach_config
+    final List<String> religions = [];
+    final List<String> litteratures = [];
+    final List<String> psychologies = [];
+    final List<String> philosophies = [];
+    final List<String> philosophes = [];
+
+    for (final id in sourceIds) {
+      // Chercher dans approach_config pour déterminer le type
+      final type = _getSourceType(id);
+      switch (type) {
+        case 'spiritual':
+          religions.add(id);
+          break;
+        case 'literary':
+          litteratures.add(id);
+          break;
+        case 'psychological':
+          psychologies.add(id);
+          break;
+        case 'philosophical':
+          philosophies.add(id);
+          break;
+        case 'philosopher':
+          philosophes.add(id);
+          break;
+      }
+    }
+
+    // Mettre à jour UNIQUEMENT les champs sources, pas les autres
+    profile['religionsSelectionnees'] = religions;
+    profile['courantsLitteraires'] = litteratures;
+    profile['approchesPsychologiques'] = psychologies;
+    profile['courantsPhilosophiques'] = philosophies;
+    profile['philosophesSelectionnes'] = philosophes;
+
+    // Sauvegarder le profil mis à jour
+    final success = await saveProfile(profile);
+    if (success) {
+      print('✅ Sources sauvegardées dans le profil: $sourceIds');
+      print('   Religions: $religions');
+      print('   Littéraires: $litteratures');
+      print('   Psychologiques: $psychologies');
+      print('   Philosophiques: $philosophies');
+      print('   Philosophes: $philosophes');
+    }
+    return success;
+  }
+
+  /// Détermine le type d'une source par son ID
+  /// Mapping basé sur les IDs de wisdom_wheel_dialog.dart et approach_config.dart
+  String _getSourceType(String sourceId) {
+    // Sources spirituelles
+    const spiritual = [
+      'judaisme_rabbinique', 'moussar', 'kabbale', 'christianisme',
+      'islam', 'soufisme', 'bouddhisme', 'hindouisme', 'stoicisme',
+      'spiritualite_contemporaine',
+    ];
+    // Sources littéraires
+    const literary = [
+      'humanisme', 'romantisme', 'realisme', 'existentialisme',
+      'absurdisme', 'poetique', 'mystique', 'symboliste_moderne',
+      'naturalisme', 'symbolisme', 'surrealisme', 'modernisme',
+      'postmodernisme', 'tragedie_classique', 'roman_psychologique',
+      'mythologie', 'science_fiction', 'fantasy',
+    ];
+    // Sources psychologiques
+    const psychological = [
+      'act', 'tcc', 'jungienne', 'logotherapie', 'schemas_young',
+      'the_work', 'humaniste_rogers', 'psychanalyse',
+      'analyse_transactionnelle', 'systemique',
+    ];
+    // Courants philosophiques
+    const philosophical = [
+      'stoicisme_philo', 'epicurisme', 'existentialisme_philo',
+      'phenomenologie', 'absurdisme_philo', 'rationalisme',
+      'empirisme', 'idealisme', 'pragmatisme', 'vitalisme',
+      'humanisme_philo', 'utilitarisme', 'structuralisme',
+      'philosophies_orientales',
+    ];
+    // Philosophes individuels
+    const philosopher = [
+      'socrate', 'platon', 'aristote', 'epicure', 'seneque',
+      'epictete', 'marc_aurele', 'spinoza', 'kant', 'nietzsche',
+      'kierkegaard', 'sartre', 'camus', 'simone_de_beauvoir',
+      'hannah_arendt', 'schopenhauer', 'montaigne', 'diogene',
+      'confucius', 'rousseau', 'hume', 'foucault', 'descartes',
+    ];
+
+    if (spiritual.contains(sourceId)) return 'spiritual';
+    if (literary.contains(sourceId)) return 'literary';
+    if (psychological.contains(sourceId)) return 'psychological';
+    if (philosophical.contains(sourceId)) return 'philosophical';
+    if (philosopher.contains(sourceId)) return 'philosopher';
+
+    // Fallback: essayer de deviner par le nom
+    print('⚠️ Source non catégorisée: $sourceId — défaut: philosophical');
+    return 'philosophical';
+  }
+
+  // ========== RÉFLEXIONS/HISTORIQUE ==========
+
+  /// Sauvegarder une réflexion pour l'utilisateur connecté
   Future<bool> saveReflection(Map<String, dynamic> reflection) async {
     await init();
     

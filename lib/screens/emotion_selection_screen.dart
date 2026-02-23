@@ -106,10 +106,13 @@ class _EmotionSelectionScreenState extends State<EmotionSelectionScreen>
         );
 
         if (mounted) {
+          final meta = AIService.instance.lastFigureMeta;
           final perspective = PerspectiveData(
             approachKey: widget.preselectedSource!.key,
             approachName: widget.preselectedSource!.name,
             responseText: response,
+            figureName: meta?['nom'],
+            figureReference: meta?['reference'],
           );
 
           Navigator.of(context).pushReplacement(
@@ -136,10 +139,13 @@ class _EmotionSelectionScreenState extends State<EmotionSelectionScreen>
             intensiteEmotionnelle: intensity,
           );
 
+          final meta = AIService.instance.lastFigureMeta;
           perspectives.add(PerspectiveData(
             approachKey: source.key,
             approachName: source.name,
             responseText: response,
+            figureName: meta?['nom'],
+            figureReference: meta?['reference'],
           ));
         }
 

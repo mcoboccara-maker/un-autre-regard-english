@@ -62,8 +62,8 @@ class TtsService {
       print('🌐 TTS: setLanguage(fr-FR) result = $setResult');
       _currentLanguage = 'fr-FR';
       
-      // Vitesse de lecture (0.0 à 1.0) - 0.45 = calme et posé
-      await _tts.setSpeechRate(0.45);
+      // Vitesse de lecture (0.0 à 1.0) - 0.65 = rythme soutenu
+      await _tts.setSpeechRate(0.65);
       
       // Hauteur de voix (0.5 à 2.0) - 1.0 = normale
       await _tts.setPitch(1.0);

@@ -109,6 +109,8 @@ class PerspectiveData {
   final String responseText;
   final String? deepeningText;
   final DeepeningState deepeningState;
+  final String? figureName;
+  final String? figureReference;
 
   const PerspectiveData({
     required this.approachKey,
@@ -116,6 +118,8 @@ class PerspectiveData {
     required this.responseText,
     this.deepeningText,
     this.deepeningState = DeepeningState.notRequested,
+    this.figureName,
+    this.figureReference,
   });
 }
 

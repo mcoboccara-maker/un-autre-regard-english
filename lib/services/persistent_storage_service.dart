@@ -105,6 +105,47 @@ class PersistentStorageService {
     return reflections;
   }
 
+  // ==================== ÉCLAIRAGES SAUVEGARDÉS ====================
+
+  /// Sauvegarder un éclairage complet (swipe Garder)
+  Future<void> saveEclairage(Map<String, dynamic> eclairageJson) async {
+    await _ensureInitialized();
+
+    if (!isUserLoggedIn) {
+      print('⚠️ Tentative sauvegarde éclairage sans utilisateur connecté');
+      return;
+    }
+
+    final email = _currentUserEmail!;
+    final key = 'saved_eclairages_$email';
+
+    final existingEclairages = _prefs!.getStringList(key) ?? [];
+    existingEclairages.add(jsonEncode(eclairageJson));
+
+    await _prefs!.setStringList(key, existingEclairages);
+    print('✓ Éclairage sauvegardé pour: $email');
+  }
+
+  /// Récupérer tous les éclairages sauvegardés
+  List<Map<String, dynamic>> getAllSavedEclairages() {
+    if (!isUserLoggedIn) return [];
+
+    final email = _currentUserEmail!;
+    final key = 'saved_eclairages_$email';
+    final eclairagesData = _prefs?.getStringList(key) ?? [];
+
+    final eclairages = <Map<String, dynamic>>[];
+    for (final eclairageJson in eclairagesData) {
+      try {
+        eclairages.add(jsonDecode(eclairageJson) as Map<String, dynamic>);
+      } catch (e) {
+        print('⚠️ Erreur décodage éclairage: $e');
+      }
+    }
+
+    return eclairages;
+  }
+
   // ==================== PROFIL UTILISATEUR ====================
 
   /// Sauvegarde le profil utilisateur
@@ -192,15 +233,17 @@ class PersistentStorageService {
       print('Erreur getUserApproaches via CompleteAuthService: $e');
     }
     
-    // Fallback sur le profil Hive (sans philosophies)
+    // Fallback sur le profil Hive (5 catégories)
     final profile = getUserProfile();
     if (profile == null) return [];
-    
+
     final List<String> allApproaches = [];
     allApproaches.addAll(profile.religionsSelectionnees);
     allApproaches.addAll(profile.courantsLitteraires);
     allApproaches.addAll(profile.approchesPsychologiques);
-    
+    allApproaches.addAll(profile.courantsPhilosophiques);
+    allApproaches.addAll(profile.philosophesSelectionnes);
+
     return allApproaches;
   }
 
@@ -650,8 +693,9 @@ class PersistentStorageService {
     await _prefs!.remove('reflections_$email');
     await _prefs!.remove('default_approaches_$email');
     await _prefs!.remove('personnages_utilises_$email');
-    await _prefs!.remove('evaluations_$email'); // NOUVEAU
+    await _prefs!.remove('evaluations_$email');
     await _prefs!.remove('emotional_states_$email');
+    await _prefs!.remove('saved_eclairages_$email');
     
     print('✓ Toutes les donnees utilisateur supprimees');
   }

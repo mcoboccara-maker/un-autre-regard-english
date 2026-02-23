@@ -375,10 +375,13 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
 
   /// Ouvrir la PerspectiveRoom avec la réponse générée
   void _openPerspectiveRoom(String response) {
+    final meta = AIService.instance.lastFigureMeta;
     final perspective = PerspectiveData(
       approachKey: _selectedSource!.key,
       approachName: _selectedSource!.name,
       responseText: response,
+      figureName: meta?['nom'],
+      figureReference: meta?['reference'],
     );
 
     Navigator.of(context).push(

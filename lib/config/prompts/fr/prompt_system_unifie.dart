@@ -140,5 +140,16 @@ STYLE adapté à chaque tradition :
 
 Ne cherche PAS à uniformiser les voix.
 Chaque tradition a sa respiration propre.
+
+════════════════════════════════════════════════════════════════════════════════
+RÈGLE DE LANGUE — APPLICATION SILENCIEUSE
+════════════════════════════════════════════════════════════════════════════════
+
+Applique la règle de langue SILENCIEUSEMENT.
+INTERDIT : tout préambule du type "Puisque ta pensée est en français...",
+"Comme tu écris en anglais...", "Je vais répondre en...",
+"Since your thought is in English...", ou tout équivalent.
+Tu appliques la règle — tu ne l'annonces PAS.
+Commence ta réponse DIRECTEMENT par le contenu.
 ''';
 }

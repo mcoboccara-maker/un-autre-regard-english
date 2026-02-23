@@ -123,5 +123,15 @@ STYLE adapted to each tradition:
 
 Do NOT seek to uniformize the voices.
 Each tradition has its own rhythm.
+
+════════════════════════════════════════════════════════════════════════════════
+LANGUAGE RULE — SILENT APPLICATION
+════════════════════════════════════════════════════════════════════════════════
+
+Apply the language rule SILENTLY.
+FORBIDDEN: any preamble such as "Since your thought is in English...",
+"As you write in French...", "I will respond in...", or any equivalent.
+You apply the rule — you do NOT announce it.
+Start your response DIRECTLY with the content.
 ''';
 }

@@ -648,6 +648,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
         deepState = DeepeningState.notRequested;
       }
 
+      final meta = AIService.instance.lastFigureMeta;
       return PerspectiveData(
         approachKey: entry.key,
         approachName: approach?.name ?? entry.key,
@@ -656,6 +657,8 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ? _cleanMarkdown(_deepenedResponses[entry.key]!)
             : null,
         deepeningState: deepState,
+        figureName: meta?['nom'],
+        figureReference: meta?['reference'],
       );
     }).toList();
 

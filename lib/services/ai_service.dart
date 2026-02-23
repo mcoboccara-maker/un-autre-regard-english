@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:async'; // AJOUT: Pour TimeoutException
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import '../models/reflection.dart';
@@ -36,13 +37,13 @@ class AIService {
   // ═══════════════════════════════════════════════════════════════════════════
   // CONFIGURATION API CLAUDE (ANTHROPIC)
   // ═══════════════════════════════════════════════════════════════════════════
-  
+
   final String _baseUrl = 'https://api.anthropic.com/v1/messages';
   String _apiKey = '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';
   
-  // MODÈLES CLAUDE
-  final String _model = 'claude-sonnet-4-5-20250929';        // Qualité (spiritualités + approfondissement)
-  final String _modelFast = 'claude-3-5-haiku-20241022';     // NOUVEAU: Rapide (autres sources)
+  // MODÈLES CLAUDE — Sonnet 4.6 partout (qualité max pour toutes les sources)
+  final String _model = 'claude-sonnet-4-6';                  // Qualité (toutes sources + approfondissement)
+  final String _modelFast = 'claude-sonnet-4-6';              // Idem — plus de distinction rapide/qualité
   
   final String _anthropicVersion = '2023-06-01';
   
@@ -66,6 +67,8 @@ class AIService {
     'kabbale', 'hassidisme', 'moussar', 'rabbinique',
     // Mystique
     'mystique', 'contemplatif',
+    // Sources spirituelles complémentaires
+    'stoicisme', 'spiritualite',
   ];
 
   /// Détermine si une source nécessite le modèle de qualité
@@ -78,10 +81,10 @@ class AIService {
   // REGLE: 1 source par type hors spirituel
   // ═══════════════════════════════════════════════════════════════════════════
   static const List<String> _defaultSources = [
-    'roman_psychologique',    // Littéraire
+    'aristote',               // Philosophe
+    'existentialisme',        // Littéraire
+    'realisme',               // Littéraire
     'schemas_young',          // Psychologique
-    'existentialisme_philo',  // Philosophique (courant)
-    'hannah_arendt',          // Philosophe
   ];
 
   /// Approches utilisateur
@@ -90,6 +93,10 @@ class AIService {
 
   /// Historique d'utilisation des sources pour pensée positive
   Map<String, int> _sourceUsageHistory = {};
+
+  /// Dernières métadonnées FIGURE_META extraites (accessibles après génération)
+  Map<String, String>? _lastFigureMeta;
+  Map<String, String>? get lastFigureMeta => _lastFigureMeta;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CHARGEMENT DES APPROCHES UTILISATEUR
@@ -272,6 +279,9 @@ class AIService {
             'Content-Type': 'application/json',
             'x-api-key': _apiKey,
             'anthropic-version': _anthropicVersion,
+            // Header requis pour les appels depuis le navigateur (Flutter Web)
+            // Permet a l'API Anthropic de retourner les headers CORS
+            if (kIsWeb) 'anthropic-dangerous-direct-browser-access': 'true',
           },
           body: jsonEncode({
             'model': effectiveModel,  // MODIFIÉ: utilise le modèle effectif
@@ -463,7 +473,10 @@ class AIService {
     // Le PromptSelector détecte la langue du reflectionText et retourne
     // le prompt dans la langue appropriée (fr, en, ou he)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
+    // Construire la description des émotions pour le prompt
+    final emotionsStr = _buildEmotionsString(emotionalState);
+
     final prompt = PromptSelector.buildUnifiedPrompt(
       userText: reflectionText,  // NOUVEAU: texte pour détection de langue
       userPrenom: userProfile?.prenom,
@@ -473,23 +486,25 @@ class AIService {
       typeEntree: _getTypeDisplayName(reflectionType),
       contenu: reflectionText,
       // Note: declencheur, souhait, petitPas ne sont plus utilisés dans le prompt unifié
-      religions: categories['religions']!.isNotEmpty 
-          ? categories['religions']!.join(', ') 
+      religions: categories['religions']!.isNotEmpty
+          ? categories['religions']!.join(', ')
           : 'Aucune selectionnee',
-      litteratures: categories['litteratures']!.isNotEmpty 
-          ? categories['litteratures']!.join(', ') 
+      litteratures: categories['litteratures']!.isNotEmpty
+          ? categories['litteratures']!.join(', ')
           : 'Aucun selectionne',
-      psychologies: categories['psychologies']!.isNotEmpty 
-          ? categories['psychologies']!.join(', ') 
+      psychologies: categories['psychologies']!.isNotEmpty
+          ? categories['psychologies']!.join(', ')
           : 'Aucune selectionnee',
-      philosophies: categories['philosophies']!.isNotEmpty 
-          ? categories['philosophies']!.join(', ') 
+      philosophies: categories['philosophies']!.isNotEmpty
+          ? categories['philosophies']!.join(', ')
           : 'Aucun selectionne',
-      philosophes: categories['philosophes']!.isNotEmpty 
-          ? categories['philosophes']!.join(', ') 
+      philosophes: categories['philosophes']!.isNotEmpty
+          ? categories['philosophes']!.join(', ')
           : 'Aucun selectionne',
       historique30Jours: historique30Jours,
       personnagesInterdits: personnagesInterdits,
+      emotionsActuelles: emotionsStr,
+      intensiteEmotionnelle: intensiteEmotionnelle,
     );
     
     // NOUVEAU: Récupérer le system prompt dans la langue détectée
@@ -520,11 +535,12 @@ class AIService {
       
       // Extraire et sauvegarder les métadonnées de la figure
       final figureMeta = _extractFigureMeta(response);
+      _lastFigureMeta = figureMeta; // Stocker pour accès externe
       await _saveExtractedCharacter(figureMeta);
-      
+
       // Retourner la réponse sans le bloc de métadonnées
       return _removeMetaBlock(response);
-      
+
     } catch (e) {
       print('AIService: Erreur génération universelle: $e');
       return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
@@ -605,6 +621,9 @@ class AIService {
         break;
     }
     
+    // Construire la description des émotions pour le prompt
+    final emotionsStr = _buildEmotionsString(emotionalState);
+
     // MODIFIÉ: Utilise PromptSelector pour le prompt multilingue
     final prompt = PromptSelector.buildUnifiedPrompt(
       userText: reflectionText,  // NOUVEAU: texte pour détection de langue
@@ -622,6 +641,8 @@ class AIService {
       philosophes: philosophesStr,
       historique30Jours: historique30Jours,
       personnagesInterdits: personnagesInterdits,
+      emotionsActuelles: emotionsStr,
+      intensiteEmotionnelle: intensiteEmotionnelle,
     );
     
     // NOUVEAU: Récupérer le system prompt dans la langue détectée
@@ -651,11 +672,12 @@ class AIService {
       
       // Extraire et sauvegarder les métadonnées de la figure
       final figureMeta = _extractFigureMeta(response);
+      _lastFigureMeta = figureMeta; // Stocker pour accès externe
       await _saveExtractedCharacter(figureMeta);
-      
+
       // Retourner la réponse sans le bloc de métadonnées
       return _removeMetaBlock(response);
-      
+
     } catch (e) {
       print('AIService: Erreur génération approche spécifique: $e');
       return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
@@ -883,7 +905,7 @@ class AIService {
   }) async {
     final responses = <String, String>{};
     
-    final approachesToProcess = selectedApproaches.take(5).toList();
+    final approachesToProcess = selectedApproaches.toList();
     
     for (final approach in approachesToProcess) {
       try {
@@ -913,6 +935,24 @@ class AIService {
   // ═══════════════════════════════════════════════════════════════════════════
   // MÉTHODES UTILITAIRES
   // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Construire une description lisible de l'état émotionnel pour le prompt
+  String? _buildEmotionsString(EmotionalState emotionalState) {
+    final activeEmotions = emotionalState.emotions.entries
+        .where((e) => e.value.level > 0)
+        .toList();
+
+    if (activeEmotions.isEmpty) return null;
+
+    final parts = activeEmotions.map((e) {
+      final nuancesStr = e.value.nuances.isNotEmpty
+          ? ' (${e.value.nuances.join(', ')})'
+          : '';
+      return '${e.key} ${e.value.level}/100$nuancesStr';
+    }).toList();
+
+    return parts.join(', ');
+  }
 
   /// Calculer l'âge depuis la date de naissance
   String _calculateAge(UserProfile? userProfile) {

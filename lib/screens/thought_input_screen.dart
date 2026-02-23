@@ -8,8 +8,10 @@ import '../config/emotion_config.dart';
 import '../models/reflection.dart';
 import '../models/emotional_state.dart';
 import '../services/ai_service.dart';
+import '../widgets/nav_cartouche.dart';
+import '../widgets/brain_gestation_widget.dart';
 import 'eclairages_carousel_screen.dart';
-import 'emotion_selection_screen.dart';
+import 'emotion_wheel_screen.dart';
 import 'perspective_room_screen.dart';
 
 class ThoughtInputScreen extends StatefulWidget {
@@ -32,8 +34,7 @@ class ThoughtInputScreen extends StatefulWidget {
   State<ThoughtInputScreen> createState() => _ThoughtInputScreenState();
 }
 
-class _ThoughtInputScreenState extends State<ThoughtInputScreen>
-    with SingleTickerProviderStateMixin {
+class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
   final TextEditingController _thoughtController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isGenerating = false;
@@ -41,7 +42,8 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
   ReflectionType _selectedType = ReflectionType.thought;
   bool _showSuggestions = false;
 
-  late AnimationController _hourglassController;
+  /// Sources actives de l'utilisateur (ou défauts) — résolu depuis AIService
+  List<ApproachConfig> _activeSources = [];
 
   final List<String> _thoughtSuggestions = [
     "Je ne suis pas a la hauteur...",
@@ -69,21 +71,42 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
   @override
   void initState() {
     super.initState();
-    _hourglassController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat();
-
     _thoughtController.addListener(() {
       setState(() {});
     });
+    // Charger les sources actives de l'utilisateur
+    _loadActiveSources();
+  }
+
+  /// Charge les sources actives depuis AIService (profil utilisateur ou défauts)
+  Future<void> _loadActiveSources() async {
+    try {
+      // S'assurer que les approches sont chargées (y compris défauts si vide)
+      if (AIService.instance.userApproches.isEmpty) {
+        await AIService.instance.loadUserApproaches();
+      }
+      final sourceKeys = AIService.instance.userApproches;
+      final List<ApproachConfig> resolved = [];
+      for (final key in sourceKeys) {
+        final config = ApproachCategories.findByKey(key);
+        if (config != null) {
+          resolved.add(config);
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _activeSources = resolved;
+        });
+      }
+    } catch (e) {
+      print('ThoughtInputScreen: Erreur _loadActiveSources: $e');
+    }
   }
 
   @override
   void dispose() {
     _thoughtController.dispose();
     _focusNode.dispose();
-    _hourglassController.dispose();
     super.dispose();
   }
 
@@ -169,10 +192,13 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
         );
 
         if (mounted) {
+          final meta = AIService.instance.lastFigureMeta;
           final perspective = PerspectiveData(
             approachKey: widget.preselectedSource!.key,
             approachName: widget.preselectedSource!.name,
             responseText: response,
+            figureName: meta?['nom'],
+            figureReference: meta?['reference'],
           );
 
           Navigator.of(context).pushReplacement(
@@ -185,7 +211,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
           );
         }
       } else {
-        final sources = _pickRandomSources(3);
+        final sources = _pickRandomSources(_activeSources.length > 0 ? _activeSources.length : 3);
         final List<PerspectiveData> perspectives = [];
 
         for (final source in sources) {
@@ -198,11 +224,13 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
             userProfile: null,
             intensiteEmotionnelle: 5,
           );
-
+          final meta = AIService.instance.lastFigureMeta;
           perspectives.add(PerspectiveData(
             approachKey: source.key,
             approachName: source.name,
             responseText: response,
+            figureName: meta?['nom'],
+            figureReference: meta?['reference'],
           ));
         }
 
@@ -239,7 +267,8 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => EmotionSelectionScreen(
+        builder: (_) => EmotionWheelScreen(
+          entryMode: EmotionWheelEntryMode.exprime,
           thoughtText: text,
           reflectionType: _selectedType,
           preselectedSource: widget.preselectedSource,
@@ -248,7 +277,62 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
     );
   }
 
+  void _showPositiveThought() {
+    final thoughts = [
+      "Chaque jour est une nouvelle opportunité de grandir.",
+      "Tu as déjà surmonté tant d'obstacles. Tu es plus fort(e) que tu ne le penses.",
+      "Prends le temps de respirer. Ce moment difficile passera.",
+      "Tu mérites d'être heureux(se) et en paix.",
+      "Tes émotions sont valides. Accueille-les avec bienveillance.",
+      "Un petit pas aujourd'hui peut mener à un grand changement demain.",
+    ];
+    final random = DateTime.now().millisecondsSinceEpoch % thoughts.length;
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/univers_visuel/pensee_positive.png',
+                width: 64, height: 64,
+                errorBuilder: (_, __, ___) => const Icon(Icons.lightbulb, color: Color(0xFFFBBF24), size: 48),
+              ),
+              const SizedBox(height: 20),
+              Text('Pensée du moment', style: GoogleFonts.cormorantGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF92400E))),
+              const SizedBox(height: 16),
+              Text(thoughts[random], style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF78350F), height: 1.5), textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFBBF24), foregroundColor: const Color(0xFF78350F), padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: Text('Merci !', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   List<ApproachConfig> _pickRandomSources(int count) {
+    // Utiliser les sources actives de l'utilisateur (ou défauts) si disponibles
+    if (_activeSources.isNotEmpty) {
+      final shuffled = List<ApproachConfig>.from(_activeSources)..shuffle();
+      return shuffled.take(count).toList();
+    }
+    // Fallback : toutes les sources
     final all = ApproachCategories.allApproaches.toList()..shuffle();
     return all.take(count).toList();
   }
@@ -267,7 +351,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // Header
+              // Header avec logo menu + titre
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -278,24 +362,41 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
                       icon: const Icon(Icons.arrow_back_ios,
                           color: Colors.white),
                     ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/univers_visuel/exprime_ce_qui_te_traverse.png',
+                        width: 32, height: 32,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Ta pensee',
+                        'Exprime ce qui te traverse',
                         style: GoogleFonts.playfairDisplay(
-                          fontSize: 22,
+                          fontSize: 19,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                    NavCartouche(
+                      assetPath: 'assets/univers_visuel/pensee_positive.png',
+                      fallbackIcon: Icons.lightbulb_outline,
+                      tooltip: 'Pensée positive',
+                      onTap: _showPositiveThought,
+                    ),
+                    const SizedBox(width: 8),
+                    NavCartouche(
+                      assetPath: 'assets/univers_visuel/menu_principal.png',
+                      fallbackIcon: Icons.grid_view_rounded,
+                      tooltip: 'Menu principal',
+                      onTap: () => Navigator.pushNamedAndRemoveUntil(
                         context, '/menu', (route) => false,
                       ),
-                      icon: const Icon(Icons.home_rounded,
-                          color: Colors.white),
-                      tooltip: 'Menu',
                     ),
                   ],
                 ),
@@ -308,9 +409,15 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // If source preselected
+                      // If source preselected — show single source badge
                       if (widget.preselectedSource != null) ...[
                         _buildSourceBadge(),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // If NO preselected source — show active sources badges
+                      if (widget.preselectedSource == null && _activeSources.isNotEmpty) ...[
+                        _buildActiveSourcesBadges(),
                         const SizedBox(height: 16),
                       ],
 
@@ -508,7 +615,11 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
                   fontSize: 15,
                   height: 1.5,
                 ),
+                filled: true,
+                fillColor: Colors.transparent,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -619,9 +730,11 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
     );
   }
 
-  // === TWO BUTTONS (direct / via emotions) ===
+  // === BOUTONS BAS — 2 cartouches côte à côte + retour ===
   Widget _buildTwoButtons() {
     final canContinue = _thoughtController.text.trim().isNotEmpty;
+    final activeColor = const Color(0xFF2E8B7B);
+    final disabledColor = const Color(0xFF2E8B7B).withValues(alpha: 0.3);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -640,93 +753,102 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Button 1: Voir autrement (direct generation, skip emotions)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: canContinue ? _generateDirect : null,
-                icon: const Icon(Icons.auto_awesome, size: 20),
-                label: Text(
-                  'Voir autrement',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+            // 2 cartouches côte à côte
+            Row(
+              children: [
+                // Cartouche 1 : Regarde autrement
+                Expanded(
+                  child: GestureDetector(
+                    onTap: canContinue ? _generateDirect : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: canContinue ? activeColor : disabledColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Regarde\nautrement',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: canContinue
-                      ? const Color(0xFF6366F1)
-                      : const Color(0xFF94A3B8),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 10),
+                // Cartouche 2 : Saisis tes émotions et regarde autrement
+                Expanded(
+                  child: GestureDetector(
+                    onTap: canContinue ? _navigateToEmotions : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: canContinue ? activeColor : disabledColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.favorite_rounded, size: 18, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Saisis tes émotions\net regarde autrement',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  elevation: canContinue ? 2 : 0,
                 ),
-              ),
+              ],
             ),
 
             const SizedBox(height: 10),
 
-            // Button 2: Emotions liees et autre regard
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: canContinue ? _navigateToEmotions : null,
-                icon: Image.asset(
-                  'assets/univers_visuel/emotionsdujour.png',
-                  width: 20,
-                  height: 20,
-                  errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.mood, size: 20),
+            // Cartouche Retour
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E8B7B).withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                label: Text(
-                  'Emotions liees et autre regard',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.white),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Retour',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: canContinue
-                      ? const Color(0xFF7C3AED)
-                      : const Color(0xFF94A3B8),
-                  side: BorderSide(
-                    color: canContinue
-                        ? const Color(0xFF7C3AED)
-                        : Colors.white.withValues(alpha: 0.2),
-                    width: 1.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Back button (small)
-            TextButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: Image.asset(
-                'assets/univers_visuel/retour.png',
-                width: 16,
-                height: 16,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.arrow_back, size: 16),
-              ),
-              label: Text(
-                'Retour au menu',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -735,40 +857,72 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen>
     );
   }
 
-  // === GENERATING INDICATOR ===
+  // === GENERATING INDICATOR (Brain Gestation Widget) ===
   Widget _buildGeneratingIndicator() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Center(
-        child: Column(
-          children: [
-            RotationTransition(
-              turns: _hourglassController,
-              child: Image.asset(
-                'assets/univers_visuel/generationiaencours.png',
-                width: 50,
-                height: 50,
-                errorBuilder: (_, __, ___) => const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                    strokeWidth: 3,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Generation en cours...',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
+        child: BrainGestationWidget(
+          isComplete: false,
+          size: 180,
         ),
       ),
+    );
+  }
+
+  // === SOURCES ACTIVES (badges scrollables) ===
+  Widget _buildActiveSourcesBadges() {
+    if (_activeSources.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            'Tes sources d\'inspiration',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _activeSources.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final source = _activeSources[index];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: source.color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: source.color.withValues(alpha: 0.35)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(source.icon, color: source.color, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      source.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

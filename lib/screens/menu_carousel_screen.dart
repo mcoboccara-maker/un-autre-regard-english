@@ -1,11 +1,13 @@
 // lib/screens/menu_carousel_screen.dart
-// Menu principal — 4 cartes empilées scrollables sur fond pastel clair
+// Menu principal — 4 cartes animées en grille 2×2 sur fond pastel clair
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/approach_config.dart';
 import '../services/complete_auth_service.dart';
 import '../services/ai_service.dart';
+import '../widgets/animated_menu_cards.dart';
+import '../widgets/nav_cartouche.dart';
 import 'emotion_wheel_screen.dart';
 import 'thought_input_screen.dart';
 
@@ -18,73 +20,10 @@ class MenuCarouselScreen extends StatefulWidget {
   State<MenuCarouselScreen> createState() => _MenuCarouselScreenState();
 }
 
-class _MenuCarouselScreenState extends State<MenuCarouselScreen>
-    with TickerProviderStateMixin {
-  // ── 4 cartes ─────────────────────────────────────────────────────────────
-  static const List<_MenuItem> _menuItems = [
-    _MenuItem(
-      id: 'exprime',
-      label: 'Exprime ce qui te traverse',
-      imagePath: 'assets/univers_visuel/penseejour.png',
-      subtitle: 'Pensée, situation, question, dilemme',
-    ),
-    _MenuItem(
-      id: 'ressens',
-      label: 'Partage ce que tu ressens',
-      imagePath: 'assets/univers_visuel/emotionsdujour.png',
-      subtitle: 'Nomme tes émotions',
-    ),
-    _MenuItem(
-      id: 'sources',
-      label: 'Explore des sources',
-      imagePath: 'assets/univers_visuel/ressources.png',
-      subtitle: '~65 regards, quiz, roue du hasard',
-    ),
-    _MenuItem(
-      id: 'regards',
-      label: 'Mes regards',
-      imagePath: 'assets/univers_visuel/historique_des_pensees.png',
-      subtitle: 'Historique vivant des éclairages',
-    ),
-  ];
-
-  final ScrollController _scrollController = ScrollController();
-  late List<AnimationController> _entryControllers;
-  late List<Animation<double>> _fadeAnimations;
-  late List<Animation<Offset>> _slideAnimations;
-
+class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Animations d'apparition progressive
-    _entryControllers = List.generate(
-      _menuItems.length,
-      (i) => AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 600),
-      ),
-    );
-
-    _fadeAnimations = _entryControllers
-        .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
-        .map((a) => Tween<double>(begin: 0.0, end: 1.0).animate(a))
-        .toList();
-
-    _slideAnimations = _entryControllers
-        .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOutCubic))
-        .map((a) =>
-            Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
-                .animate(a))
-        .toList();
-
-    // Écouter le scroll pour le parallaxe
-    _scrollController.addListener(() {
-      if (mounted) setState(() {});
-    });
-
-    // Lancer les animations en séquence
-    _startEntryAnimations();
 
     if (widget.preselectedSource != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -93,44 +32,29 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen>
     }
   }
 
-  Future<void> _startEntryAnimations() async {
-    for (int i = 0; i < _entryControllers.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 120));
-      if (mounted) _entryControllers[i].forward();
-    }
+  // ── Navigation ──────────────────────────────────────────────────────────────
+
+  void _navigateToExprime() {
+    // Navigation directe vers saisie (pas de bottom sheet intermédiaire)
+    _navigateToThought();
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    for (final c in _entryControllers) {
-      c.dispose();
-    }
-    super.dispose();
+  void _navigateToRessens() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EmotionWheelScreen(
+          preselectedSource: widget.preselectedSource,
+        ),
+      ),
+    );
   }
 
-  // ── Tap sur une carte ─────────────────────────────────────────────────────
-  void _onMenuTap(String id) {
-    switch (id) {
-      case 'exprime':
-        _showExprimeSheet();
-        break;
-      case 'ressens':
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => EmotionWheelScreen(
-              preselectedSource: widget.preselectedSource,
-            ),
-          ),
-        );
-        break;
-      case 'sources':
-        Navigator.pushNamed(context, '/sources-explorer');
-        break;
-      case 'regards':
-        Navigator.pushNamed(context, '/history');
-        break;
-    }
+  void _navigateToCheminParcouru() {
+    Navigator.pushNamed(context, '/history');
+  }
+
+  void _navigateToSources() {
+    Navigator.pushNamed(context, '/sources-explorer');
   }
 
   // ── Bottom sheet "Exprime" avec 2 actions ─────────────────────────────────
@@ -159,7 +83,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen>
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(
-                'assets/univers_visuel/penseejour.png',
+                'assets/univers_visuel/exprime_ce_qui_te_traverse.png',
                 width: 64,
                 height: 64,
                 fit: BoxFit.cover,
@@ -497,15 +421,16 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0A1628), // Bleu nuit
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFE8F4FD), // bleu pâle
-              Color(0xFFFFF8E7), // jaune pâle
-              Color(0xFFE8F8E8), // vert pâle
+              Color(0xFF0D1B2A), // Bleu nuit profond
+              Color(0xFF1B2838), // Bleu nuit moyen
+              Color(0xFF0A1628), // Bleu nuit sombre
             ],
           ),
         ),
@@ -515,31 +440,39 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen>
               // ── Barre du haut ──────────────────────────────────────────
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Row(
                   children: [
+                    Image.asset(
+                      'assets/icon/app_icon.png',
+                      width: 32, height: 32,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       'Un Autre Regard',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1A2E5A),
+                        color: Colors.white,
                       ),
                     ),
                     const Spacer(),
-                    _buildTopBarIcon(
+                    NavCartouche(
                       assetPath: 'assets/univers_visuel/profil.png',
                       fallbackIcon: Icons.person_rounded,
                       tooltip: 'Mon profil',
                       onTap: _goToProfile,
                     ),
-                    _buildTopBarIcon(
+                    const SizedBox(width: 8),
+                    NavCartouche(
                       assetPath: 'assets/univers_visuel/pensee_positive.png',
                       fallbackIcon: Icons.lightbulb_outline,
                       tooltip: 'Pensée positive',
                       onTap: _showPositiveThought,
                     ),
-                    _buildTopBarIcon(
+                    const SizedBox(width: 8),
+                    NavCartouche(
                       assetPath: 'assets/univers_visuel/deconnexion.png',
                       fallbackIcon: Icons.logout,
                       tooltip: 'Déconnexion',
@@ -549,16 +482,57 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen>
                 ),
               ),
 
-              // ── 4 cartes empilées ──────────────────────────────────────
+              // ── 4 cartes animées plein écran (2 rangées × 2 colonnes) ──
+              // Limiter la largeur sur écrans larges (web) pour garder
+              // un ratio proche du carré sur chaque carte
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 8),
-                  itemCount: _menuItems.length,
-                  itemBuilder: (context, index) {
-                    return _buildCard(index);
-                  },
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 500),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      child: Column(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ExprimeCeQuiTeTraverseCard(
+                                onTap: _navigateToExprime,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: PartageCeQueTuRessensCard(
+                                onTap: _navigateToRessens,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TonCheminParcouruCard(
+                                onTap: _navigateToCheminParcouru,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: ConnecteToiAuxSourcesCard(
+                                onTap: _navigateToSources,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ],
+                    ),
+                  ),
+                ),
                 ),
               ),
             ],
@@ -568,157 +542,4 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen>
     );
   }
 
-  Widget _buildCard(int index) {
-    final item = _menuItems[index];
-
-    // Calcul parallaxe
-    double parallaxOffset = 0;
-    if (_scrollController.hasClients) {
-      final scrollOffset = _scrollController.offset;
-      // Chaque carte a ~200px de hauteur totale (180 + marges)
-      final cardTop = index * 200.0;
-      parallaxOffset = (scrollOffset - cardTop) * 0.3;
-    }
-
-    return FadeTransition(
-      opacity: _fadeAnimations[index],
-      child: SlideTransition(
-        position: _slideAnimations[index],
-        child: GestureDetector(
-          onTap: () => _onMenuTap(item.id),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            height: 180,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Image avec parallaxe
-                  Transform.translate(
-                    offset: Offset(0, parallaxOffset.clamp(-30, 30)),
-                    child: Image.asset(
-                      item.imagePath,
-                      fit: BoxFit.cover,
-                      // Agrandir légèrement pour le parallaxe
-                      height: 240,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: const Color(0xFFE2E8F0),
-                        child: Icon(Icons.image,
-                            color: Colors.grey[400], size: 60),
-                      ),
-                    ),
-                  ),
-
-                  // Gradient overlay en bas
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.55),
-                            Colors.black.withValues(alpha: 0.8),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Texte
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 16,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          item.label,
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.subtitle,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopBarIcon({
-    required String assetPath,
-    required IconData fallbackIcon,
-    required String tooltip,
-    required VoidCallback onTap,
-  }) {
-    return IconButton(
-      onPressed: onTap,
-      tooltip: tooltip,
-      icon: Image.asset(
-        assetPath,
-        width: 28,
-        height: 28,
-        errorBuilder: (_, __, ___) => Icon(
-          fallbackIcon,
-          color: const Color(0xFF1A2E5A).withValues(alpha: 0.7),
-          size: 24,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Modèle ──────────────────────────────────────────────────────────────────
-class _MenuItem {
-  final String id;
-  final String label;
-  final String imagePath;
-  final String subtitle;
-
-  const _MenuItem({
-    required this.id,
-    required this.label,
-    required this.imagePath,
-    required this.subtitle,
-  });
 }

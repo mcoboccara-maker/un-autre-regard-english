@@ -26,12 +26,14 @@ class PromptUnifie {
     required String philosophes,
     String? historique30Jours,
     String? personnagesInterdits,
+    String? emotionsActuelles,
+    int? intensiteEmotionnelle,
   }) {
-    
+
     // ══════════════════════════════════════════════════════════════════════
     // CONSTRUCTION DU CONTEXTE UTILISATEUR
     // ══════════════════════════════════════════════════════════════════════
-    
+
     final contexteParts = <String>[];
     if (userPrenom != null && userPrenom.isNotEmpty) {
       contexteParts.add('Je m\'appelle $userPrenom');
@@ -42,9 +44,34 @@ class PromptUnifie {
     if (userValeursSelectionnees != null && userValeursSelectionnees.isNotEmpty) {
       contexteParts.add('mes valeurs sont : $userValeursSelectionnees');
     }
-    
-    final contexteUtilisateur = contexteParts.isNotEmpty 
+
+    final contexteUtilisateur = contexteParts.isNotEmpty
         ? '${contexteParts.join(', ')}.\n\n'
+        : '';
+
+    // ══════════════════════════════════════════════════════════════════════
+    // CONSTRUCTION DU CONTEXTE ÉMOTIONNEL
+    // ══════════════════════════════════════════════════════════════════════
+
+    final contexteEmotionnel = (emotionsActuelles != null && emotionsActuelles.isNotEmpty)
+        ? '''
+
+────────────────────────────────────────────────────────────────────────────────
+ÉTAT ÉMOTIONNEL ACTUEL DE L'UTILISATEUR
+────────────────────────────────────────────────────────────────────────────────
+
+Émotions ressenties : $emotionsActuelles
+Intensité globale : ${intensiteEmotionnelle ?? 5}/10
+
+L'état émotionnel de l'utilisateur doit influencer ta réponse :
+1. CHOIX DE LA FIGURE : privilégie une figure qui a traversé une expérience
+   résonnant avec cet état émotionnel. La figure doit pouvoir "parler" à
+   quelqu'un qui ressent ces émotions.
+2. TON DE L'ÉCLAIRAGE : adapte la profondeur et la sensibilité au niveau
+   d'intensité émotionnelle. Plus l'intensité est élevée, plus le ton doit
+   être accueillant et non-intrusif. Ne minimise JAMAIS l'émotion.
+
+'''
         : '';
     
     // ══════════════════════════════════════════════════════════════════════
@@ -149,7 +176,7 @@ Cette règle est NON NÉGOCIABLE.
 CONTRAINTE DE LONGUEUR — OBLIGATOIRE
 ════════════════════════════════════════════════════════════════════════════════
 
-Réponds en 150-200 mots MAXIMUM (hors métadonnées FIGURE_META).
+Réponds en 200-260 mots MAXIMUM (hors métadonnées FIGURE_META).
 Sois concis et percutant. Chaque mot doit apporter de la valeur.
 Une réponse trop longue sera rejetée.
 
@@ -332,7 +359,7 @@ MISE EN FORME (Markdown) :
 La réponse DOIT obligatoirement contenir :
 • Au moins 1 figure/personnage OU 1 cas clinique OU 1 scène clairement identifiée
 • Au moins 1 référence textuelle précise (voir règle ci-dessus)
-• Une structure compréhensible suivant les 3 sections demandées
+• Une structure compréhensible suivant les 5 sections demandées
 
 Sans ces éléments, la réponse est inutilisable.
 
@@ -340,7 +367,7 @@ Sans ces éléments, la réponse est inutilisable.
 DEMANDE DE L'UTILISATEUR
 ════════════════════════════════════════════════════════════════════════════════
 $contexteHistorique
-${contexteUtilisateur}Ma pensée, situation ou dilemme : "$contenu"
+${contexteUtilisateur}${contexteEmotionnel}Ma pensée, situation ou dilemme : "$contenu"
 
 ⚠️⚠️⚠️ RAPPEL CRITIQUE : Le texte ci-dessus entre guillemets détermine ta langue de réponse.
 Si c'est en anglais → réponds en anglais. Si c'est en français → réponds en français.
@@ -432,63 +459,99 @@ Si aucune figure conforme n'est possible pour cette source,
 indique-le clairement plutôt que de forcer une figure inadaptée.
 
 ════════════════════════════════════════════════════════════════════════════════
-STRUCTURE DE LA RÉPONSE — 3 SECTIONS (150-200 mots total)
+STRUCTURE DE LA RÉPONSE — 5 SECTIONS (200-260 mots total)
 ════════════════════════════════════════════════════════════════════════════════
 
 ────────────────────────────────────────────────────────────────────────────────
-1. LA FIGURE & LE LIEN (50-70 mots)
+1. MOTIF UNIVERSEL (15-25 mots)
 ────────────────────────────────────────────────────────────────────────────────
 
-• NOMME le motif universel identifié (1 phrase)
-• Présente la figure choisie (personnage réel, biblique, historique, littéraire ou clinique)
-• Décris son contexte : époque, circonstances, tension vécue
-• Indique EXPLICITEMENT pourquoi cette figure est retenue :
-  quelle pensée, difficulté ou tension elle a elle-même vécue ou formulée
-  en résonance DIRECTE avec le motif universel
-• Donne la RÉFÉRENCE TEXTUELLE PRÉCISE (obligatoire)
-
-Si le lien entre la figure et le motif n'est pas DIRECT et IMMÉDIATEMENT explicitable,
-la figure ne doit pas être utilisée.
-
-La figure doit rester présente comme point de référence IMPLICITE
-tout au long de l'éclairage, et non seulement dans cette section.
+Nomme en 1-2 phrases le fil humain universel et intemporel
+qui se cache derrière la pensée soumise.
+Ce motif est le pont entre la situation concrète et la tradition.
 
 ────────────────────────────────────────────────────────────────────────────────
-2. L'ÉCLAIRAGE (60-80 mots)
+2. LA FIGURE (30-40 mots)
+────────────────────────────────────────────────────────────────────────────────
+
+Présente la figure choisie (personnage réel, biblique, historique, littéraire ou clinique).
+Décris son contexte : qui, époque, tension vécue.
+Indique POURQUOI cette figure est retenue :
+quelle pensée, difficulté ou tension elle a vécue ou formulée
+en résonance DIRECTE avec le motif universel identifié.
+
+VALEURS PARTAGÉES (conditionnel) :
+Si l'utilisateur a déclaré des valeurs (voir contexte personnel ci-dessus)
+ET que la figure choisie partage FACTUELLEMENT une ou plusieurs de ces valeurs
+DANS SA TRADITION D'ORIGINE → le mentionner ici comme un fait de la tradition,
+PAS comme une flatterie.
+Format : "[Figure], pour qui [valeur] signifiait [sens précis dans cette tradition]..."
+INTERDIT : "Comme toi, il croyait en...", "Vous partagez la même valeur de...",
+toute formulation miroir ou validante.
+Si AUCUNE valeur de l'utilisateur ne résonne factuellement avec la figure
+→ NE RIEN MENTIONNER. Le silence est préférable à la complaisance.
+
+Si le lien entre la figure et le motif n'est pas DIRECT → ne pas l'utiliser.
+La figure doit rester présente comme référence IMPLICITE tout au long de l'éclairage.
+
+────────────────────────────────────────────────────────────────────────────────
+3. RÉFÉRENCE PRÉCISE & CONTEXTE (20-30 mots)
+────────────────────────────────────────────────────────────────────────────────
+
+Donne la RÉFÉRENCE TEXTUELLE PRÉCISE (obligatoire) :
+livre + chapitre + verset, ou œuvre + acte/chapitre, ou cas clinique + ouvrage.
+Ajoute une courte mise en contexte de cette référence.
+
+────────────────────────────────────────────────────────────────────────────────
+4. ÉCLAIRAGE & REFORMULATION (70-90 mots)
 ────────────────────────────────────────────────────────────────────────────────
 
 • Ce que la tradition rend VISIBLE dans cette situation
 • Concepts, distinctions ou notions clés
 • Ce que la tradition NE traite PAS ou ne cherche PAS à résoudre
-• Cite les textes ou références si pertinent
 
-Reste DESCRIPTIF :
-• sans interprétation psychologisante excessive
-• sans jugement
-• sans projection contemporaine
+Reste DESCRIPTIF : sans interprétation psychologisante excessive,
+sans jugement, sans projection contemporaine.
 
 Adapte le style à la tradition :
-• elliptique (zen, kabbale) 
+• elliptique (zen, kabbale)
 • narratif (hassidisme, soufisme, mythologie)
 • clinique (TCC, schémas)
 • conceptuel (stoïcisme, existentialisme)
 • symbolique (analytique jungienne, poésie)
 
-Ne cherche PAS à uniformiser les voix.
-
-────────────────────────────────────────────────────────────────────────────────
-3. REFORMULATION (40-50 mots)
-────────────────────────────────────────────────────────────────────────────────
-
-Reformule la pensée de l'utilisateur
+Termine cette section en reformulant la pensée de l'utilisateur
 dans le langage et les catégories PROPRES à cette tradition,
-de manière concise, $styleTutoiement.
+$styleTutoiement. Cette reformulation DÉPLACE le regard
+sans orienter le chemin.
 
-La reformulation finale peut OUVRIR une perspective de compréhension,
-SANS proposer d'issue, de direction ni de résolution.
+────────────────────────────────────────────────────────────────────────────────
+5. LE REGARD DE LA SOURCE (40-60 mots)
+────────────────────────────────────────────────────────────────────────────────
 
-Elle peut, lorsque cela s'y prête,
-DÉPLACER le regard sans orienter le chemin.
+Formule 1 à 2 questions que CET éclairage génère —
+pas cette source en général.
+
+TEST DE VALIDITÉ : si cette question pourrait apparaître
+dans un autre éclairage de la même source sur une autre pensée,
+elle est trop générique — reformule.
+
+La question doit contenir un élément tiré de la figure choisie,
+du motif universel identifié, ou de la tension spécifique
+nommée dans l'éclairage.
+
+INTERDIT dans cette section :
+• Questions rhétoriques dont la réponse positive est implicite
+• Questions présupposant croissance, transformation ou passage à l'action
+• Toute formulation en "tu pourrais / et si tu / comment grandir"
+• Questions génériques applicables sans avoir lu l'éclairage
+
+AUTORISÉ :
+• Tensions conceptuelles que la tradition révèle dans CE CAS
+• Distinctions que la tradition opère sur CETTE tension précise
+• Questions laissées ouvertes — sans réponse attendue ni préférable
+• Formulations du type : "[Source] distingue X de Y —
+  cette distinction pose ici la question de..."
 
 ────────────────────────────────────────────────────────────────────────────────
 4. MÉTADONNÉES FIGURE (pour historisation) — OBLIGATOIRE

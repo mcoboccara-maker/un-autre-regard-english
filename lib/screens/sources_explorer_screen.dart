@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/approach_config.dart';
 import '../widgets/wisdom_wheel_dialog.dart';
+import '../services/complete_auth_service.dart';
+import '../services/ai_service.dart';
+import '../services/persistent_storage_service.dart';
 import 'orientation/orientation_welcome_screen.dart';
 
 class SourcesExplorerScreen extends StatefulWidget {
@@ -24,6 +27,8 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
 
   // ── Sources sélectionnées ────────────────────────────────────────────────
   final Set<String> _selectedSources = {};
+  final Set<String> _savedSources = {}; // Sources déjà sauvegardées (pour détecter les changements)
+  bool _isSaving = false;
 
   // ── Mapping clé → nom de fichier PNG (copié de HomeCarouselScreen) ──────
   static const Map<String, String> _iconMapping = {
@@ -128,6 +133,74 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadExistingSources();
+  }
+
+  Future<void> _loadExistingSources() async {
+    // Charger UNIQUEMENT les sources EXPLICITEMENT choisies par l'utilisateur
+    // On appelle directement PersistentStorageService (pas AIService qui injecte les défauts)
+    // Règle MEMORY : "Dès que l'utilisateur choisit explicitement une source → les défauts ne sont plus valides"
+    final existing = await PersistentStorageService.instance.getUserApproaches();
+    if (existing.isNotEmpty && mounted) {
+      setState(() {
+        _selectedSources.addAll(existing);
+        _savedSources.addAll(existing);
+      });
+    }
+  }
+
+  bool get _hasUnsavedChanges {
+    if (_selectedSources.length != _savedSources.length) return true;
+    return !_selectedSources.containsAll(_savedSources) || !_savedSources.containsAll(_selectedSources);
+  }
+
+  Future<void> _saveSelectedSources() async {
+    if (_selectedSources.isEmpty || _isSaving) return;
+
+    setState(() => _isSaving = true);
+
+    final success = await CompleteAuthService.instance.saveSelectedSources(_selectedSources.toList());
+
+    if (success) {
+      await AIService.instance.loadUserApproaches();
+      if (mounted) {
+        setState(() {
+          _savedSources.clear();
+          _savedSources.addAll(_selectedSources);
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${_selectedSources.length} source${_selectedSources.length > 1 ? 's' : ''} sauvegardée${_selectedSources.length > 1 ? 's' : ''}',
+              style: GoogleFonts.inter(fontSize: 13),
+            ),
+            backgroundColor: const Color(0xFF2E8B7B),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erreur lors de la sauvegarde. Réessaie.',
+              style: GoogleFonts.inter(fontSize: 13),
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -164,6 +237,59 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
                   ),
                 ),
               ),
+              // ── Bouton Sauvegarder (visible si changements non sauvegardés) ──
+              if (_hasUnsavedChanges && _selectedSources.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSaving ? null : _saveSelectedSources,
+                      icon: _isSaving
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.check_circle_outline, size: 20),
+                      label: Text(
+                        _isSaving
+                            ? 'Sauvegarde...'
+                            : 'Sauvegarder mes ${_selectedSources.length} source${_selectedSources.length > 1 ? 's' : ''}',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _accentTeal,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ),
+              // ── Bouton retour en bas ──
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                      context, '/menu', (route) => false,
+                    ),
+                    icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                    label: Text(
+                      'Retour au menu',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _textSecondary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -177,13 +303,7 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context, '/menu', (route) => false,
-            ),
-            icon: const Icon(Icons.home_rounded, color: Colors.white, size: 26),
-            tooltip: 'Menu',
-          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Explore des sources',
@@ -195,7 +315,69 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: 48), // équilibre avec le bouton gauche
+          // Cartouche droite : pensée positive + menu
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: _showPositiveThought,
+                icon: Image.asset(
+                  'assets/univers_visuel/pensee_positive.png',
+                  width: 26,
+                  height: 26,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.lightbulb_outline,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                tooltip: 'Pensée positive',
+              ),
+              IconButton(
+                onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                  context, '/menu', (route) => false,
+                ),
+                icon: Image.asset(
+                  'assets/univers_visuel/profil.png',
+                  width: 26,
+                  height: 26,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.menu_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                tooltip: 'Menu principal',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPositiveThought() {
+    final thoughts = [
+      "Chaque jour est une nouvelle opportunité de grandir.",
+      "Tu as déjà surmonté tant d'obstacles.",
+      "Prends le temps de respirer. Ce moment difficile passera.",
+      "Tu mérites d'être heureux(se) et en paix.",
+      "Tes émotions sont valides. Accueille-les avec bienveillance.",
+    ];
+    final random = DateTime.now().millisecondsSinceEpoch % thoughts.length;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: const Color(0xFFFEF3C7),
+        title: Text('Pensée du moment', style: GoogleFonts.cormorantGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF92400E))),
+        content: Text(thoughts[random], style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF78350F), height: 1.5)),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFBBF24), foregroundColor: const Color(0xFF78350F)),
+            child: const Text('Merci !'),
+          ),
         ],
       ),
     );
@@ -445,8 +627,46 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
   }
 
   // ── Ouvrir la roue du hasard (popup existant) ────────────────────────────
-  void _openWheel() {
-    WisdomWheelDialog.show(context);
+  void _openWheel() async {
+    final selectedIds = await WisdomWheelDialog.show(context);
+
+    // Si l'utilisateur a validé des sources
+    if (selectedIds != null && selectedIds.isNotEmpty) {
+      // RÈGLE : les choix se CUMULENT, on AJOUTE les sources de la roue aux existantes
+      final mergedSources = Set<String>.from(_selectedSources)..addAll(selectedIds);
+
+      // 1. Sauvegarder le tout dans le profil utilisateur
+      final success = await CompleteAuthService.instance.saveSelectedSources(mergedSources.toList());
+
+      if (success) {
+        // 2. Recharger les approches dans AIService pour prise en compte immédiate
+        await AIService.instance.loadUserApproaches();
+
+        // 3. Mettre à jour l'affichage local (cocher toutes les sources cumulées)
+        if (mounted) {
+          setState(() {
+            _selectedSources.clear();
+            _selectedSources.addAll(mergedSources);
+            _savedSources.clear();
+            _savedSources.addAll(mergedSources);
+          });
+
+          final newCount = selectedIds.where((id) => !_selectedSources.contains(id)).length;
+          // 4. Feedback utilisateur
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${selectedIds.length} sagesse${selectedIds.length > 1 ? 's' : ''} ajoutée${selectedIds.length > 1 ? 's' : ''} — ${mergedSources.length} source${mergedSources.length > 1 ? 's' : ''} au total',
+                style: GoogleFonts.inter(fontSize: 13),
+              ),
+              backgroundColor: const Color(0xFF2E8B7B),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
   }
 }
 

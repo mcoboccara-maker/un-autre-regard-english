@@ -35,12 +35,14 @@ class PromptUnifie {
     required String philosophes,
     String? historique30Jours,
     String? personnagesInterdits,
+    String? emotionsActuelles,
+    int? intensiteEmotionnelle,
   }) {
-    
+
     // ══════════════════════════════════════════════════════════════════════
     // BUILD USER CONTEXT
     // ══════════════════════════════════════════════════════════════════════
-    
+
     final contexteParts = <String>[];
     if (userPrenom != null && userPrenom.isNotEmpty) {
       contexteParts.add('My name is $userPrenom');
@@ -51,9 +53,34 @@ class PromptUnifie {
     if (userValeursSelectionnees != null && userValeursSelectionnees.isNotEmpty) {
       contexteParts.add('my values are: $userValeursSelectionnees');
     }
-    
-    final contexteUtilisateur = contexteParts.isNotEmpty 
+
+    final contexteUtilisateur = contexteParts.isNotEmpty
         ? '${contexteParts.join(', ')}.\n\n'
+        : '';
+
+    // ══════════════════════════════════════════════════════════════════════
+    // BUILD EMOTIONAL CONTEXT
+    // ══════════════════════════════════════════════════════════════════════
+
+    final contexteEmotionnel = (emotionsActuelles != null && emotionsActuelles.isNotEmpty)
+        ? '''
+
+────────────────────────────────────────────────────────────────────────────────
+USER'S CURRENT EMOTIONAL STATE
+────────────────────────────────────────────────────────────────────────────────
+
+Emotions felt: $emotionsActuelles
+Overall intensity: ${intensiteEmotionnelle ?? 5}/10
+
+The user's emotional state must influence your response:
+1. FIGURE CHOICE: favor a figure who went through an experience that resonates
+   with this emotional state. The figure must be able to "speak" to someone
+   who feels these emotions.
+2. ILLUMINATION TONE: adapt the depth and sensitivity to the emotional
+   intensity level. The higher the intensity, the more welcoming and
+   non-intrusive the tone should be. NEVER minimize the emotion.
+
+'''
         : '';
     
     // ══════════════════════════════════════════════════════════════════════
@@ -143,7 +170,7 @@ like a memory of what this person is going through.
 LENGTH CONSTRAINT — MANDATORY
 ════════════════════════════════════════════════════════════════════════════════
 
-Respond in 150-200 words MAXIMUM (excluding FIGURE_META metadata).
+Respond in 200-260 words MAXIMUM (excluding FIGURE_META metadata).
 Be concise and impactful. Every word must add value.
 A response that is too long will be rejected.
 
@@ -318,7 +345,7 @@ Without these elements, the response is unusable.
 USER REQUEST
 ════════════════════════════════════════════════════════════════════════════════
 $contexteHistorique
-${contexteUtilisateur}My thought, situation or dilemma: "$contenu"
+${contexteUtilisateur}${contexteEmotionnel}My thought, situation or dilemma: "$contenu"
 
 Source to use: $sourcesTexte
 
@@ -407,63 +434,64 @@ If no compliant figure is possible for this source,
 indicate it clearly rather than forcing an unsuitable figure.
 
 ════════════════════════════════════════════════════════════════════════════════
-RESPONSE STRUCTURE — 3 SECTIONS (150-200 words total)
+RESPONSE STRUCTURE — 5 SECTIONS (200-260 words total)
 ════════════════════════════════════════════════════════════════════════════════
 
 ────────────────────────────────────────────────────────────────────────────────
-1. THE FIGURE & THE LINK (50-70 words)
+1. UNIVERSAL MOTIF (15-25 words)
 ────────────────────────────────────────────────────────────────────────────────
 
-• NAME the identified universal motif (1 sentence)
-• Present the chosen figure (real, biblical, historical, literary, or clinical character)
-• Describe their context: era, circumstances, tension experienced
-• Indicate EXPLICITLY why this figure is retained:
-  what thought, difficulty, or tension they themselves lived or formulated
-  in DIRECT resonance with the universal motif
-• Give the PRECISE TEXTUAL REFERENCE (mandatory)
-
-If the link between the figure and the motif is not DIRECT and IMMEDIATELY explicable,
-the figure should not be used.
-
-The figure must remain present as an IMPLICIT reference point
-throughout the illumination, not only in this section.
+Name in 1-2 sentences the universal and timeless human thread
+hidden behind the submitted thought.
 
 ────────────────────────────────────────────────────────────────────────────────
-2. THE ILLUMINATION (60-80 words)
+2. THE FIGURE (30-40 words)
+────────────────────────────────────────────────────────────────────────────────
+
+Present the chosen figure. Describe their context: who, era, tension experienced.
+Indicate WHY this figure is retained: what tension they lived or formulated
+in DIRECT resonance with the universal motif.
+
+SHARED VALUES (conditional):
+If the user declared values AND the figure factually shares one or more
+IN ITS TRADITION OF ORIGIN → mention it as a fact of the tradition, NOT flattery.
+Format: "[Figure], for whom [value] meant [precise meaning in this tradition]..."
+FORBIDDEN: "Like you, they believed in...", any mirror or validating formulation.
+If NO value resonates factually → SAY NOTHING.
+
+────────────────────────────────────────────────────────────────────────────────
+3. PRECISE REFERENCE & CONTEXT (20-30 words)
+────────────────────────────────────────────────────────────────────────────────
+
+Give the PRECISE TEXTUAL REFERENCE (mandatory):
+book + chapter + verse, or work + act/chapter, or clinical case + publication.
+
+────────────────────────────────────────────────────────────────────────────────
+4. ILLUMINATION & REFORMULATION (70-90 words)
 ────────────────────────────────────────────────────────────────────────────────
 
 • What the tradition makes VISIBLE in this situation
 • Key concepts, distinctions, or notions
-• What the tradition does NOT address or does NOT seek to resolve
-• Cite texts or references if relevant
+• What the tradition does NOT seek to resolve
 
-Stay DESCRIPTIVE:
-• without excessive psychologizing interpretation
-• without judgment
-• without contemporary projection
-
-Adapt style to tradition:
-• elliptical (Zen, Kabbalah)
-• narrative (Hasidism, Sufism, mythology)
-• clinical (CBT, schemas)
-• conceptual (Stoicism, existentialism)
-• symbolic (Jungian analysis, poetry)
-
-Do NOT seek to uniformize the voices.
+Stay DESCRIPTIVE. Adapt style to tradition.
+End by reformulating the user's thought in the language SPECIFIC to this tradition,
+$styleTutoiement. This reformulation SHIFTS the gaze without guiding the path.
 
 ────────────────────────────────────────────────────────────────────────────────
-3. REFORMULATION (40-50 words)
+5. THE SOURCE'S GAZE (40-60 words)
 ────────────────────────────────────────────────────────────────────────────────
 
-Reformulate the user's thought
-in the language and categories SPECIFIC to this tradition,
-concisely, $styleTutoiement.
+Formulate 1-2 questions that THIS illumination generates —
+not this source in general.
 
-The final reformulation may OPEN a perspective of understanding,
-WITHOUT proposing an outcome, direction, or resolution.
+VALIDITY TEST: if this question could appear in another illumination
+of the same source on a different thought, it is too generic — reformulate.
 
-It may, when appropriate,
-SHIFT the gaze without guiding the path.
+FORBIDDEN: rhetorical questions with implicit positive answer,
+questions presupposing growth or action, generic questions.
+ALLOWED: conceptual tensions the tradition reveals in THIS CASE,
+questions left open without expected answer.
 
 ────────────────────────────────────────────────────────────────────────────────
 4. FIGURE METADATA (for historization) — MANDATORY

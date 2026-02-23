@@ -126,8 +126,6 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
         // Contenu principal visible
         Column(
           children: [
-            _buildHeader(),
-            const SizedBox(height: 16),
             _buildWheel(),
             const SizedBox(height: 16),
             _buildLegend(),
@@ -196,7 +194,7 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
     return RepaintBoundary(
       key: _chartKey,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -210,34 +208,34 @@ class _EmotionWheelWidgetState extends State<EmotionWheelWidget> {
         ),
         child: Column(
           children: [
-            // Indicateurs demi-cercles (Ressources à GAUCHE, Difficiles à DROITE)
+            // Indicateurs Appui / Tensions avec les bonnes icônes
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: _buildHalfCircleLabelWithIcon('Appui', const Color(0xFF10B981), 'assets/univers_visuel/appui.png')),
+                  Flexible(child: _buildHalfCircleLabelWithIcon('Appui', const Color(0xFF10B981), 'assets/univers_visuel/emotionsdujour.png')),
                   const SizedBox(width: 8),
-                  Flexible(child: _buildHalfCircleLabelWithIcon('Tensions', const Color(0xFFDC2626), 'assets/univers_visuel/tension.png')),
+                  Flexible(child: _buildHalfCircleLabelWithIcon('Tensions', const Color(0xFFDC2626), 'assets/univers_visuel/emotionsdujour.png')),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
 
             // Roue personnalisée avec CustomPainter - responsive et centrée
             LayoutBuilder(
               builder: (context, constraints) {
                 // Utiliser toute la largeur disponible
                 final availableWidth = constraints.maxWidth;
-                // Roue plus petite pour laisser de la place aux labels
-                final wheelSize = (availableWidth * 0.55).clamp(180.0, 260.0);
+                // Roue plus grande pour réduire le blanc
+                final wheelSize = (availableWidth * 0.65).clamp(200.0, 300.0);
                 // Rayon des icônes - plus éloigné de la roue
                 final iconRadius = wheelSize * 0.62;
                 const iconSize = 28.0;
 
                 return SizedBox(
                   width: availableWidth,
-                  height: availableWidth * 0.95,
+                  height: availableWidth * 0.82,
                   child: GestureDetector(
                     onTapUp: (details) => _handleWheelTapResponsive(details, wheelSize, availableWidth),
                     child: Stack(

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../config/orientation_config.dart';
 import '../../services/complete_auth_service.dart';
+import '../../services/ai_service.dart';
 import '../../models/user_profile.dart';
 import '../../widgets/app_scaffold.dart'; // ✅ AJOUT IMPORT APPSCAFFOLD
 
@@ -88,23 +89,42 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
     try {
       // Récupérer le profil actuel
       final profileData = await CompleteAuthService.instance.getProfile();
-      
+
+      // RÈGLE : les choix se CUMULENT — merger avec les sources existantes
+      final existingPhilosophes = Set<String>.from(
+          List<String>.from(profileData?['philosophesSelectionnes'] ?? []));
+      final existingCourantsPhilo = Set<String>.from(
+          List<String>.from(profileData?['courantsPhilosophiques'] ?? []));
+      final existingLitteraires = Set<String>.from(
+          List<String>.from(profileData?['courantsLitteraires'] ?? []));
+      final existingPsychologiques = Set<String>.from(
+          List<String>.from(profileData?['approchesPsychologiques'] ?? []));
+
+      // Ajouter les nouvelles sélections aux existantes
+      existingPhilosophes.addAll(_selectedPhilosophes);
+      existingCourantsPhilo.addAll(_selectedCourantsPhilo);
+      existingLitteraires.addAll(_selectedLitteraires);
+      existingPsychologiques.addAll(_selectedPsychologiques);
+
       // Construire le profil mis à jour
       final currentEmail = await CompleteAuthService.instance.getCurrentUser();
-      
+
       final updates = {
         ...?profileData,
         'email': currentEmail,
-        'philosophesSelectionnes': _selectedPhilosophes.toList(),
-        'courantsPhilosophiques': _selectedCourantsPhilo.toList(),
-        'courantsLitteraires': _selectedLitteraires.toList(),
-        'approchesPsychologiques': _selectedPsychologiques.toList(),
+        'philosophesSelectionnes': existingPhilosophes.toList(),
+        'courantsPhilosophiques': existingCourantsPhilo.toList(),
+        'courantsLitteraires': existingLitteraires.toList(),
+        'approchesPsychologiques': existingPsychologiques.toList(),
         'orientationCompleted': true,
         'orientationDate': DateTime.now().toIso8601String(),
         'lastUpdated': DateTime.now().toIso8601String(),
       };
 
       await CompleteAuthService.instance.saveProfile(updates);
+
+      // Recharger les approches dans AIService pour prise en compte immédiate
+      await AIService.instance.loadUserApproaches();
 
       setState(() {
         _isSaving = false;

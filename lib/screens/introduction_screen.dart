@@ -245,6 +245,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _bgEdge,
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(

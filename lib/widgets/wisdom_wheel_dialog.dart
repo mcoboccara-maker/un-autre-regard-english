@@ -6,7 +6,9 @@
 // - Retour au menu principal apres fermeture
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:math' as math;
 
 class WheelSource {
@@ -47,7 +49,10 @@ class WisdomWheelDialog extends StatefulWidget {
 class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProviderStateMixin {
   late List<AnimationController> _spinControllers;
   late AnimationController _pulseController;
-  
+
+  // Audio pour le son des roues
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   final List<double> _currentAngles = [0, 0, 0, 0];
   final List<bool> _isSpinning = [false, false, false, false];
   final List<WheelSource?> _selectedSources = [null, null, null, null];
@@ -139,6 +144,8 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
   void dispose() {
     for (final c in _spinControllers) c.dispose();
     _pulseController.dispose();
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -169,7 +176,12 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
       _isSpinning[index] = true;
       _selectedSources[index] = null;
     });
-    
+
+    // Jouer le son de la roue
+    _playWheelSound();
+    // Vibration de départ
+    HapticFeedback.mediumImpact();
+
     _spinControllers[index].reset();
     
     final animation = Tween<double>(
@@ -185,6 +197,8 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
     });
     
     _spinControllers[index].forward().then((_) {
+      // Vibration de fin (impact fort)
+      HapticFeedback.heavyImpact();
       setState(() {
         _isSpinning[index] = false;
         _selectedSources[index] = sources[targetIndex];
@@ -214,6 +228,18 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  /// Jouer le son de la roue
+  Future<void> _playWheelSound() async {
+    try {
+      await _audioPlayer.stop(); // Arrêter le son précédent si encore en cours
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+      await _audioPlayer.play(AssetSource('sounds/wheel_spin.mp3'));
+    } catch (e) {
+      // Si le fichier n'existe pas, on utilise juste les vibrations
+      print('🔇 Son de roue non disponible: $e');
+    }
   }
 
   @override
@@ -680,8 +706,9 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false);
+                final nav = Navigator.of(context);
+                nav.pop();
+                nav.pushNamedAndRemoveUntil('/menu', (route) => false);
               },
               icon: Image.asset(
                 'assets/univers_visuel/menu_principal.png',

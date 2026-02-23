@@ -108,9 +108,11 @@ class PromptSelector {
     required String philosophes,
     String? historique30Jours,
     String? personnagesInterdits,
+    String? emotionsActuelles,
+    int? intensiteEmotionnelle,
   }) {
     final lang = detectAndCache(userText);
-    
+
     switch (lang) {
       case LanguageDetector.english:
         return en_unifie.PromptUnifie.build(
@@ -127,6 +129,8 @@ class PromptSelector {
           philosophes: philosophes,
           historique30Jours: historique30Jours,
           personnagesInterdits: personnagesInterdits,
+          emotionsActuelles: emotionsActuelles,
+          intensiteEmotionnelle: intensiteEmotionnelle,
         );
       case LanguageDetector.hebrew:
         return he_unifie.PromptUnifie.build(
@@ -143,6 +147,8 @@ class PromptSelector {
           philosophes: philosophes,
           historique30Jours: historique30Jours,
           personnagesInterdits: personnagesInterdits,
+          emotionsActuelles: emotionsActuelles,
+          intensiteEmotionnelle: intensiteEmotionnelle,
         );
       default:
         return fr_unifie.PromptUnifie.build(
@@ -159,6 +165,8 @@ class PromptSelector {
           philosophes: philosophes,
           historique30Jours: historique30Jours,
           personnagesInterdits: personnagesInterdits,
+          emotionsActuelles: emotionsActuelles,
+          intensiteEmotionnelle: intensiteEmotionnelle,
         );
     }
   }
