@@ -126,35 +126,37 @@ class _EmotionSelectionScreenState extends State<EmotionSelectionScreen>
         }
       } else {
         final sources = _pickRandomSources(3);
-        final List<PerspectiveData> perspectives = [];
 
-        for (final source in sources) {
-          final response =
-              await AIService.instance.generateApproachSpecificResponse(
-            approach: source.key,
-            reflectionText: widget.thoughtText,
-            reflectionType: widget.reflectionType,
-            emotionalState: _emotionalState,
-            userProfile: null,
-            intensiteEmotionnelle: intensity,
-          );
-
-          final meta = AIService.instance.lastFigureMeta;
-          perspectives.add(PerspectiveData(
-            approachKey: source.key,
-            approachName: source.name,
-            responseText: response,
-            figureName: meta?['nom'],
-            figureReference: meta?['reference'],
-          ));
-        }
+        // Ecart 1: Generer la premiere source, naviguer immediatement
+        final firstSource = sources.first;
+        final response =
+            await AIService.instance.generateApproachSpecificResponse(
+          approach: firstSource.key,
+          reflectionText: widget.thoughtText,
+          reflectionType: widget.reflectionType,
+          emotionalState: _emotionalState,
+          userProfile: null,
+          intensiteEmotionnelle: intensity,
+        );
+        final meta = AIService.instance.lastFigureMeta;
+        final firstPerspective = PerspectiveData(
+          approachKey: firstSource.key,
+          approachName: firstSource.name,
+          responseText: response,
+          figureName: meta?['nom'],
+          figureReference: meta?['reference'],
+        );
 
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (_) => EclairagesCarouselScreen(
                 thoughtText: widget.thoughtText,
-                perspectives: perspectives,
+                perspectives: [firstPerspective],
+                emotionalState: _emotionalState,
+                intensiteEmotionnelle: intensity,
+                pendingSources: sources.length > 1 ? sources.sublist(1) : null,
+                reflectionType: widget.reflectionType,
               ),
             ),
           );

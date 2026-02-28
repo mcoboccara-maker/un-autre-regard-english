@@ -212,34 +212,36 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
         }
       } else {
         final sources = _pickRandomSources(_activeSources.length > 0 ? _activeSources.length : 3);
-        final List<PerspectiveData> perspectives = [];
 
-        for (final source in sources) {
-          final response =
-              await AIService.instance.generateApproachSpecificResponse(
-            approach: source.key,
-            reflectionText: text,
-            reflectionType: _selectedType,
-            emotionalState: EmotionalState.empty(),
-            userProfile: null,
-            intensiteEmotionnelle: 5,
-          );
-          final meta = AIService.instance.lastFigureMeta;
-          perspectives.add(PerspectiveData(
-            approachKey: source.key,
-            approachName: source.name,
-            responseText: response,
-            figureName: meta?['nom'],
-            figureReference: meta?['reference'],
-          ));
-        }
+        // Ecart 1: Generer la premiere source, naviguer immediatement,
+        // passer les restantes a EclairagesCarouselScreen pour generation progressive
+        final firstSource = sources.first;
+        final response =
+            await AIService.instance.generateApproachSpecificResponse(
+          approach: firstSource.key,
+          reflectionText: text,
+          reflectionType: _selectedType,
+          emotionalState: EmotionalState.empty(),
+          userProfile: null,
+          intensiteEmotionnelle: 5,
+        );
+        final meta = AIService.instance.lastFigureMeta;
+        final firstPerspective = PerspectiveData(
+          approachKey: firstSource.key,
+          approachName: firstSource.name,
+          responseText: response,
+          figureName: meta?['nom'],
+          figureReference: meta?['reference'],
+        );
 
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (_) => EclairagesCarouselScreen(
                 thoughtText: text,
-                perspectives: perspectives,
+                perspectives: [firstPerspective],
+                pendingSources: sources.length > 1 ? sources.sublist(1) : null,
+                reflectionType: _selectedType,
               ),
             ),
           );

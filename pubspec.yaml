@@ -100,6 +100,22 @@ flutter:
     - assets/univers_visuel/orientation/
     - assets/univers_visuel/evaluation/
     - assets/univers_visuel/icon/
+    - assets/univers_visuel/essai_test/
+
+    # Sceaux émotions (Sacred Seal Mode V6) — 512px optimisés pour le web
+    - assets/emotions_seal/
+
+    # Glyphes émotions (Field Engine) — sans texte, fond transparent
+    - assets/emotions_glyph/
+
+    # Mandala de fond (tibétain bleu-vert 1024px)
+    - assets/mandala/
+
+    # Masques visages — scénario A (terracotta androgyne)
+    - assets/masks/terracotta/
+
+    # Masques visages — scénario B (pastels colorés androgyne)
+    - assets/masks/pastel/
     
 flutter_launcher_icons:
   android: true

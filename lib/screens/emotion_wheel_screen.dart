@@ -12,6 +12,7 @@ import '../models/mood_entry.dart';
 import '../models/emotional_state.dart';
 import '../services/ai_service.dart';
 import '../services/emotional_tracking_service.dart';
+import '../widgets/mandala_dev/premium_mandala_field_engine_v1.dart';
 import '../widgets/interactive_plutchik_wheel.dart';
 import '../widgets/nav_cartouche.dart';
 import '../widgets/brain_gestation_widget.dart';
@@ -459,36 +460,38 @@ class _EmotionWheelScreenState extends State<EmotionWheelScreen>
             ? resolved
             : ApproachCategories.allApproaches.toList();
         final sources = List<ApproachConfig>.from(pool);
-        final List<PerspectiveData> perspectives = [];
 
-        for (final source in sources) {
-          final response =
-              await AIService.instance.generateApproachSpecificResponse(
-            approach: source.key,
-            reflectionText: text,
-            reflectionType: widget.reflectionType ?? ReflectionType.thought,
-            emotionalState: emotionalState,
-            userProfile: null,
-            intensiteEmotionnelle: avgIntensity,
-          );
-          final meta = AIService.instance.lastFigureMeta;
-          perspectives.add(PerspectiveData(
-            approachKey: source.key,
-            approachName: source.name,
-            responseText: response,
-            figureName: meta?['nom'],
-            figureReference: meta?['reference'],
-          ));
-        }
+        // Ecart 1: Generer la premiere source, naviguer immediatement,
+        // passer les restantes pour generation progressive
+        final firstSource = sources.first;
+        final response =
+            await AIService.instance.generateApproachSpecificResponse(
+          approach: firstSource.key,
+          reflectionText: text,
+          reflectionType: widget.reflectionType ?? ReflectionType.thought,
+          emotionalState: emotionalState,
+          userProfile: null,
+          intensiteEmotionnelle: avgIntensity,
+        );
+        final meta = AIService.instance.lastFigureMeta;
+        final firstPerspective = PerspectiveData(
+          approachKey: firstSource.key,
+          approachName: firstSource.name,
+          responseText: response,
+          figureName: meta?['nom'],
+          figureReference: meta?['reference'],
+        );
 
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (_) => EclairagesCarouselScreen(
                 thoughtText: text,
-                perspectives: perspectives,
+                perspectives: [firstPerspective],
                 emotionalState: emotionalState,
                 intensiteEmotionnelle: avgIntensity,
+                pendingSources: sources.length > 1 ? sources.sublist(1) : null,
+                reflectionType: widget.reflectionType ?? ReflectionType.thought,
               ),
             ),
           );
@@ -630,12 +633,14 @@ class _EmotionWheelScreenState extends State<EmotionWheelScreen>
                       child: Column(
                         children: [
                           // ── Roue Plutchik — taille responsive maximisée ──
+                          // Scénarios masques : MaskStyle.terracotta / .pastel / .glyph
                           SizedBox(
                             width: wheelSize,
                             height: wheelSize,
                             child: InteractivePlutchikWheel(
+                              maskStyle: MaskStyle.pastel,
                               selectedIndex: _selectedIndex,
-                              confirmedIndices: _confirmedIndicesSet,
+                              confirmedIndices: _confirmedEmotions.map((e) => e.index).toSet(),
                               selectedNuances: _selectedNuances,
                               intensity: _intensity,
                               onEmotionTapped: _onEmotionTapped,
@@ -648,8 +653,12 @@ class _EmotionWheelScreenState extends State<EmotionWheelScreen>
                                   }
                                 });
                               },
-                              onIntensityChanged: (val) =>
-                                  setState(() => _intensity = val),
+                              onIntensityChanged: (val) {
+                                setState(() {
+                                  _intensity = val;
+                                  if (val == 0) _selectedNuances.clear();
+                                });
+                              },
                             ),
                           ),
 

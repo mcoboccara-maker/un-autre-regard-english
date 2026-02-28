@@ -78,6 +78,19 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
         print('✅ Historique invité effacé');
+
+        // Reinitialiser le profil invite (sources par defaut)
+        print('🗑️ Reinitialisation des sources invité...');
+        final profile = await CompleteAuthService.instance.getProfile();
+        if (profile != null) {
+          profile['religionsSelectionnees'] = <String>[];
+          profile['courantsLitteraires'] = <String>[];
+          profile['approchesPsychologiques'] = <String>[];
+          profile['courantsPhilosophiques'] = <String>[];
+          profile['philosophesSelectionnes'] = <String>[];
+          await CompleteAuthService.instance.saveProfile(profile);
+          print('✅ Sources invité réinitialisées (défauts seront appliqués)');
+        }
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -1,14 +1,20 @@
 // lib/widgets/interactive_plutchik_wheel.dart
 // Roue de Plutchik style MANDALA ORGANIQUE — pétales lotus arrondis, ornements,
-// palette chaude psychédélique, icônes PNG, intensité au centre
+// palette chaude psychédélique, masques visages, intensité au centre
 // Positives à droite (vert appui), Négatives à gauche (orange tension)
+// Scénarios A (terracotta) et B (pastel) avec mandala Kalachakra en fond
 
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../config/emotion_config.dart';
+import 'parametric_emotion_face.dart';
+
+/// Style de masques pour les scénarios
+enum MaskStyle { terracotta, pastel, glyph }
 
 /// Couleurs thématiques des deux pôles
 const Color _kAppuiColor = Color(0xFF10B981);   // Vert — émotions positives
@@ -20,6 +26,31 @@ const Color _kGoldLight = Color(0xFFFFF0DB);
 const Color _kAmberGlow = Color(0xFFE8B84B);
 const Color _kTealSoft = Color(0xFF7FC4B8);
 
+/// ── ESSAI TEST : icônes 2048 avec intensité progressive ──
+const String _kEssaiTestPath = 'assets/univers_visuel/essai_test';
+const Map<String, String> _kEssaiPrefix = {
+  'AIMANT': 'aimant', 'BLESSE': 'blesse', 'CONFUS': 'confus',
+  'CRITIQUE': 'critique', 'DEPRIME': 'deprime', 'DETENDU': 'detendu',
+  'EFFRAYE': 'effraye', 'EN_COLERE': 'encolere', 'FORT': 'fort',
+};
+const Map<String, int> _kEssaiMaxLevel = {
+  'aimant': 1, 'blesse': 6, 'confus': 5, 'critique': 5,
+  'deprime': 5, 'detendu': 1, 'effraye': 5, 'encolere': 6, 'fort': 4,
+};
+
+/// ── MASQUES : mapping émotion → fichier (androgyne uniquement) ──
+const String _kTerracottaPath = 'assets/masks/terracotta';
+const String _kPastelPath = 'assets/masks/pastel';
+
+const Map<String, String> _kEmotionToMaskFile = {
+  'HEUREUX': 'heureux', 'AIMANT': 'aimant', 'PAISIBLE': 'paisible',
+  'DETENDU': 'detendu', 'VIVANT': 'vivant', 'OUVERT': 'ouvert',
+  'POSITIF': 'positif', 'INTERESSE': 'interesse', 'FORT': 'fort',
+  'TRISTE': 'triste', 'BLESSE': 'blesse', 'EFFRAYE': 'effraye',
+  'EN_COLERE': 'colere', 'DEPRIME': 'deprime', 'IMPUISSANT': 'impuissant',
+  'CONFUS': 'confus', 'INDIFFERENT': 'indifferent', 'CRITIQUE': 'critique',
+};
+
 class InteractivePlutchikWheel extends StatefulWidget {
   final int? selectedIndex;
   final Set<int> confirmedIndices;
@@ -28,6 +59,7 @@ class InteractivePlutchikWheel extends StatefulWidget {
   final ValueChanged<int> onEmotionTapped;
   final ValueChanged<String> onNuanceTapped;
   final ValueChanged<int>? onIntensityChanged;
+  final MaskStyle maskStyle;
 
   const InteractivePlutchikWheel({
     super.key,
@@ -38,6 +70,7 @@ class InteractivePlutchikWheel extends StatefulWidget {
     required this.onEmotionTapped,
     required this.onNuanceTapped,
     this.onIntensityChanged,
+    this.maskStyle = MaskStyle.glyph,
   });
 
   @override
@@ -46,9 +79,10 @@ class InteractivePlutchikWheel extends StatefulWidget {
 }
 
 class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  late AnimationController _rotationController;
 
   static final List<EmotionConfig> _allEmotions = [
     ...EmotionCategories.positiveEmotions,
@@ -57,6 +91,7 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
 
   final Map<String, ui.Image> _loadedImages = {};
   bool _imagesLoaded = false;
+  bool _iconsLoaded = false;
   int? _hoveredIndex;
 
   @override
@@ -64,15 +99,62 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 4500),
     )..repeat(reverse: true);
     _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    // Rotation lente continue (1 tour complet en 90 secondes)
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 90),
+    )..repeat();
     _loadAllImages();
   }
 
+  /// Détourage blanc : convertit les pixels blancs/quasi-blancs en transparent
+  static Future<ui.Image> _removeWhiteBackground(ui.Image source, {int threshold = 235}) async {
+    final byteData = await source.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) return source;
+    final pixels = Uint8List.fromList(byteData.buffer.asUint8List());
+    final w = source.width;
+    final h = source.height;
+
+    for (int i = 0; i < pixels.length; i += 4) {
+      final r = pixels[i];
+      final g = pixels[i + 1];
+      final b = pixels[i + 2];
+      final brightness = (r + g + b) ~/ 3;
+      if (brightness > threshold) {
+        // Dégradé doux pour les bords (anti-aliasing)
+        final fade = ((threshold + 20) - brightness).clamp(0, 20);
+        pixels[i + 3] = (fade * 255 ~/ 20).clamp(0, 255);
+      }
+    }
+
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromPixels(
+      pixels, w, h, ui.PixelFormat.rgba8888,
+      (image) => completer.complete(image),
+    );
+    return completer.future;
+  }
+
+  Future<ui.Image?> _loadSingleImage(String path, {int? targetWidth}) async {
+    try {
+      final data = await rootBundle.load(path);
+      final bytes = data.buffer.asUint8List();
+      final codec = await ui.instantiateImageCodec(bytes, targetWidth: targetWidth);
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } catch (e) {
+      debugPrint('Could not load image: $path — $e');
+      return null;
+    }
+  }
+
   Future<void> _loadAllImages() async {
+    // ── PHASE 1 : Icônes d'émotions (PARALLÈLE) — affichage immédiat ──
     final paths = <String>{};
     for (final e in _allEmotions) {
       paths.add(e.iconPath);
@@ -80,23 +162,89 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
     paths.add('assets/univers_visuel/appui.png');
     paths.add('assets/univers_visuel/tension.png');
 
-    for (final path in paths) {
-      try {
-        final data = await rootBundle.load(path);
-        final bytes = data.buffer.asUint8List();
-        final codec = await ui.instantiateImageCodec(bytes, targetWidth: 64);
-        final frame = await codec.getNextFrame();
-        _loadedImages[path] = frame.image;
-      } catch (e) {
-        debugPrint('Could not load image: $path — $e');
-      }
-    }
+    final iconFutures = paths.map((path) async {
+      final img = await _loadSingleImage(path, targetWidth: 64);
+      if (img != null) _loadedImages[path] = img;
+    });
+    await Future.wait(iconFutures);
+
+    // Afficher le mandala dès que les icônes sont prêtes
+    if (mounted) setState(() => _iconsLoaded = true);
+
+    // ── PHASES 2, 3, 4 en PARALLÈLE en arrière-plan ──
+    await Future.wait([
+      _loadMandalaBackground(),
+      _loadMaskImages(),
+      _loadEssaiImages(),
+    ]);
+
     if (mounted) setState(() => _imagesLoaded = true);
+  }
+
+  Future<void> _loadMandalaBackground() async {
+    final img = await _loadSingleImage('assets/mandala/mandala_exotique.png');
+    if (img != null) _loadedImages['mandala_bg'] = img;
+  }
+
+  Future<void> _loadMaskImages() async {
+    if (widget.maskStyle == MaskStyle.glyph) return;
+
+    final basePath = widget.maskStyle == MaskStyle.terracotta
+        ? _kTerracottaPath : _kPastelPath;
+    final prefix = widget.maskStyle == MaskStyle.terracotta ? 'a' : 'pastel_';
+
+    final futures = _kEmotionToMaskFile.entries.map((entry) async {
+      final emotionKey = entry.key;
+      final fileName = entry.value;
+      final assetPath = '$basePath/$prefix$fileName.png';
+
+      // Pétale et centre en parallèle
+      final results = await Future.wait([
+        _loadSingleImage(assetPath, targetWidth: 96),
+        _loadSingleImage(assetPath, targetWidth: 320),
+      ]);
+
+      if (results[0] != null) {
+        final detoured = await _removeWhiteBackground(results[0]!);
+        _loadedImages['mask_petal_$emotionKey'] = detoured;
+      }
+      if (results[1] != null) {
+        final detoured = await _removeWhiteBackground(results[1]!);
+        _loadedImages['mask_center_$emotionKey'] = detoured;
+      }
+    });
+    await Future.wait(futures);
+  }
+
+  Future<void> _loadEssaiImages() async {
+    final futures = _kEssaiPrefix.entries.map((entry) async {
+      final prefix = entry.value;
+
+      // Pétale + centre niveau 0 en parallèle
+      final results = await Future.wait([
+        _loadSingleImage('$_kEssaiTestPath/${prefix}_0.png', targetWidth: 80),
+        _loadSingleImage('$_kEssaiTestPath/${prefix}_0.png', targetWidth: 256),
+      ]);
+      if (results[0] != null) _loadedImages['essai_petal_$prefix'] = results[0]!;
+      if (results[1] != null) _loadedImages['essai_center_${prefix}_0'] = results[1]!;
+
+      // Intensités progressives en parallèle
+      final maxLevel = _kEssaiMaxLevel[prefix] ?? 0;
+      final levelFutures = List.generate(maxLevel, (i) async {
+        final level = i + 1;
+        final img = await _loadSingleImage(
+          '$_kEssaiTestPath/${prefix}_$level.png', targetWidth: 256);
+        if (img != null) _loadedImages['essai_center_${prefix}_$level'] = img;
+      });
+      await Future.wait(levelFutures);
+    });
+    await Future.wait(futures);
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
@@ -139,11 +287,27 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
             child: SizedBox(
               width: size,
               height: size,
-              child: Stack(
+              child: (!_iconsLoaded && widget.maskStyle != MaskStyle.glyph)
+                // ── Chargement : animation d'attente élégante ──
+                ? AnimatedBuilder(
+                    animation: Listenable.merge([_pulseAnimation, _rotationController]),
+                    builder: (context, _) {
+                      final pulse = _pulseAnimation.value;
+                      final rot = _rotationController.value * 2 * math.pi;
+                      return CustomPaint(
+                        size: Size(size, size),
+                        painter: _LoadingMandalaPainter(
+                          pulseValue: pulse,
+                          rotationAngle: rot,
+                        ),
+                      );
+                    },
+                  )
+                : Stack(
                 children: [
                   Positioned.fill(
                     child: AnimatedBuilder(
-                      animation: _pulseAnimation,
+                      animation: Listenable.merge([_pulseAnimation, _rotationController]),
                       builder: (context, _) {
                         return CustomPaint(
                           size: Size(size, size),
@@ -154,8 +318,10 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
                             selectedNuances: widget.selectedNuances,
                             intensity: widget.intensity,
                             pulseValue: _pulseAnimation.value,
+                            rotationValue: _rotationController.value,
                             images: _loadedImages,
                             imagesLoaded: _imagesLoaded,
+                            maskStyle: widget.maskStyle,
                           ),
                         );
                       },
@@ -280,15 +446,27 @@ class _MandalaWheelPainter extends CustomPainter {
   final Set<String> selectedNuances;
   final int intensity;
   final double pulseValue;
+  final double rotationValue;
   final Map<String, ui.Image> images;
   final bool imagesLoaded;
+  final MaskStyle maskStyle;
 
   _MandalaWheelPainter({
     required this.emotions, this.selectedIndex,
     this.confirmedIndices = const {}, this.selectedNuances = const {},
     this.intensity = 5, required this.pulseValue,
+    this.rotationValue = 0.0,
     required this.images, required this.imagesLoaded,
+    this.maskStyle = MaskStyle.glyph,
   });
+
+  bool get _useMasks => maskStyle != MaskStyle.glyph;
+
+  /// Fonctions d'intensité (CDC emotion_model.dart)
+  double _intensitySaturation(double t) => 0.3 + t * 0.7;       // 0.3 → 1.0
+  double _intensityScale(double t) => 0.8 + t * 0.4;             // 0.8 → 1.2
+  double _intensityOpacity(double t) => 0.3 + t * 0.7;           // 0.3 → 1.0
+  double _intensityGlow(double t) => t * 8.0;                    // 0 → 8px
 
   // ── Helpers géométriques ──────────────────────────────────────────
 
@@ -386,37 +564,174 @@ class _MandalaWheelPainter extends CustomPainter {
     final nuanceInnerR = emotionOuterR + 4;
     final nuanceOuterR = outerRadius;
 
-    // 1. Aura de fond
+    // ── Respiration synchronisée ──
+    final innerBreath = 1.0 + 0.006 * pulseValue;
+    final goldRingRadius = emotionOuterR + 2;
+
+    // 0. Mandala Kalachakra — ROND, UNIQUEMENT à l'extérieur du cercle doré
+    if (_useMasks) {
+      canvas.save();
+      // Clip CIRCULAIRE extérieur (pour que le mandala ne dépasse pas en carré)
+      // avec trou intérieur (cercle doré) via evenOdd
+      final mandalaClipRadius = outerRadius * 1.25;  // cercle extérieur du mandala
+      final holePath = Path()
+        ..addOval(Rect.fromCircle(center: center, radius: mandalaClipRadius))
+        ..addOval(Rect.fromCircle(center: center, radius: goldRingRadius * innerBreath))
+        ..fillType = PathFillType.evenOdd;
+      canvas.clipPath(holePath);
+      _drawMandalaBackground(canvas, center, outerRadius);
+      canvas.restore();
+    }
+
+    // 1. Fond bleu nuit profond à l'intérieur du cercle doré (même couleur que le fond d'écran)
+    if (_useMasks) {
+      _drawDarkInterior(canvas, center, goldRingRadius * innerBreath);
+    }
+
+    // 2. Aura de fond
     _drawBackgroundAura(canvas, center, outerRadius);
 
-    // 2. Halo d'intensité diffus
+    // 3. Halo d'intensité diffus
     _drawIntensityHalo(canvas, center, emotionOuterR, outerRadius);
 
-    // 3. Marqueurs Appui / Tension
+    // 4. Marqueurs Appui / Tension
     _drawZoneMarkers(canvas, center, emotionInnerR, outerRadius, segmentAngle);
 
-    // 4. Pétales lotus + décorations
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(innerBreath);
+    canvas.translate(-center.dx, -center.dy);
+
+    // 5. Grand cercle doré reliant les bouts des pétales — TRÈS LUMINEUX
+    canvas.drawCircle(center, goldRingRadius, Paint()
+      ..color = _kAmberGlow.withValues(alpha: 0.90 + 0.10 * pulseValue)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5);
+    // Halo doré extérieur
+    canvas.drawCircle(center, goldRingRadius + 3.0, Paint()
+      ..color = _kAmberGlow.withValues(alpha: 0.35 + 0.10 * pulseValue)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5);
+    // Halo doré intérieur
+    canvas.drawCircle(center, goldRingRadius - 2.0, Paint()
+      ..color = _kGoldWarm.withValues(alpha: 0.30 + 0.08 * pulseValue)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0);
+    // Glow flou autour du cercle doré
+    canvas.drawCircle(center, goldRingRadius, Paint()
+      ..color = _kAmberGlow.withValues(alpha: 0.20 + 0.10 * pulseValue)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6.0);
+
+    // 6. Pétales lotus + décorations
     _drawPetals(canvas, center, n, segmentAngle, gapAngle, emotionInnerR, emotionOuterR);
 
-    // 5. Anneau décoratif de dots (entre pétales et nuances)
-    _drawOrnamentalDotRing(canvas, center, emotionOuterR + 2.5, n * 2, 1.2,
+    // 7. Anneau décoratif de dots (entre pétales et nuances)
+    _drawOrnamentalDotRing(canvas, center, emotionOuterR + 5, n * 2, 1.2,
       _kGoldWarm.withValues(alpha: 0.30));
 
-    // 6. Nuances (si émotion sélectionnée)
+    // 8. Nuances (si émotion sélectionnée)
     _drawNuances(canvas, center, n, segmentAngle, nuanceInnerR, nuanceOuterR);
 
-    // 7. Anneau ornamental intérieur (autour du centre)
+    // 9. Anneau ornamental intérieur (autour du centre)
     _drawOrnamentalDotRing(canvas, center, emotionInnerR - 6, n, 1.5,
       _kGoldWarm.withValues(alpha: 0.35));
 
-    // Fin anneau doré subtil autour des pétales
-    canvas.drawCircle(center, emotionOuterR + 1, Paint()
-      ..color = _kGoldWarm.withValues(alpha: 0.15)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5);
-
-    // 8. Centre orné
+    // 10. Centre orné
     _drawMandalaCenter(canvas, center, emotionInnerR - 3);
+
+    canvas.restore();
+  }
+
+  // ── FOND BLEU NUIT PROFOND (intérieur du cercle doré) ──────────
+
+  void _drawDarkInterior(Canvas canvas, Offset center, double radius) {
+    canvas.save();
+    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
+
+    // Gradient bleu nuit identique au fond d'écran
+    final baseGrad = ui.Gradient.radial(
+      center, radius,
+      [
+        const Color(0xFF1B2838),  // bleu nuit central
+        const Color(0xFF0F1E35),  // bleu nuit moyen
+        const Color(0xFF0A1628),  // bleu nuit profond
+      ],
+      [0.0, 0.5, 1.0],
+    );
+    canvas.drawCircle(center, radius, Paint()..shader = baseGrad);
+
+    // Léger reflet subtil au centre pour donner de la profondeur
+    final highlight = ui.Gradient.radial(
+      Offset(center.dx, center.dy - radius * 0.1),
+      radius * 0.5,
+      [const Color(0x08FFFFFF), const Color(0x00FFFFFF)],
+    );
+    canvas.drawCircle(center, radius, Paint()..shader = highlight);
+
+    canvas.restore();
+  }
+
+  // ── MANDALA KALACHAKRA EN FOND ───────────────────────────────────
+
+  void _drawMandalaBackground(Canvas canvas, Offset center, double outerRadius) {
+    final mandalaImg = images['mandala_bg'];
+    if (mandalaImg == null || !imagesLoaded) return;
+
+    // ── Respiration douce : subtile oscillation scale + opacité ──
+    final breathScale = 1.0 + 0.008 * pulseValue;  // 1.000 → 1.008 (quasi-imperceptible)
+    final breathAlpha = 0.92 + 0.08 * pulseValue;   // 0.92 → 1.0
+
+    // ── Rotation lente continue ──
+    final rotAngle = rotationValue * 2 * math.pi;  // 0→2π en 90s
+
+    final mandalaDiameter = outerRadius * 2.6 * breathScale;
+    final srcRect = Rect.fromLTWH(
+      0, 0, mandalaImg.width.toDouble(), mandalaImg.height.toDouble());
+    final dstRect = Rect.fromCenter(
+      center: Offset.zero, width: mandalaDiameter, height: mandalaDiameter);
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotAngle);
+
+    // L'image mandala est bleu-vert (R~38, G~97, B~115), alpha max 25%.
+    // Effet "nuit étoilée" : fond sombre, motifs en traces lumineuses bleu profond.
+    // On pousse vers le bleu nuit, on réduit le rouge/vert, alpha modéré.
+    const rScale = 0.2;    // rouge quasi-éteint → nuit profonde
+    const gScale = 0.6;    // vert réduit → pas de teinte verte
+    const bScale = 1.4;    // bleu amplifié → dominante bleu nuit
+    const gBoost = 5.0;    // léger boost vert pour turquoise subtil
+    const bBoost = 15.0;   // boost bleu pour luminosité
+    const alphaAmp = 2.8;  // alpha 25% → ~70% (traces visibles, pas opaques)
+    final mandalaFilter = ColorFilter.matrix(<double>[
+      rScale, 0, 0, 0, 0,              // R : quasi-noir
+      0, gScale, 0, 0, gBoost,         // G : turquoise subtil
+      0, 0, bScale, 0, bBoost,         // B : bleu nuit lumineux
+      0, 0, 0, alphaAmp * breathAlpha, 0,
+    ]);
+
+    canvas.drawImageRect(mandalaImg, srcRect, dstRect, Paint()
+      ..filterQuality = FilterQuality.medium
+      ..colorFilter = mandalaFilter
+      ..blendMode = BlendMode.screen);
+
+    // 2e passe : halo doux — traces lumineuses étalées
+    final haloFilter = ColorFilter.matrix(<double>[
+      rScale * 0.3, 0, 0, 0, 0,
+      0, gScale * 0.5, 0, 0, gBoost * 0.3,
+      0, 0, bScale * 0.6, 0, bBoost * 0.5,
+      0, 0, 0, alphaAmp * 0.4 * breathAlpha, 0,
+    ]);
+    final haloDstRect = Rect.fromCenter(
+      center: Offset.zero, width: mandalaDiameter * 1.08, height: mandalaDiameter * 1.08);
+    canvas.drawImageRect(mandalaImg, srcRect, haloDstRect, Paint()
+      ..filterQuality = FilterQuality.low
+      ..colorFilter = haloFilter
+      ..blendMode = BlendMode.screen);
+
+    canvas.restore();
   }
 
   // ── AURA DE FOND ──────────────────────────────────────────────────
@@ -546,15 +861,84 @@ class _MandalaWheelPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5);
 
-    // Icône PNG (centrée sur midAngle)
+    // Icône (centrée sur midAngle) — masque ROND pour intégration organique
     final iconRadius = emotionInnerR + (emotionOuterR - emotionInnerR) * 0.32;
     final iconPos = _polar(center, iconRadius, midAngle);
-    final iconSize = isSelected ? 24.0 : 20.0;
-    if (imagesLoaded && images.containsKey(emotion.iconPath)) {
-      _drawImage(canvas, images[emotion.iconPath]!, iconPos, iconSize);
+    final baseIconSize = isSelected ? 26.0 : 22.0;
+
+    // ── MASQUES VISAGES (terracotta / pastel) ──
+    // En mode masques, pas de fallback glyph — on attend le chargement
+    if (_useMasks && !imagesLoaded) return;
+    if (_useMasks && imagesLoaded && images.containsKey('mask_petal_${emotion.key}')) {
+      final maskImg = images['mask_petal_${emotion.key}']!;
+      final intensityFrac = isSelected ? intensity / 10.0 : (isConfirmed ? 0.6 : 0.25);
+      final scale = _intensityScale(intensityFrac);
+      final iconSize = baseIconSize * scale;
+
+      canvas.save();
+      canvas.clipPath(Path()..addOval(Rect.fromCircle(center: iconPos, radius: iconSize / 2)));
+
+      // Fond coloré du pétale sous le masque (pour que multiply fonde le blanc)
+      final petalHsl = HSLColor.fromColor(emotion.color);
+      final petalBg = petalHsl.withLightness(0.78).withSaturation((petalHsl.saturation * 0.6).clamp(0.0, 1.0)).toColor();
+      canvas.drawCircle(iconPos, iconSize / 2, Paint()..color = petalBg);
+
+      final srcRect = Rect.fromLTWH(0, 0, maskImg.width.toDouble(), maskImg.height.toDouble());
+      final displaySize = iconSize * 1.5;
+      final dstRect = Rect.fromCenter(center: iconPos, width: displaySize, height: displaySize);
+      canvas.drawImageRect(maskImg, srcRect, dstRect, Paint()
+        ..filterQuality = FilterQuality.medium
+        ..blendMode = BlendMode.multiply);
+      canvas.restore();
+
+      // Glow d'intensité autour du masque
+      final glowR = _intensityGlow(intensityFrac);
+      if (glowR > 0.5) {
+        canvas.drawCircle(iconPos, iconSize / 2, Paint()
+          ..color = _warmBlend(emotion.color, 0.3).withValues(alpha: 0.15 + intensityFrac * 0.15)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, glowR));
+      }
+
+      // Contour subtil doré
+      canvas.drawCircle(iconPos, iconSize / 2, Paint()
+        ..color = _kGoldWarm.withValues(alpha: isSelected ? 0.5 : isConfirmed ? 0.4 : 0.20)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8);
+    }
+    // ── VISAGE PARAMÉTRIQUE (fallback mode glyph) ──
+    else if (ParametricEmotionFace.isSupported(emotion.key)) {
+      final petalIntensity = isSelected ? intensity / 10.0 : 0.3;
+      ParametricEmotionFace.draw(
+          canvas, iconPos, baseIconSize / 2, emotion.key, petalIntensity);
+      canvas.drawCircle(iconPos, baseIconSize / 2, Paint()
+        ..color = _kGoldWarm.withValues(alpha: isSelected ? 0.5 : 0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8);
     } else {
-      _drawMaterialIcon(canvas, emotion.icon, iconPos, iconSize,
-        Colors.white.withValues(alpha: isSelected ? 1.0 : 0.85));
+      // Fallback : essai test PNG → PNG original → Material icon
+      final essaiPrefix = _kEssaiPrefix[emotion.key];
+      final essaiPetalKey = essaiPrefix != null ? 'essai_petal_$essaiPrefix' : null;
+      final hasEssaiPetal = essaiPetalKey != null && imagesLoaded && images.containsKey(essaiPetalKey);
+
+      if (hasEssaiPetal) {
+        canvas.save();
+        canvas.clipPath(Path()..addOval(Rect.fromCircle(center: iconPos, radius: baseIconSize / 2)));
+        final img = images[essaiPetalKey]!;
+        final srcRect = Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble());
+        final displaySize = baseIconSize * 1.4;
+        final dstRect = Rect.fromCenter(center: iconPos, width: displaySize, height: displaySize);
+        canvas.drawImageRect(img, srcRect, dstRect, Paint()..filterQuality = FilterQuality.medium);
+        canvas.restore();
+        canvas.drawCircle(iconPos, baseIconSize / 2, Paint()
+          ..color = _kGoldWarm.withValues(alpha: isSelected ? 0.5 : 0.25)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8);
+      } else if (imagesLoaded && images.containsKey(emotion.iconPath)) {
+        _drawImage(canvas, images[emotion.iconPath]!, iconPos, baseIconSize);
+      } else {
+        _drawMaterialIcon(canvas, emotion.icon, iconPos, baseIconSize,
+          Colors.white.withValues(alpha: isSelected ? 1.0 : 0.85));
+      }
     }
 
     // Point décoratif au sommet du pétale
@@ -678,16 +1062,55 @@ class _MandalaWheelPainter extends CustomPainter {
           ..strokeWidth = 0.6);
       }
 
-      // Image de fond clippée
+      // Image de fond clippée — couleur du pétale sélectionné
       canvas.save();
       canvas.clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
-      canvas.drawCircle(center, radius, Paint()..color = _kGoldLight);
-      final bgIconSize = radius * 1.8;
-      if (imagesLoaded && images.containsKey(emotion.iconPath)) {
-        final img = images[emotion.iconPath]!;
-        final srcRect = Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble());
+      final centerBgColor = _useMasks
+          ? hsl.withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
+                .withLightness(0.75).toColor()
+          : _kGoldLight;
+      canvas.drawCircle(center, radius, Paint()..color = centerBgColor);
+
+      // ── MASQUE VISAGE AU CENTRE (terracotta / pastel) ──
+      if (_useMasks && imagesLoaded && images.containsKey('mask_center_${emotion.key}')) {
+        final maskImg = images['mask_center_${emotion.key}']!;
+        final t = intensityFrac;
+        final scale = _intensityScale(t);
+
+        final bgIconSize = radius * 1.8 * scale;
+        final srcRect = Rect.fromLTWH(0, 0, maskImg.width.toDouble(), maskImg.height.toDouble());
         final dstRect = Rect.fromCenter(center: center, width: bgIconSize, height: bgIconSize);
-        canvas.drawImageRect(img, srcRect, dstRect, Paint()..filterQuality = FilterQuality.medium);
+        // BlendMode.multiply : blanc → fond coloré, visage → visible
+        canvas.drawImageRect(maskImg, srcRect, dstRect, Paint()
+          ..filterQuality = FilterQuality.high
+          ..blendMode = BlendMode.multiply);
+      }
+      // ── VISAGE PARAMÉTRIQUE (mode glyph) ──
+      else if (ParametricEmotionFace.isSupported(emotion.key)) {
+        ParametricEmotionFace.draw(
+            canvas, center, radius * 0.85, emotion.key, intensity / 10.0);
+      } else {
+        // Fallback : icône d'intensité progressive (essai test) → PNG original
+        final bgIconSize = radius * 1.8;
+        final essaiPrefix = _kEssaiPrefix[emotion.key];
+        final maxLevel = essaiPrefix != null ? (_kEssaiMaxLevel[essaiPrefix] ?? 0) : 0;
+        ui.Image? centerImg;
+
+        if (essaiPrefix != null && maxLevel > 0 && imagesLoaded) {
+          if (intensity == 0) {
+            centerImg = images['essai_center_${essaiPrefix}_0'];
+          } else {
+            final level = ((intensity / 10.0) * maxLevel).ceil().clamp(1, maxLevel);
+            centerImg = images['essai_center_${essaiPrefix}_$level'];
+          }
+        }
+        centerImg ??= imagesLoaded ? images[emotion.iconPath] : null;
+
+        if (centerImg != null) {
+          final srcRect = Rect.fromLTWH(0, 0, centerImg.width.toDouble(), centerImg.height.toDouble());
+          final dstRect = Rect.fromCenter(center: center, width: bgIconSize, height: bgIconSize);
+          canvas.drawImageRect(centerImg, srcRect, dstRect, Paint()..filterQuality = FilterQuality.high);
+        }
       }
       canvas.restore();
 
@@ -803,6 +1226,82 @@ class _MandalaWheelPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _MandalaWheelPainter oldDelegate) {
-    return oldDelegate.selectedIndex != selectedIndex || oldDelegate.confirmedIndices != confirmedIndices || oldDelegate.pulseValue != pulseValue || oldDelegate.selectedNuances != selectedNuances || oldDelegate.intensity != intensity || oldDelegate.imagesLoaded != imagesLoaded;
+    return oldDelegate.selectedIndex != selectedIndex || oldDelegate.confirmedIndices != confirmedIndices || oldDelegate.pulseValue != pulseValue || oldDelegate.selectedNuances != selectedNuances || oldDelegate.intensity != intensity || oldDelegate.imagesLoaded != imagesLoaded || oldDelegate.maskStyle != maskStyle;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAINTER DE CHARGEMENT — mandala tournant en attendant les masques
+// ══════════════════════════════════════════════════════════════════════════════
+
+class _LoadingMandalaPainter extends CustomPainter {
+  final double pulseValue;
+  final double rotationAngle;
+
+  _LoadingMandalaPainter({required this.pulseValue, required this.rotationAngle});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 20;
+    final breath = 0.92 + 0.08 * pulseValue;
+
+    // Cercles concentriques tournants bleu-turquoise
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotationAngle);
+
+    for (int ring = 0; ring < 4; ring++) {
+      final r = radius * (0.35 + ring * 0.18) * breath;
+      final alpha = 0.15 + 0.08 * pulseValue - ring * 0.03;
+      canvas.drawCircle(Offset.zero, r, Paint()
+        ..color = Color.fromRGBO(80, 180, 220, alpha.clamp(0.05, 0.35))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5);
+
+      // Dots sur chaque anneau
+      final dotCount = 12 + ring * 6;
+      for (int d = 0; d < dotCount; d++) {
+        final a = d * 2 * math.pi / dotCount;
+        final dx = r * math.cos(a);
+        final dy = r * math.sin(a);
+        canvas.drawCircle(Offset(dx, dy), 1.2, Paint()
+          ..color = Color.fromRGBO(160, 210, 230, alpha.clamp(0.08, 0.30)));
+      }
+    }
+    canvas.restore();
+
+    // Cercle doré central
+    final centerR = radius * 0.28 * breath;
+    final goldGrad = ui.Gradient.radial(
+      center, centerR,
+      [const Color(0x30D4A574), const Color(0x15D4A574), const Color(0x00D4A574)],
+    );
+    canvas.drawCircle(center, centerR, Paint()..shader = goldGrad);
+    canvas.drawCircle(center, centerR, Paint()
+      ..color = Color.fromRGBO(212, 165, 116, 0.35 + 0.15 * pulseValue)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0);
+
+    // Texte de chargement
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: 'Chargement...',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: Color.fromRGBO(212, 165, 116, 0.6 + 0.3 * pulseValue),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(center.dx - textPainter.width / 2, center.dy - textPainter.height / 2));
+  }
+
+  @override
+  bool shouldRepaint(covariant _LoadingMandalaPainter old) {
+    return old.pulseValue != pulseValue || old.rotationAngle != rotationAngle;
   }
 }

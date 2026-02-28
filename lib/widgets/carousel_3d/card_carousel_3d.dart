@@ -79,6 +79,10 @@ class CardCarousel3D extends StatefulWidget {
   /// Décalage vertical du centre (négatif = vers le haut)
   final double verticalOffset;
 
+  /// Callback pour vérifier si la navigation est autorisée
+  /// (ex: bloquer pendant approfondissement)
+  final bool Function()? canNavigate;
+
   const CardCarousel3D({
     super.key,
     required this.cards,
@@ -93,6 +97,7 @@ class CardCarousel3D extends StatefulWidget {
     this.angleSpacing = 30,
     this.controller,
     this.verticalOffset = 0,
+    this.canNavigate,
   });
 
   @override
@@ -278,7 +283,8 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     final double absAngle = normalizedAngle.abs();
 
     // Position X basée sur l'angle
-    final double xOffset = math.sin(normalizedAngle * math.pi / 180) * 200;
+    final double spreadFactor = widget.mode == CarouselMode.face ? 150.0 : 200.0;
+    final double xOffset = math.sin(normalizedAngle * math.pi / 180) * spreadFactor;
 
     // Profondeur Z : carte active (angle ~0) devant, cartes éloignées derrière
     final double zOffset = math.cos(normalizedAngle * math.pi / 180) * 50;
@@ -293,13 +299,14 @@ class _CardCarousel3DState extends State<CardCarousel3D>
         rotationY = normalizedAngle * 0.5;
       }
     } else {
-      // Mode face : rotation progressive
-      rotationY = normalizedAngle * 0.3;
+      // Mode face : rotation plus douce
+      rotationY = normalizedAngle * 0.2;
     }
 
-    // Opacité décroissante avec la distance
-    double opacity = 1.0 - (absAngle / 180) * 0.7;
-    opacity = opacity.clamp(0.3, 1.0);
+    // Opacité décroissante avec la distance — plus forte en mode face
+    final double opacityFalloff = widget.mode == CarouselMode.face ? 0.85 : 0.7;
+    double opacity = 1.0 - (absAngle / 180) * opacityFalloff;
+    opacity = opacity.clamp(0.15, 1.0);
 
     // Scale décroissant avec la distance
     double scale = 1.0 - (absAngle / 180) * 0.3;
@@ -399,6 +406,7 @@ class _CardCarousel3DState extends State<CardCarousel3D>
 
   void _onDragStart(DragStartDetails details) {
     if (_isSwipingCard) return;
+    if (widget.canNavigate != null && !widget.canNavigate!()) return;
     _isDragging = true;
     _dragStartX = details.globalPosition.dx;
     _rotationController.stop();
@@ -410,8 +418,6 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     _dragDeltaX = details.globalPosition.dx - _dragStartX;
 
     setState(() {
-      // Convertir le drag en rotation
-      // Plus de sensibilité pour plus de cartes
       final sensitivity = widget.cards.length > 10 ? 0.3 : 0.2;
       _currentAngle += details.delta.dx * sensitivity;
     });

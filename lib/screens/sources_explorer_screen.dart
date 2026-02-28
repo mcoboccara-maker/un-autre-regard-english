@@ -102,32 +102,37 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
     _SourceSection(
       type: ApproachType.spiritual,
       title: 'Sources spirituelles',
-      icon: Icons.self_improvement,
+      imagePath: 'assets/univers_visuel/spiritualites.png',
+      fallbackIcon: Icons.self_improvement,
       color: Color(0xFF6366F1),
     ),
     // Quiz + Roue insérés entre spirituelles et littéraires (via build)
     _SourceSection(
       type: ApproachType.literary,
       title: 'Sources littéraires',
-      icon: Icons.auto_stories,
+      imagePath: 'assets/univers_visuel/litteraire.png',
+      fallbackIcon: Icons.auto_stories,
       color: Color(0xFFEC4899),
     ),
     _SourceSection(
       type: ApproachType.psychological,
       title: 'Sources psychologiques',
-      icon: Icons.psychology,
+      imagePath: 'assets/univers_visuel/psychologie.png',
+      fallbackIcon: Icons.psychology,
       color: Color(0xFF0EA5E9),
     ),
     _SourceSection(
       type: ApproachType.philosophical,
       title: 'Courants philosophiques',
-      icon: Icons.account_balance,
+      imagePath: 'assets/univers_visuel/philosophie.png',
+      fallbackIcon: Icons.account_balance,
       color: Color(0xFF10B981),
     ),
     _SourceSection(
       type: ApproachType.philosopher,
       title: 'Philosophes',
-      icon: Icons.person,
+      imagePath: 'assets/univers_visuel/philosophes.png',
+      fallbackIcon: Icons.person,
       color: Color(0xFFF59E0B),
     ),
   ];
@@ -406,7 +411,17 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
               color: section.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(section.icon, color: section.color, size: 22),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(
+                section.imagePath,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    Icon(section.fallbackIcon, color: section.color, size: 22),
+              ),
+            ),
           ),
           title: Row(
             children: [
@@ -674,13 +689,15 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
 class _SourceSection {
   final ApproachType type;
   final String title;
-  final IconData icon;
+  final String imagePath;
+  final IconData fallbackIcon;
   final Color color;
 
   const _SourceSection({
     required this.type,
     required this.title,
-    required this.icon,
+    required this.imagePath,
+    required this.fallbackIcon,
     required this.color,
   });
 }
