@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/eclairage_service.dart';
+import '../../services/language_detector.dart';
 import '../../services/sefaria_api_service.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════════
@@ -32,12 +33,12 @@ class _EclairageScreenState extends State<EclairageScreen> {
 
   // Suggestions de questions
   final List<String> _suggestions = [
-    'Quel est le sens de la souffrance ?',
-    'Comment trouver la paix intérieure ?',
-    'Pourquoi le Shabbat est-il si important ?',
-    'Comment pardonner à quelqu\'un qui m\'a blessé ?',
-    'Quel est le but de la vie selon le judaïsme ?',
-    'Comment gérer la colère ?',
+    'What is the meaning of suffering?',
+    'How to find inner peace?',
+    'Why is Shabbat so important?',
+    'How to forgive someone who has hurt me?',
+    'What is the purpose of life according to Judaism?',
+    'How to manage anger?',
   ];
 
   @override
@@ -66,7 +67,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
     try {
       await for (final response in EclairageService.instance.generateEclairageStreaming(
         question: question,
-        language: 'fr',
+        language: LanguageDetector.detect(question),
       )) {
         if (mounted) {
           setState(() => _response = response);
@@ -158,7 +159,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Éclairage',
+                  'Insight',
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -171,7 +172,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
                 icon: const Icon(Icons.mic, color: Colors.white70),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Saisie vocale bientôt disponible')),
+                    const SnackBar(content: Text('Voice input coming soon')),
                   );
                 },
               ),
@@ -179,7 +180,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Transformez une pensée, une situation ou une question en éclairage juif vivant',
+            'Transform a thought, situation or question into a living Jewish insight',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: Colors.white.withOpacity(0.8),
@@ -209,7 +210,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
             controller: _questionController,
             maxLines: 4,
             decoration: InputDecoration(
-              hintText: 'Posez votre question ou partagez une réflexion...',
+              hintText: 'Ask your question or share a reflection...',
               hintStyle: GoogleFonts.inter(color: Colors.grey.shade400),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.all(20),
@@ -223,7 +224,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
               children: [
                 // Compteur de caractères
                 Text(
-                  '${_questionController.text.length} caractères',
+                  '${_questionController.text.length} characters',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.grey.shade500,
@@ -243,7 +244,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
                           ),
                         )
                       : const Icon(Icons.auto_awesome, size: 18),
-                  label: Text(_isGenerating ? 'Génération...' : 'Éclairer'),
+                  label: Text(_isGenerating ? 'Generating...' : 'Illuminate'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6366F1),
                     foregroundColor: Colors.white,
@@ -317,7 +318,7 @@ class _EclairageScreenState extends State<EclairageScreen> {
 
         // Erreur
         if (response.hasError)
-          _buildError(response.error ?? 'Erreur inconnue'),
+          _buildError(response.error ?? 'Unknown error'),
       ],
     );
   }
@@ -328,19 +329,19 @@ class _EclairageScreenState extends State<EclairageScreen> {
 
     switch (status) {
       case EclairageStatus.loading:
-        message = 'Préparation...';
+        message = 'Preparing...';
         icon = Icons.hourglass_empty;
         break;
       case EclairageStatus.generatingInsight:
-        message = 'Génération de l\'éclairage...';
+        message = 'Generating insight...';
         icon = Icons.auto_awesome;
         break;
       case EclairageStatus.loadingContext:
-        message = 'Recherche du contexte historique...';
+        message = 'Searching historical context...';
         icon = Icons.history_edu;
         break;
       case EclairageStatus.loadingSources:
-        message = 'Recherche des sources textuelles...';
+        message = 'Searching textual sources...';
         icon = Icons.menu_book;
         break;
       default:
@@ -474,7 +475,7 @@ class _EclairageCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Éclairage',
+                'Insight',
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -563,7 +564,7 @@ class _EclairageCard extends StatelessWidget {
                       const Icon(Icons.psychology, color: Color(0xFF059669), size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Pour réfléchir',
+                        'Food for Thought',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -629,7 +630,7 @@ class _ContextSection extends StatelessWidget {
             const Icon(Icons.history_edu, color: Color(0xFF6366F1), size: 20),
             const SizedBox(width: 8),
             Text(
-              'Contexte historique',
+              'Historical Context',
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -732,7 +733,7 @@ class _SourcesSection extends StatelessWidget {
             const Icon(Icons.menu_book, color: Color(0xFF10B981), size: 20),
             const SizedBox(width: 8),
             Text(
-              'Sources textuelles',
+              'Textual Sources',
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -875,7 +876,7 @@ class _SourceCardState extends State<_SourceCard> {
                       );
                     },
                     icon: const Icon(Icons.open_in_new, size: 16),
-                    label: const Text('Voir sur Sefaria'),
+                    label: const Text('View on Sefaria'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF10B981),
                       side: const BorderSide(color: Color(0xFF10B981)),

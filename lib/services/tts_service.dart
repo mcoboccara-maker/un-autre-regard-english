@@ -63,10 +63,10 @@ class TtsService {
       _currentLanguage = 'fr-FR';
       
       // Vitesse de lecture (0.0 à 1.0) - 0.65 = rythme soutenu
-      await _tts.setSpeechRate(0.65);
+      await _tts.setSpeechRate(0.60);
       
-      // Hauteur de voix (0.5 à 2.0) - 1.0 = normale
-      await _tts.setPitch(1.0);
+      // Hauteur de voix (0.5 à 2.0) - 0.85 = voix plus chaude
+      await _tts.setPitch(0.85);
       
       // Volume (0.0 à 1.0)
       await _tts.setVolume(1.0);
@@ -386,8 +386,8 @@ class TtsService {
 
     // Supprimer les # des titres
     result = result.replaceAll(RegExp(r'^#+\s*', multiLine: true), '');
-    // Supprimer les puces Markdown
-    result = result.replaceAll(RegExp(r'^\s*[-•]\s*', multiLine: true), '');
+    // Supprimer les puces Markdown (tiret, bullet, astérisque)
+    result = result.replaceAll(RegExp(r'^\s*[-•*]\s*', multiLine: true), '');
     // Supprimer les numérotations Markdown
     result = result.replaceAll(RegExp(r'^\s*\d+\.\s*', multiLine: true), '');
 
@@ -411,6 +411,16 @@ class TtsService {
 
     // Supprimer les guillemets doubles excessifs
     result = result.replaceAll('""', '"');
+
+    // Tirets longs/moyens/doubles → virgule (pause naturelle)
+    result = result.replaceAll('—', ',');
+    result = result.replaceAll('–', ',');
+    result = result.replaceAll('--', ',');
+    result = result.replaceAll(RegExp(r'\s-\s'), ', ');
+    // Points de suspension → point simple
+    result = result.replaceAll('...', '.');
+    result = result.replaceAll('..', '.');
+
     // Nettoyer les espaces multiples
     result = result.replaceAll(RegExp(r' {2,}'), ' ');
     // Nettoyer les lignes vides multiples

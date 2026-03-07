@@ -23,7 +23,7 @@
     </queries>
     
     <application
-        android:label="Un Autre Regard"
+        android:label="An Other Perspective"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         

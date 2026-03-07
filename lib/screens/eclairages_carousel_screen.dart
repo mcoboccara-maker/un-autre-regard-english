@@ -4,14 +4,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import '../config/approach_config.dart';
 import '../models/emotional_state.dart';
 import '../models/reflection.dart';
 import '../models/saved_eclairage.dart';
 import '../services/ai_service.dart';
 import '../services/persistent_storage_service.dart';
+import '../services/emotional_tracking_service.dart';
 import '../services/tts_service.dart';
-import '../widgets/brain_gestation_widget.dart';
+import '../widgets/cosmic_eye_widget.dart';
 import '../widgets/carousel_3d/card_carousel_3d.dart';
 import '../widgets/nav_cartouche.dart';
 import '../widgets/neon_brain_button.dart';
@@ -23,36 +25,36 @@ import 'perspective_room_screen.dart';
 
 const Map<String, List<String>> _kSourceQuestions = {
   'philosophie': [
-    'Qu\'est-ce que ce regard change pour toi ?',
-    'Ou se situe ta liberte ici ?',
+    'What does this perspective change for you?',
+    'Where does your freedom lie here?',
   ],
   'stoicisme': [
-    'Qu\'est-ce qui depend reellement de toi ?',
-    'Que se passe-t-il si tu cesses de lutter contre le reste ?',
+    'What truly depends on you?',
+    'What happens if you stop fighting against the rest?',
   ],
   'existentialisme': [
-    'Qu\'assumes-tu deja dans cette situation ?',
-    'Qu\'est-ce que tu choisis, meme implicitement ?',
+    'What are you already taking on in this situation?',
+    'What are you choosing, even implicitly?',
   ],
   'litterature': [
-    'En quoi ce personnage te ressemble-t-il ?',
-    'Que revele cette histoire de ta situation ?',
+    'How does this character resemble you?',
+    'What does this story reveal about your situation?',
   ],
   'psychologie': [
-    'Que cherches-tu a proteger ici ?',
-    'Qu\'est-ce qui se repete ?',
+    'What are you trying to protect here?',
+    'What keeps repeating?',
   ],
   'spiritualite': [
-    'Que pourrais-tu deposer ?',
-    'Ou ressens-tu une resistance ?',
+    'What could you let go of?',
+    'Where do you feel resistance?',
   ],
   'hasard': [
-    'Qu\'est-ce que tu n\'avais pas envisage ?',
-    'Si tu faisais confiance a ce mouvement ?',
+    'What had you not considered?',
+    'What if you trusted this movement?',
   ],
   'emotions': [
-    'Ou ressens-tu cette emotion ?',
-    'Que cherche-t-elle a te dire ?',
+    'Where do you feel this emotion?',
+    'What is it trying to tell you?',
   ],
 };
 
@@ -195,6 +197,8 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
     final pending = widget.pendingSources;
     if (pending == null || pending.isEmpty) return;
 
+    final userProfile = PersistentStorageService.instance.getUserProfile();
+
     for (final source in pending) {
       try {
         final response =
@@ -203,7 +207,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
           reflectionText: widget.thoughtText,
           reflectionType: widget.reflectionType ?? ReflectionType.thought,
           emotionalState: widget.emotionalState ?? EmotionalState.empty(),
-          userProfile: null,
+          userProfile: userProfile,
           intensiteEmotionnelle: widget.intensiteEmotionnelle ?? 5,
         );
 
@@ -258,6 +262,8 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
   }
 
   void _focusOn(int index) {
+    // Arrêter la lecture vocale en cours lors du changement de carte
+    TtsService.instance.stop();
     setState(() {
       _focusedIndex = index.clamp(0, _perspectives.length - 1);
       _readIndices.add(_focusedIndex);
@@ -462,9 +468,12 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
     if (_savedMap.length == _perspectives.length && _allArrived) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
-          setState(() {
-            _showFinalPage = true;
-          });
+          // Retour automatique au menu central
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/menu',
+            (route) => false,
+          );
         }
       });
     }
@@ -486,6 +495,22 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
 
   Future<void> _saveEclairageComplet(int index) async {
     final perspective = _perspectives[index];
+
+    // Ne pas sauvegarder les erreurs API
+    if (perspective.responseText.startsWith('[ERREUR_API]') ||
+        perspective.responseText.startsWith('❌')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot save an insight with an error'),
+            backgroundColor: Color(0xFFEF4444),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
     final userResponse = _responseControllers[index]?.text.trim();
     final deepText = _deepeningTexts[index];
 
@@ -508,94 +533,77 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
     );
 
     try {
-      await PersistentStorageService.instance
+      final success = await PersistentStorageService.instance
           .saveEclairage(savedEclairage.toJson());
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: Text('${perspective.approachName} sauvegarde')),
-              ],
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text('${perspective.approachName} saved')),
+                ],
+              ),
+              backgroundColor: const Color(0xFF10B981),
+              duration: const Duration(seconds: 2),
             ),
-            backgroundColor: const Color(0xFF10B981),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.warning_amber, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                      child: Text('Sign in to save your insights')),
+                ],
+              ),
+              backgroundColor: Color(0xFFEF4444),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
       print('\u274c Erreur sauvegarde eclairage: $e');
     }
   }
 
+  /// Partager un éclairage via les apps/réseaux sociaux
+  void _shareEclairage(int index) {
+    if (index < 0 || index >= _perspectives.length) return;
+    final perspective = _perspectives[index];
+    final isShowingDeepening = _showDeepeningView[index] == true;
+    final deepeningText = _deepeningTexts[index];
+
+    final buffer = StringBuffer();
+    buffer.writeln('✨ Insight — ${perspective.approachName}');
+    if (perspective.figureName != null) {
+      buffer.writeln('Figure: ${perspective.figureName}');
+    }
+    buffer.writeln('');
+    buffer.writeln('💭 "${widget.thoughtText}"');
+    buffer.writeln('');
+    if (isShowingDeepening && deepeningText != null) {
+      buffer.writeln('📖 Deep Dive:');
+      buffer.writeln(deepeningText);
+    } else {
+      buffer.writeln(perspective.responseText);
+    }
+    buffer.writeln('');
+    buffer.writeln('— Un Autre Regard');
+    Share.share(buffer.toString());
+  }
+
   void _showPositiveThought() {
-    final thoughts = [
-      "Chaque jour est une nouvelle opportunite de grandir.",
-      "Tu as deja surmonte tant d'obstacles. Tu es plus fort(e) que tu ne le penses.",
-      "Prends le temps de respirer. Ce moment difficile passera.",
-      "Tu merites d'etre heureux(se) et en paix.",
-      "Tes emotions sont valides. Accueille-les avec bienveillance.",
-      "Un petit pas aujourd'hui peut mener a un grand changement demain.",
-    ];
-    final random = DateTime.now().millisecondsSinceEpoch % thoughts.length;
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/univers_visuel/pensee_positive.png',
-                width: 64,
-                height: 64,
-                errorBuilder: (_, __, ___) => const Icon(Icons.lightbulb,
-                    color: Color(0xFFFBBF24), size: 48),
-              ),
-              const SizedBox(height: 20),
-              Text('Pensee du moment',
-                  style: GoogleFonts.cormorantGaramond(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF92400E))),
-              const SizedBox(height: 16),
-              Text(thoughts[random],
-                  style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: const Color(0xFF78350F),
-                      height: 1.5),
-                  textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFBBF24),
-                    foregroundColor: const Color(0xFF78350F),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12))),
-                child: Text('Merci !',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
-        ),
-      ),
+      barrierDismissible: false,
+      builder: (ctx) => _PositiveThoughtDialog(),
     );
   }
 
@@ -637,7 +645,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                         enableSwipeActions: false,
                         onCardChanged: (index) => _focusOn(index),
                         initialIndex: _focusedIndex,
-                        canNavigate: () => !_isCurrentDeepeningLoading(),
+                        // Navigation autorisée même pendant approfondissement (point 11)
                       ),
               ),
               _buildBottomBar(),
@@ -775,7 +783,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
           ),
           Expanded(
             child: Text(
-              'Eclairages',
+              'Insights',
               style: GoogleFonts.playfairDisplay(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -800,33 +808,33 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                   size: 26,
                 ),
               ),
-              tooltip: 'Connexion',
+              tooltip: 'Sign in',
             )
           else
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 NavCartouche(
-                  assetPath: 'assets/univers_visuel/menu_principal.png',
-                  fallbackIcon: Icons.grid_view_rounded,
-                  tooltip: 'Menu principal',
-                  onTap: () => Navigator.pushNamedAndRemoveUntil(
-                    context, '/menu', (route) => false,
-                  ),
+                  assetPath: 'assets/univers_visuel/profil.png',
+                  fallbackIcon: Icons.person_rounded,
+                  tooltip: 'My profile',
+                  onTap: () => Navigator.pushNamed(context, '/profile'),
                 ),
                 const SizedBox(width: 6),
                 NavCartouche(
                   assetPath: 'assets/univers_visuel/pensee_positive.png',
                   fallbackIcon: Icons.lightbulb_outline,
-                  tooltip: 'Pensee positive',
+                  tooltip: 'Positive thought',
                   onTap: _showPositiveThought,
                 ),
                 const SizedBox(width: 6),
                 NavCartouche(
-                  assetPath: 'assets/univers_visuel/profil.png',
-                  fallbackIcon: Icons.person_rounded,
-                  tooltip: 'Mon profil',
-                  onTap: () => Navigator.pushNamed(context, '/profile'),
+                  assetPath: 'assets/univers_visuel/menu_principal.png',
+                  fallbackIcon: Icons.grid_view_rounded,
+                  tooltip: 'Main menu',
+                  onTap: () => Navigator.pushNamedAndRemoveUntil(
+                    context, '/menu', (route) => false,
+                  ),
                 ),
               ],
             ),
@@ -844,16 +852,16 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Column(
         children: [
-          // Brain widget centre - meme esthetique que sur l'ecran pensee
-          BrainGestationWidget(
-            isComplete: _allArrived,
-            size: 120,
+          // Oeil cosmique centre sous Eclairages
+          const CosmicEyeWidget(
+            width: 120,
+            height: 120,
           ),
           const SizedBox(height: 4),
           // Compteurs sous le cerveau
           if (!_allArrived) ...[
             Text(
-              '${_perspectives.length}/$_totalExpected eclairages arrives',
+              '${_perspectives.length}/$_totalExpected insights received',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -862,7 +870,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
             ),
           ] else if (_savedMap.isNotEmpty && !widget.readOnly) ...[
             Text(
-              '${_savedMap.length}/${_perspectives.length} traites',
+              '${_savedMap.length}/${_perspectives.length} processed',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: Colors.white.withValues(alpha: 0.5),
@@ -871,7 +879,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
           ],
           if (_unreadCount > 0 && !_allArrived)
             Text(
-              '$_unreadCount non lu${_unreadCount > 1 ? 's' : ''}',
+              '$_unreadCount unread',
               style: GoogleFonts.inter(
                 fontSize: 10,
                 color: const Color(0xFF64FFDA),
@@ -891,10 +899,10 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          BrainGestationWidget(isComplete: false, size: 180),
+          const CosmicEyeWidget(width: 180, height: 180),
           const SizedBox(height: 24),
           Text(
-            'Generation en cours...',
+            'Generating...',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: Colors.white.withValues(alpha: 0.6),
@@ -943,7 +951,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
               children: [
                 Text(
                   isShowingDeepening
-                      ? 'Approfondissement'
+                      ? 'Deep Dive'
                       : perspective.approachName,
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 15,
@@ -980,13 +988,17 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
               final textToSpeak = isShowingDeepening
                   ? (_deepeningTexts[index] ?? perspective.responseText)
                   : perspective.responseText;
+              // Ne pas lire les erreurs API
+              if (textToSpeak.startsWith('[ERREUR_API]') || textToSpeak.startsWith('❌')) {
+                return;
+              }
               TtsService.instance.speak(
                 textToSpeak,
                 approachKey: perspective.approachKey,
               );
             },
             icon: Icon(Icons.volume_up, color: color, size: 20),
-            tooltip: 'Ecouter',
+            tooltip: 'Listen',
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
           // Toggle original/deepening — icone PNG eclairage_initial
@@ -1000,8 +1012,8 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
               },
               child: Tooltip(
                 message: isShowingDeepening
-                    ? 'Voir eclairage initial'
-                    : 'Voir approfondissement',
+                    ? 'View initial insight'
+                    : 'View deep dive',
                 child: Padding(
                   padding: const EdgeInsets.all(6),
                   child: isShowingDeepening
@@ -1020,6 +1032,39 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                 ),
               ),
             ),
+          // Icône Partager
+          GestureDetector(
+            onTap: () => _shareEclairage(index),
+            child: Tooltip(
+              message: 'Share',
+              child: Container(
+                width: 30,
+                height: 30,
+                margin: const EdgeInsets.only(left: 2),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset(
+                    'assets/univers_visuel/partage.png',
+                    width: 30,
+                    height: 30,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.share,
+                      color: color.withValues(alpha: 0.7),
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1071,7 +1116,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                     Icon(Icons.short_text, color: color, size: 16),
                     const SizedBox(width: 8),
                     Text(
-                      'Eclairage initial',
+                      'Initial insight',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -1107,19 +1152,19 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
           ),
         ],
 
-        // Ecart 6: Approfondissement button (not in readOnly, not if already showing deepening)
-        if (!widget.readOnly && !isShowingDeepening) ...[
+        // Ecart 6: Approfondissement button (visible aussi en mode teaser)
+        if (!isShowingDeepening) ...[
           const SizedBox(height: 16),
           _buildDeepeningButton(index, color, deepeningState),
         ],
 
-        // Ecart 7+8: Questions en bas du contenu scrollable
-        if (!widget.readOnly && questions.isNotEmpty) ...[
+        // Ecart 7+8: Questions en bas du contenu scrollable (visible aussi en mode teaser)
+        if (questions.isNotEmpty) ...[
           const SizedBox(height: 20),
           _buildQuestionsSection(index, questions, color, textDark),
         ],
 
-        // Ecart 9: Hint swipe pour garder/passer
+        // Ecart 9: Hint swipe pour garder/passer (uniquement mode connecté)
         if (!widget.readOnly && _savedMap[index] == null) ...[
           const SizedBox(height: 24),
           _buildSwipeHint(color),
@@ -1148,7 +1193,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Approfondissement en cours...',
+              'Deep dive in progress...',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: color,
@@ -1180,7 +1225,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Reessayer',
+                'Retry',
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: Colors.redAccent,
@@ -1212,7 +1257,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Voir l\'approfondissement',
+                'View deep dive',
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: const Color(0xFF10B981),
@@ -1238,7 +1283,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Approfondissement',
+              'Deep Dive',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 color: const Color(0xFF00D4FF),
@@ -1269,7 +1314,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
             Icon(Icons.help_outline, color: color, size: 16),
             const SizedBox(width: 8),
             Text(
-              'Questions de reflexion',
+              'Reflection questions',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -1320,7 +1365,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
             ),
             decoration: InputDecoration(
               hintText:
-                  'Ce que cet eclairage t\'inspire, tes reponses aux questions...',
+                  'What this insight inspires in you, your answers to the questions...',
               hintStyle: GoogleFonts.inter(
                 fontSize: 12,
                 color:
@@ -1353,7 +1398,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                 size: 14, color: color.withValues(alpha: 0.4)),
             const SizedBox(width: 6),
             Text(
-              'Glisse pour explorer les eclairages',
+              'Swipe to explore the insights',
               style: GoogleFonts.inter(
                 fontSize: 10,
                 color: color.withValues(alpha: 0.35),
@@ -1397,7 +1442,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                         size: 18, color: Colors.white70),
                     const SizedBox(width: 6),
                     Text(
-                      'Passer',
+                      'Skip',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -1435,7 +1480,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                       size: 18, color: Colors.white),
                   const SizedBox(width: 8),
                   Text(
-                    'Retour',
+                    'Back',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1470,7 +1515,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                         size: 18, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
-                      'Garder',
+                      'Keep',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -1515,7 +1560,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Ton regard a-t-il bouge ?',
+                  'Has your perspective shifted?',
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -1525,7 +1570,7 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '$savedCount eclairage${savedCount > 1 ? 's' : ''} garde${savedCount > 1 ? 's' : ''}',
+                  '$savedCount insight${savedCount > 1 ? 's' : ''} kept',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.6),
@@ -1534,8 +1579,8 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                 const SizedBox(height: 48),
                 _buildFinalOption(
                   icon: Icons.refresh,
-                  label: 'Nouvelle reflexion',
-                  subtitle: 'Recommencer avec une autre pensee',
+                  label: 'New reflection',
+                  subtitle: 'Start over with another thought',
                   onTap: () {
                     Navigator.of(context)
                         .popUntil((route) => route.isFirst);
@@ -1544,8 +1589,8 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                 const SizedBox(height: 12),
                 _buildFinalOption(
                   icon: Icons.auto_awesome,
-                  label: 'Autres eclairages',
-                  subtitle: 'Explorer d\'autres perspectives',
+                  label: 'More insights',
+                  subtitle: 'Explore other perspectives',
                   onTap: () {
                     setState(() {
                       _savedMap.clear();
@@ -1556,8 +1601,8 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
                 const SizedBox(height: 12),
                 _buildFinalOption(
                   icon: Icons.home,
-                  label: 'Retour a l\'accueil',
-                  subtitle: 'Revenir au manege des sources',
+                  label: 'Back to home',
+                  subtitle: 'Return to the sources carousel',
                   onTap: () {
                     Navigator.of(context)
                         .popUntil((route) => route.isFirst);
@@ -1616,6 +1661,159 @@ class _EclairagesCarouselScreenState extends State<EclairagesCarouselScreen> {
             ),
             Icon(Icons.arrow_forward_ios,
                 color: Colors.white.withValues(alpha: 0.3), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// DIALOG PENSEE POSITIVE (générée par l'IA)
+// ============================================================================
+
+class _PositiveThoughtDialog extends StatefulWidget {
+  @override
+  State<_PositiveThoughtDialog> createState() => _PositiveThoughtDialogState();
+}
+
+class _PositiveThoughtDialogState extends State<_PositiveThoughtDialog> {
+  String? _thought;
+  bool _isLoading = true;
+  bool _isError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _generate();
+  }
+
+  Future<void> _generate() async {
+    try {
+      final userProfile = PersistentStorageService.instance.getUserProfile();
+
+      // Charger les émotions du jour si disponibles
+      String? historique7Jours;
+      try {
+        final entries = await EmotionalTrackingService.instance.getEntriesForLastDays(7);
+        if (entries.isNotEmpty) {
+          final buffer = StringBuffer();
+          for (final entry in entries) {
+            final dateStr = '${entry.date.day}/${entry.date.month}/${entry.date.year}';
+            final emotionsStr = entry.emotions.entries
+                .map((e) => '${e.key} ${e.value.intensity}/100')
+                .join(', ');
+            buffer.writeln('$dateStr : $emotionsStr');
+          }
+          historique7Jours = buffer.toString().trim();
+        }
+      } catch (_) {}
+
+      final result = await AIService.instance.generatePositiveThought(
+        userProfile: userProfile,
+        historique7Jours: historique7Jours,
+      );
+
+      if (mounted) {
+        final isErr = result.startsWith('❌');
+        setState(() {
+          _thought = isErr ? null : result;
+          _isLoading = false;
+          _isError = isErr;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isError = true;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/univers_visuel/pensee_positive.png',
+              width: 64,
+              height: 64,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.lightbulb, color: Color(0xFFFBBF24), size: 48),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Thought of the moment',
+              style: GoogleFonts.cormorantGaramond(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF92400E),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFBBF24)),
+                  ),
+                ),
+              )
+            else if (_isError)
+              Text(
+                'Unable to generate a thought at the moment.',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: const Color(0xFF78350F),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              )
+            else
+              Text(
+                _thought ?? '',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: const Color(0xFF78350F),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFBBF24),
+                foregroundColor: const Color(0xFF78350F),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Thank you!',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+            ),
           ],
         ),
       ),

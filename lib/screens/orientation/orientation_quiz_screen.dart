@@ -7,6 +7,7 @@ import '../../config/orientation_config.dart';
 import '../../widgets/app_scaffold.dart'; // ✅ AJOUT IMPORT APPSCAFFOLD
 import 'orientation_result_screen.dart';
 
+
 class OrientationQuizScreen extends StatefulWidget {
   const OrientationQuizScreen({super.key});
 
@@ -14,15 +15,15 @@ class OrientationQuizScreen extends StatefulWidget {
   State<OrientationQuizScreen> createState() => _OrientationQuizScreenState();
 }
 
-class _OrientationQuizScreenState extends State<OrientationQuizScreen> 
+class _OrientationQuizScreenState extends State<OrientationQuizScreen>
     with SingleTickerProviderStateMixin {
-  
+
   int _currentQuestionIndex = 0;
   int _currentOptionIndex = 0; // Option affichée (0, 1, 2)
-  
+
   final Map<String, int> _scores = {}; // source_id → score cumulé
   final List<String> _selectedOptions = []; // Pour historique
-  
+
   late AnimationController _swipeController;
   double _dragOffset = 0;
   bool _isDragging = false;
@@ -42,27 +43,27 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
     super.dispose();
   }
 
-  OrientationQuestion get _currentQuestion => 
+  OrientationQuestion get _currentQuestion =>
       OrientationConfig.questions[_currentQuestionIndex];
 
-  OrientationOption get _currentOption => 
+  OrientationOption get _currentOption =>
       _currentQuestion.options[_currentOptionIndex];
 
-  double get _progress => 
+  double get _progress =>
       (_currentQuestionIndex + 1) / OrientationConfig.questions.length;
 
   void _onOptionSelected(OrientationOption option) {
     // Feedback haptique
     HapticFeedback.lightImpact();
-    
+
     // Ajouter les scores
     option.sourceScores.forEach((sourceId, points) {
       _scores[sourceId] = (_scores[sourceId] ?? 0) + points;
     });
-    
+
     // Sauvegarder le choix
     _selectedOptions.add(option.id);
-    
+
     // Passer à la question suivante
     if (_currentQuestionIndex < OrientationConfig.questions.length - 1) {
       setState(() {
@@ -94,7 +95,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
   void _onHorizontalDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     if (_dragOffset.abs() > screenWidth * 0.25 || velocity.abs() > 500) {
       if (_dragOffset > 0) {
         // Swipe droite → option précédente
@@ -104,7 +105,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
         _showNextOption();
       }
     }
-    
+
     setState(() {
       _isDragging = false;
       _dragOffset = 0;
@@ -141,7 +142,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
   Widget build(BuildContext context) {
     // ✅ UTILISATION DE APPSCAFFOLD
     return AppScaffold(
-      title: 'Quiz d\'orientation',
+      title: 'Orientation Quiz',
       headerIconPath: 'assets/univers_visuel/orientation.png',
       showTitle: false,
       showBackButton: false, // Pas de bouton retour standard, on a un bouton fermer custom
@@ -163,24 +164,24 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
           children: [
             // Barre de progression
             _buildProgressBar(),
-            
+
             // Thème de la question
             _buildQuestionTheme(),
-            
+
             // Image principale (swipeable)
             Expanded(
               child: _buildSwipeableImage(),
             ),
-            
+
             // Indicateurs d'options
             _buildOptionIndicators(),
-            
+
             // Instructions
             _buildInstructions(),
-            
+
             // Bouton de sélection
             _buildSelectButton(),
-            
+
             const SizedBox(height: 20),
           ],
         ),
@@ -212,7 +213,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
                   ),
                 ),
               ),
-              
+
               // Numéro de question
               Text(
                 '${_currentQuestionIndex + 1}/${OrientationConfig.questions.length}',
@@ -224,9 +225,9 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Barre de progression
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
@@ -332,9 +333,33 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
                 ).animate(key: ValueKey('${_currentQuestionIndex}_$_currentOptionIndex'))
                   .fadeIn(duration: 200.ms)
                   .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
-                
-                // ❌ SUPPRIMÉ : Overlay avec label (causait la duplication de texte)
-                
+
+                // Overlay rectangle bleu nuit avec label anglais (masque la légende française)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF0F172A),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    child: Text(
+                      _currentOption.label,
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+
                 // Indicateur de swipe gauche
                 if (_dragOffset < -20)
                   Positioned(
@@ -356,7 +381,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
                       ),
                     ),
                   ),
-                
+
                 // Indicateur de swipe droite
                 if (_dragOffset > 20)
                   Positioned(
@@ -423,7 +448,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
           Icon(Icons.swipe, color: const Color(0xFF64748B), size: 16),
           const SizedBox(width: 8),
           Text(
-            'Swipe pour explorer • Tap pour choisir',
+            'Swipe to explore • Tap to choose',
             style: GoogleFonts.poppins(
               color: const Color(0xFF64748B),
               fontSize: 12,
@@ -449,7 +474,7 @@ class _OrientationQuizScreenState extends State<OrientationQuizScreen>
           minimumSize: const Size(double.infinity, 56),
         ),
         child: Text(
-          'Choisir "${_currentOption.label}"',
+          'Choose "${_currentOption.label}"',
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,

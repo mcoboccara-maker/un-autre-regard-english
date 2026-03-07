@@ -60,6 +60,13 @@ class InteractivePlutchikWheel extends StatefulWidget {
   final ValueChanged<String> onNuanceTapped;
   final ValueChanged<int>? onIntensityChanged;
   final MaskStyle maskStyle;
+  /// Mode camembert : après sauvegarde, seuls les pétales confirmés restent
+  /// et un pie chart apparaît au centre
+  final bool pieChartMode;
+  /// Intensités des émotions confirmées (index externe → intensité 0-10)
+  final Map<int, int> confirmedIntensities;
+  /// Nuances des émotions confirmées (index externe → set de nuances)
+  final Map<int, Set<String>> confirmedNuances;
 
   const InteractivePlutchikWheel({
     super.key,
@@ -71,6 +78,9 @@ class InteractivePlutchikWheel extends StatefulWidget {
     required this.onNuanceTapped,
     this.onIntensityChanged,
     this.maskStyle = MaskStyle.glyph,
+    this.pieChartMode = false,
+    this.confirmedIntensities = const {},
+    this.confirmedNuances = const {},
   });
 
   @override
@@ -242,6 +252,16 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
   }
 
   @override
+  void didUpdateWidget(covariant InteractivePlutchikWheel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.pieChartMode && !oldWidget.pieChartMode) {
+      // Arrêter rotation et respiration en mode camembert
+      _rotationController.stop();
+      _pulseController.stop();
+    }
+  }
+
+  @override
   void dispose() {
     _pulseController.dispose();
     _rotationController.dispose();
@@ -272,6 +292,28 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
     }).toSet();
   }
 
+  Map<int, int> get _internalConfirmedIntensities {
+    final negCount = EmotionCategories.negativeEmotions.length;
+    final result = <int, int>{};
+    for (final entry in widget.confirmedIntensities.entries) {
+      final externalIdx = entry.key;
+      final internalIdx = externalIdx < negCount ? externalIdx + 9 : externalIdx - negCount;
+      result[internalIdx] = entry.value;
+    }
+    return result;
+  }
+
+  Map<int, Set<String>> get _internalConfirmedNuances {
+    final negCount = EmotionCategories.negativeEmotions.length;
+    final result = <int, Set<String>>{};
+    for (final entry in widget.confirmedNuances.entries) {
+      final externalIdx = entry.key;
+      final internalIdx = externalIdx < negCount ? externalIdx + 9 : externalIdx - negCount;
+      result[internalIdx] = entry.value;
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -287,8 +329,8 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
             child: SizedBox(
               width: size,
               height: size,
-              child: (!_iconsLoaded && widget.maskStyle != MaskStyle.glyph)
-                // ── Chargement : animation d'attente élégante ──
+              child: (!_iconsLoaded && widget.maskStyle != MaskStyle.glyph && !widget.pieChartMode)
+                // ── Chargement : animation d'attente élégante (skip en pieChart) ──
                 ? AnimatedBuilder(
                     animation: Listenable.merge([_pulseAnimation, _rotationController]),
                     builder: (context, _) {
@@ -322,12 +364,18 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
                             images: _loadedImages,
                             imagesLoaded: _imagesLoaded,
                             maskStyle: widget.maskStyle,
+                            pieChartMode: widget.pieChartMode,
+                            confirmedIntensities: _internalConfirmedIntensities,
+                            confirmedNuances: _internalConfirmedNuances,
                           ),
                         );
                       },
                     ),
                   ),
-                  if (_hoveredIndex != null) _buildHoverTooltip(),
+                  if (_hoveredIndex != null)
+                    _buildEmotionBadge(_hoveredIndex!)
+                  else if (widget.selectedIndex != null && !widget.pieChartMode)
+                    _buildEmotionBadge(_internalFromExternal(widget.selectedIndex!)),
                 ],
               ),
             ),
@@ -337,21 +385,40 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
     );
   }
 
-  Widget _buildHoverTooltip() {
-    final emotion = _allEmotions[_hoveredIndex!];
-    final isPos = _hoveredIndex! < EmotionCategories.positiveEmotions.length;
+  int _internalFromExternal(int externalIdx) {
+    final negCount = EmotionCategories.negativeEmotions.length;
+    return externalIdx < negCount ? externalIdx + 9 : externalIdx - negCount;
+  }
+
+  Widget _buildEmotionBadge(int internalIndex) {
+    final emotion = _allEmotions[internalIndex];
+    final petalColor = emotion.color;
+    final hsl = HSLColor.fromColor(petalColor);
+    final brightColor = hsl.withLightness((hsl.lightness + 0.15).clamp(0.0, 0.85)).withSaturation(1.0).toColor();
     return Positioned(
       top: 2, left: 0, right: 0,
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: isPos ? const Color(0xEE2A7B6F) : const Color(0xEECF7B3A),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 6, offset: const Offset(0, 2))],
+            color: petalColor.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(color: brightColor.withValues(alpha: 0.5), blurRadius: 12, spreadRadius: 1),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2)),
+            ],
           ),
           child: Text(emotion.name,
-            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700, decoration: TextDecoration.none)),
+            style: TextStyle(
+              color: brightColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              decoration: TextDecoration.none,
+              shadows: [
+                Shadow(color: brightColor.withValues(alpha: 0.8), blurRadius: 8),
+                Shadow(color: brightColor.withValues(alpha: 0.4), blurRadius: 16),
+              ],
+            )),
         ),
       ),
     );
@@ -450,6 +517,9 @@ class _MandalaWheelPainter extends CustomPainter {
   final Map<String, ui.Image> images;
   final bool imagesLoaded;
   final MaskStyle maskStyle;
+  final bool pieChartMode;
+  final Map<int, int> confirmedIntensities;
+  final Map<int, Set<String>> confirmedNuances;
 
   _MandalaWheelPainter({
     required this.emotions, this.selectedIndex,
@@ -458,6 +528,9 @@ class _MandalaWheelPainter extends CustomPainter {
     this.rotationValue = 0.0,
     required this.images, required this.imagesLoaded,
     this.maskStyle = MaskStyle.glyph,
+    this.pieChartMode = false,
+    this.confirmedIntensities = const {},
+    this.confirmedNuances = const {},
   });
 
   bool get _useMasks => maskStyle != MaskStyle.glyph;
@@ -571,31 +644,47 @@ class _MandalaWheelPainter extends CustomPainter {
     // 0. Mandala Kalachakra — ROND, UNIQUEMENT à l'extérieur du cercle doré
     if (_useMasks) {
       canvas.save();
-      // Clip CIRCULAIRE extérieur (pour que le mandala ne dépasse pas en carré)
-      // avec trou intérieur (cercle doré) via evenOdd
-      final mandalaClipRadius = outerRadius * 1.25;  // cercle extérieur du mandala
-      final holePath = Path()
-        ..addOval(Rect.fromCircle(center: center, radius: mandalaClipRadius))
-        ..addOval(Rect.fromCircle(center: center, radius: goldRingRadius * innerBreath))
-        ..fillType = PathFillType.evenOdd;
-      canvas.clipPath(holePath);
+      final mandalaClipRadius = outerRadius * 1.25;
+      if (pieChartMode) {
+        // En pieChart : mandala visible PARTOUT (pas de trou intérieur)
+        canvas.clipPath(Path()..addOval(
+            Rect.fromCircle(center: center, radius: mandalaClipRadius)));
+      } else {
+        // Normal : trou intérieur via evenOdd
+        final holePath = Path()
+          ..addOval(Rect.fromCircle(center: center, radius: mandalaClipRadius))
+          ..addOval(Rect.fromCircle(center: center, radius: goldRingRadius * innerBreath))
+          ..fillType = PathFillType.evenOdd;
+        canvas.clipPath(holePath);
+      }
       _drawMandalaBackground(canvas, center, outerRadius);
       canvas.restore();
     }
 
-    // 1. Fond bleu nuit profond à l'intérieur du cercle doré (même couleur que le fond d'écran)
+    // 1. Fond bleu nuit profond à l'intérieur du cercle doré
+    // En mode pieChart : PAS d'overlay — les tranches semi-transparentes laissent le mandala visible
     if (_useMasks) {
-      _drawDarkInterior(canvas, center, goldRingRadius * innerBreath);
+      if (pieChartMode) {
+        // Pas d'overlay : le mandala transparaît à travers les tranches colorées
+      } else {
+        _drawDarkInterior(canvas, center, goldRingRadius * innerBreath);
+      }
     }
 
-    // 2. Aura de fond
-    _drawBackgroundAura(canvas, center, outerRadius);
+    // 2. Aura de fond (masqué en mode pieChart)
+    if (!pieChartMode) {
+      _drawBackgroundAura(canvas, center, outerRadius);
+    }
 
-    // 3. Halo d'intensité diffus
-    _drawIntensityHalo(canvas, center, emotionOuterR, outerRadius);
+    // 3. Halo d'intensité diffus (masqué en mode pieChart)
+    if (!pieChartMode) {
+      _drawIntensityHalo(canvas, center, emotionOuterR, outerRadius);
+    }
 
-    // 4. Marqueurs Appui / Tension
-    _drawZoneMarkers(canvas, center, emotionInnerR, outerRadius, segmentAngle);
+    // 4. Marqueurs Appui / Tension (masqué en mode pieChart)
+    if (!pieChartMode) {
+      _drawZoneMarkers(canvas, center, emotionInnerR, outerRadius, segmentAngle);
+    }
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -624,22 +713,39 @@ class _MandalaWheelPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6.0);
 
-    // 6. Pétales lotus + décorations
-    _drawPetals(canvas, center, n, segmentAngle, gapAngle, emotionInnerR, emotionOuterR);
+    // 6. Pétales lotus (skip en pieChart — le camembert étendu couvre cette zone)
+    if (!pieChartMode) {
+      _drawPetals(canvas, center, n, segmentAngle, gapAngle, emotionInnerR, emotionOuterR);
+    }
 
-    // 7. Anneau décoratif de dots (entre pétales et nuances)
-    _drawOrnamentalDotRing(canvas, center, emotionOuterR + 5, n * 2, 1.2,
-      _kGoldWarm.withValues(alpha: 0.30));
+    // 7. Anneau décoratif de dots (masqué en mode pieChart)
+    if (!pieChartMode) {
+      _drawOrnamentalDotRing(canvas, center, emotionOuterR + 5, n * 2, 1.2,
+        _kGoldWarm.withValues(alpha: 0.30));
+    }
 
-    // 8. Nuances (si émotion sélectionnée)
-    _drawNuances(canvas, center, n, segmentAngle, nuanceInnerR, nuanceOuterR);
+    // 8. Nuances (masqué en mode pieChart)
+    if (!pieChartMode) {
+      _drawNuances(canvas, center, n, segmentAngle, nuanceInnerR, nuanceOuterR);
+    }
 
-    // 9. Anneau ornamental intérieur (autour du centre)
-    _drawOrnamentalDotRing(canvas, center, emotionInnerR - 6, n, 1.5,
-      _kGoldWarm.withValues(alpha: 0.35));
+    // 9. Anneau ornamental intérieur (skip en pieChart)
+    if (!pieChartMode) {
+      _drawOrnamentalDotRing(canvas, center, emotionInnerR - 6, n, 1.5,
+        _kGoldWarm.withValues(alpha: 0.35));
+    }
 
-    // 10. Centre orné
-    _drawMandalaCenter(canvas, center, emotionInnerR - 3);
+    // 10. Centre : pie chart en mode sauvegarde, sinon centre normal
+    if (pieChartMode) {
+      _drawPieChart(canvas, center, emotionOuterR - 2);
+      // 11. Masques sur l'anneau doré, alignés avec les portions du camembert
+      _drawPieChartMasks(canvas, center, goldRingRadius);
+      // 12. Émotions non sélectionnées en blanc (au-delà de l'anneau doré)
+      // Affiche les noms des 18 émotions principales (PAS les nuances)
+      _drawUnselectedEmotions(canvas, center, n, segmentAngle, goldRingRadius + 4, nuanceOuterR);
+    } else {
+      _drawMandalaCenter(canvas, center, emotionInnerR - 3);
+    }
 
     canvas.restore();
   }
@@ -670,6 +776,15 @@ class _MandalaWheelPainter extends CustomPainter {
     );
     canvas.drawCircle(center, radius, Paint()..shader = highlight);
 
+    canvas.restore();
+  }
+
+  // ── FOND SEMI-TRANSPARENT (mode pieChart) ──────────────────────────
+  void _drawSemiTransparentInterior(Canvas canvas, Offset center, double radius) {
+    canvas.save();
+    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
+    // Fond sombre à 55% opacité → mandala visible en filigrane + contraste pour le camembert
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF0F1E35).withValues(alpha: 0.55));
     canvas.restore();
   }
 
@@ -775,7 +890,7 @@ class _MandalaWheelPainter extends CustomPainter {
 
   // ── PÉTALES LOTUS (LARGES, CHEVAUCHEMENT MANDALA) ─────────────────
 
-  void _drawPetals(Canvas canvas, Offset center, int n, double segmentAngle, double gapAngle, double emotionInnerR, double emotionOuterR) {
+  void _drawPetals(Canvas canvas, Offset center, int n, double segmentAngle, double gapAngle, double emotionInnerR, double emotionOuterR, [Map<int, double> pieChartMidAngles = const {}]) {
     // Pétales 1.6× plus larges que le segment → chevauchement ~30%
     final visualHalfAngle = segmentAngle * 0.80;
 
@@ -793,13 +908,18 @@ class _MandalaWheelPainter extends CustomPainter {
     }
 
     for (final i in paintOrder) {
-      _drawSinglePetal(canvas, center, i, n, segmentAngle, visualHalfAngle, emotionInnerR, emotionOuterR);
+      // En mode pieChart, ne dessiner que les pétales confirmés
+      if (pieChartMode && !confirmedIndices.contains(i)) continue;
+      _drawSinglePetal(canvas, center, i, n, segmentAngle, visualHalfAngle, emotionInnerR, emotionOuterR, pieChartMidAngles);
     }
   }
 
-  void _drawSinglePetal(Canvas canvas, Offset center, int i, int n, double segmentAngle, double halfAngle, double emotionInnerR, double emotionOuterR) {
+  void _drawSinglePetal(Canvas canvas, Offset center, int i, int n, double segmentAngle, double halfAngle, double emotionInnerR, double emotionOuterR, [Map<int, double> pieChartMidAngles = const {}]) {
     final emotion = emotions[i];
-    final midAngle = -math.pi / 2 + i * segmentAngle + segmentAngle / 2;
+    // En mode pieChart, aligner le pétale sur la portion du camembert correspondante
+    final midAngle = (pieChartMode && pieChartMidAngles.containsKey(i))
+        ? pieChartMidAngles[i]!
+        : -math.pi / 2 + i * segmentAngle + segmentAngle / 2;
     final isSelected = i == selectedIndex;
     final isConfirmed = confirmedIndices.contains(i);
     final isHighlighted = isSelected || isConfirmed;
@@ -862,9 +982,27 @@ class _MandalaWheelPainter extends CustomPainter {
       ..strokeWidth = 0.5);
 
     // Icône (centrée sur midAngle) — masque ROND pour intégration organique
-    final iconRadius = emotionInnerR + (emotionOuterR - emotionInnerR) * 0.32;
+    // En mode pieChart : masque au bout du pétale (tip)
+    final iconFrac = pieChartMode ? 0.75 : 0.32;
+    final iconRadius = emotionInnerR + (emotionOuterR - emotionInnerR) * iconFrac;
     final iconPos = _polar(center, iconRadius, midAngle);
-    final baseIconSize = isSelected ? 26.0 : 22.0;
+    final baseIconSize = isSelected ? 26.0 : (pieChartMode ? 24.0 : 22.0);
+
+    // ── MODE PIE CHART : nom de l'émotion radial, pas de masque ──
+    if (pieChartMode) {
+      final textR = emotionInnerR + (emotionOuterR - emotionInnerR) * 0.38;
+      _drawRadialText(
+        canvas, center, midAngle, textR,
+        emotion.name,
+        9.5, FontWeight.w800,
+        color: Colors.white.withValues(alpha: 0.95),
+        maxTextWidth: (emotionOuterR - emotionInnerR) * 0.80,
+        customShadows: [
+          Shadow(color: Colors.black.withValues(alpha: 0.7), blurRadius: 3),
+        ],
+      );
+      return; // Pas de masque/icône en mode pieChart
+    }
 
     // ── MASQUES VISAGES (terracotta / pastel) ──
     // En mode masques, pas de fallback glyph — on attend le chargement
@@ -934,7 +1072,19 @@ class _MandalaWheelPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 0.8);
       } else if (imagesLoaded && images.containsKey(emotion.iconPath)) {
-        _drawImage(canvas, images[emotion.iconPath]!, iconPos, baseIconSize);
+        // Fond coloré (couleur du pétale) + clip circulaire
+        canvas.save();
+        canvas.clipPath(Path()..addOval(Rect.fromCircle(center: iconPos, radius: baseIconSize / 2)));
+        canvas.drawCircle(iconPos, baseIconSize / 2, Paint()..color = emotion.color);
+        final img = images[emotion.iconPath]!;
+        final srcRect = Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble());
+        final dstRect = Rect.fromCenter(center: iconPos, width: baseIconSize, height: baseIconSize);
+        canvas.drawImageRect(img, srcRect, dstRect, Paint()..filterQuality = FilterQuality.medium);
+        canvas.restore();
+        canvas.drawCircle(iconPos, baseIconSize / 2, Paint()
+          ..color = _kGoldWarm.withValues(alpha: isSelected ? 0.5 : 0.25)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8);
       } else {
         _drawMaterialIcon(canvas, emotion.icon, iconPos, baseIconSize,
           Colors.white.withValues(alpha: isSelected ? 1.0 : 0.85));
@@ -1008,8 +1158,8 @@ class _MandalaWheelPainter extends CustomPainter {
       final tAngle = nStart + nSweep / 2;
       final tR = (nuanceInnerR + nuanceOuterR) / 2;
       _drawRadialText(canvas, center, tAngle, tR, nuances[j],
-        isNSel ? 9.0 : 8.0,
-        isNSel ? FontWeight.bold : FontWeight.w600,
+        isNSel ? 9.0 : 8.5,
+        FontWeight.w900,
         color: isNSel ? Colors.white : const Color(0xFF2D1B00),
         withShadow: true,
         maxTextWidth: nuanceRingWidth * 0.85);
@@ -1032,19 +1182,291 @@ class _MandalaWheelPainter extends CustomPainter {
   void _drawZoneMarkers(Canvas canvas, Offset center, double innerR, double outerR, double segmentAngle) {
     final canvasSize = center.dx * 2;
     const markerSize = 22.0;
-    const tensionIconPos = Offset(30, 22);
-    const tensionLabelPos = Offset(30, 42);
-    final appuiIconPos = Offset(canvasSize - 30, 22);
-    final appuiLabelPos = Offset(canvasSize - 30, 42);
+    const tensionIconPos = Offset(30, 8);
+    const tensionLabelPos = Offset(30, 30);
+    final appuiIconPos = Offset(canvasSize - 30, 8);
+    final appuiLabelPos = Offset(canvasSize - 30, 30);
     if (imagesLoaded) {
       final appuiImg = images['assets/univers_visuel/appui.png'];
       final tensionImg = images['assets/univers_visuel/tension.png'];
-      if (appuiImg != null) { _drawImage(canvas, appuiImg, appuiIconPos, markerSize); _drawLabel(canvas, appuiLabelPos, 'Appui', _kAppuiColor, 9.0); }
+      if (appuiImg != null) { _drawImage(canvas, appuiImg, appuiIconPos, markerSize); _drawLabel(canvas, appuiLabelPos, 'Support', _kAppuiColor, 9.0); }
       if (tensionImg != null) { _drawImage(canvas, tensionImg, tensionIconPos, markerSize); _drawLabel(canvas, tensionLabelPos, 'Tension', _kTensionColor, 9.0); }
     }
   }
 
   // ── CENTRE ORNÉ DU MANDALA ───────────────────────────────────────
+
+  // ── PIE CHART ÉTENDU — mode sauvegarde ─────────────────────────────
+  // Camembert couvrant 360° du centre jusqu'au bord de la zone pétales.
+  // Plus de pétales séparés : chaque tranche s'étend sur toute la surface,
+  // avec gradient radial, nom de l'émotion et intensité intégrés.
+  void _drawPieChart(Canvas canvas, Offset center, double radius) {
+    if (confirmedIntensities.isEmpty) return;
+    final n = emotions.length;
+
+    final pieRadius = radius;
+    final innerHoleR = pieRadius * 0.06; // petit trou central décoratif
+
+    final sortedEntries = confirmedIntensities.entries
+        .where((e) => e.value > 0 && e.key < n)
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    if (sortedEntries.isEmpty) return;
+
+    // Tranches ÉGALES — l'intensité est affichée en chiffre, pas en taille
+    final sweepAngle = 2 * math.pi / sortedEntries.length;
+    double currentAngle = -math.pi / 2;
+
+    for (final entry in sortedEntries) {
+      final idx = entry.key;
+      final intensityVal = entry.value;
+      final color = emotions[idx].color;
+      final hsl = HSLColor.fromColor(color);
+
+      // Arc donut avec gradient radial pour la profondeur
+      final path = Path()
+        ..arcTo(Rect.fromCircle(center: center, radius: pieRadius),
+            currentAngle, sweepAngle, true)
+        ..arcTo(Rect.fromCircle(center: center, radius: innerHoleR),
+            currentAngle + sweepAngle, -sweepAngle, false)
+        ..close();
+
+      final innerColor = color.withValues(alpha: 0.58);
+      final outerColor = hsl
+          .withLightness((hsl.lightness + 0.10).clamp(0.0, 0.90))
+          .toColor()
+          .withValues(alpha: 0.50);
+      canvas.drawPath(
+          path,
+          Paint()
+            ..shader = ui.Gradient.radial(center, pieRadius,
+                [innerColor, outerColor], [innerHoleR / pieRadius, 1.0]));
+
+      // Bordure entre tranches (seulement si >1 émotion)
+      if (sortedEntries.length > 1) {
+        canvas.drawPath(
+            path,
+            Paint()
+              ..color = Colors.black.withValues(alpha: 0.30)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2.0);
+      }
+
+      final midAngle = currentAngle + sweepAngle / 2;
+
+      // Intensité (chiffre) au tiers intérieur
+      final numR = pieRadius * 0.30;
+      _drawRadialText(canvas, center, midAngle, numR, '$intensityVal',
+          15.0, FontWeight.w900,
+          color: Colors.white.withValues(alpha: 0.95),
+          maxTextWidth: pieRadius * 0.4,
+          customShadows: [
+            Shadow(
+                color: Colors.black.withValues(alpha: 0.7), blurRadius: 4),
+          ]);
+
+      // Nom de l'émotion aux 2/3 extérieurs
+      final nameR = pieRadius * 0.68;
+      _drawRadialText(canvas, center, midAngle, nameR, emotions[idx].name,
+          13.0, FontWeight.w700,
+          color: Colors.white.withValues(alpha: 0.95),
+          maxTextWidth: pieRadius * 0.55,
+          customShadows: [
+            Shadow(
+                color: Colors.black.withValues(alpha: 0.8), blurRadius: 3),
+          ]);
+
+      currentAngle += sweepAngle;
+    }
+
+    // Cercle central doré décoratif
+    canvas.drawCircle(
+        center,
+        innerHoleR,
+        Paint()
+          ..color = _kAmberGlow.withValues(alpha: 0.70)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5);
+
+    // Anneau doré extérieur
+    canvas.drawCircle(
+        center,
+        pieRadius,
+        Paint()
+          ..color =
+              _kAmberGlow.withValues(alpha: 0.60 + 0.15 * pulseValue)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5);
+  }
+
+  // ── MASQUES SUR L'ANNEAU DORÉ — mode pieChart ────────────────────
+  // Chaque émotion confirmée affiche son masque rond sur le cercle doré,
+  // aligné avec le milieu de sa portion de camembert.
+  void _drawPieChartMasks(Canvas canvas, Offset center, double ringRadius) {
+    if (confirmedIntensities.isEmpty || !imagesLoaded) return;
+    final n = emotions.length;
+
+    final sortedEntries = confirmedIntensities.entries
+        .where((e) => e.value > 0 && e.key < n)
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    if (sortedEntries.isEmpty) return;
+
+    // Tranches ÉGALES — cohérent avec _drawPieChart
+    final sweepAngle = 2 * math.pi / sortedEntries.length;
+    double currentAngle = -math.pi / 2;
+
+    for (final entry in sortedEntries) {
+      final idx = entry.key;
+      final midAngle = currentAngle + sweepAngle / 2;
+      final emotion = emotions[idx];
+
+      final iconPos = _polar(center, ringRadius, midAngle);
+      const iconSize = 32.0;
+
+      final maskKey = 'mask_petal_${emotion.key}';
+      if (images.containsKey(maskKey)) {
+        final maskImg = images[maskKey]!;
+
+        canvas.save();
+        canvas.clipPath(Path()
+          ..addOval(Rect.fromCircle(center: iconPos, radius: iconSize / 2)));
+
+        // Fond coloré sous le masque (blend multiply)
+        final petalHsl = HSLColor.fromColor(emotion.color);
+        final petalBg = petalHsl
+            .withLightness(0.78)
+            .withSaturation((petalHsl.saturation * 0.6).clamp(0.0, 1.0))
+            .toColor();
+        canvas.drawCircle(iconPos, iconSize / 2, Paint()..color = petalBg);
+
+        final srcRect = Rect.fromLTWH(
+            0, 0, maskImg.width.toDouble(), maskImg.height.toDouble());
+        final displaySize = iconSize * 1.5;
+        final dstRect = Rect.fromCenter(
+            center: iconPos, width: displaySize, height: displaySize);
+        canvas.drawImageRect(
+            maskImg,
+            srcRect,
+            dstRect,
+            Paint()
+              ..filterQuality = FilterQuality.medium
+              ..blendMode = BlendMode.multiply);
+        canvas.restore();
+
+        // Contour doré autour du masque
+        canvas.drawCircle(
+            iconPos,
+            iconSize / 2,
+            Paint()
+              ..color = _kAmberGlow.withValues(alpha: 0.70)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.5);
+      }
+
+      currentAngle += sweepAngle;
+    }
+  }
+
+  // ── NUANCES en mode pieChart — affichées autour de chaque tranche ───
+  void _drawPieChartNuances(Canvas canvas, Offset center, double innerR, double outerR) {
+    if (confirmedIntensities.isEmpty || confirmedNuances.isEmpty) return;
+    final n = emotions.length;
+
+    final sortedEntries = confirmedIntensities.entries
+        .where((e) => e.value > 0 && e.key < n)
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    if (sortedEntries.isEmpty) return;
+
+    // Tranches ÉGALES — cohérent avec _drawPieChart
+    final sweepAngle = 2 * math.pi / sortedEntries.length;
+    double currentAngle = -math.pi / 2;
+
+    for (final entry in sortedEntries) {
+      final idx = entry.key;
+      final nuances = confirmedNuances[idx];
+
+      if (nuances != null && nuances.isNotEmpty) {
+        final nuanceList = nuances.toList();
+        final nuanceCount = nuanceList.length;
+        final nuanceArc = sweepAngle / nuanceCount;
+
+        for (int j = 0; j < nuanceCount; j++) {
+          final nAngle = currentAngle + j * nuanceArc + nuanceArc / 2;
+          final tR = (innerR + outerR) / 2;
+          _drawRadialText(canvas, center, nAngle, tR, nuanceList[j],
+              10.0, FontWeight.w900,
+              color: Colors.white,
+              maxTextWidth: (outerR - innerR) * 0.85,
+              customShadows: [
+                Shadow(color: Colors.black.withValues(alpha: 0.8), blurRadius: 3),
+                Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 1),
+              ]);
+        }
+      }
+      currentAngle += sweepAngle;
+    }
+  }
+
+  // ── ÉMOTIONS NON SÉLECTIONNÉES — noms des 18 émotions principales en blanc ──
+  void _drawUnselectedEmotions(Canvas canvas, Offset center, int n,
+      double segmentAngle, double innerR, double outerR) {
+    if (confirmedIntensities.isEmpty) return;
+
+    // Collecter les angles occupés par les masques du pie chart
+    final occupiedAngles = <double>[];
+
+    final sortedEntries = confirmedIntensities.entries
+        .where((e) => e.value > 0 && e.key < n)
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    if (sortedEntries.isEmpty) return;
+
+    final sliceSweep = 2 * math.pi / sortedEntries.length;
+    double curAngle = -math.pi / 2;
+
+    for (final entry in sortedEntries) {
+      occupiedAngles.add(curAngle + sliceSweep / 2);
+      curAngle += sliceSweep;
+    }
+
+    // Seuil angulaire : ne pas dessiner si trop proche d'un masque
+    const avoidAngle = 0.28; // ~16 degrés
+
+    for (int i = 0; i < n; i++) {
+      // Skip les émotions confirmées — déjà affichées dans le pie chart
+      if (confirmedIntensities.containsKey(i)) continue;
+
+      final midAngle = -math.pi / 2 + i * segmentAngle + segmentAngle / 2;
+
+      // Vérifier si l'angle est trop proche d'un masque
+      bool tooClose = false;
+      for (final oAngle in occupiedAngles) {
+        var diff = (midAngle - oAngle).abs();
+        if (diff > math.pi) diff = 2 * math.pi - diff;
+        if (diff < avoidAngle) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (tooClose) continue;
+
+      final tR = (innerR + outerR) / 2;
+
+      _drawRadialText(canvas, center, midAngle, tR, emotions[i].name,
+          10.0, FontWeight.w900,
+          color: Colors.white,
+          maxTextWidth: (outerR - innerR) * 0.85,
+          customShadows: [
+            Shadow(color: Colors.black.withValues(alpha: 0.8), blurRadius: 3),
+            Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 1),
+          ]);
+    }
+  }
 
   void _drawMandalaCenter(Canvas canvas, Offset center, double radius) {
     if (selectedIndex != null) {
@@ -1107,9 +1529,15 @@ class _MandalaWheelPainter extends CustomPainter {
         centerImg ??= imagesLoaded ? images[emotion.iconPath] : null;
 
         if (centerImg != null) {
+          // Fond coloré (couleur de l'émotion) + clip circulaire
+          final clipRadius = bgIconSize / 2;
+          canvas.save();
+          canvas.clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: clipRadius)));
+          canvas.drawCircle(center, clipRadius, Paint()..color = emotion.color);
           final srcRect = Rect.fromLTWH(0, 0, centerImg.width.toDouble(), centerImg.height.toDouble());
           final dstRect = Rect.fromCenter(center: center, width: bgIconSize, height: bgIconSize);
           canvas.drawImageRect(centerImg, srcRect, dstRect, Paint()..filterQuality = FilterQuality.high);
+          canvas.restore();
         }
       }
       canvas.restore();
@@ -1180,7 +1608,7 @@ class _MandalaWheelPainter extends CustomPainter {
         ..strokeWidth = 1.0);
 
       final textPainter = TextPainter(
-        text: TextSpan(text: 'Que\nressens-tu ?',
+        text: TextSpan(text: 'How do\nyou feel?',
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
             color: _kGoldLight.withValues(alpha: 0.85), height: 1.3)),
         textDirection: TextDirection.ltr, textAlign: TextAlign.center);
@@ -1226,7 +1654,7 @@ class _MandalaWheelPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _MandalaWheelPainter oldDelegate) {
-    return oldDelegate.selectedIndex != selectedIndex || oldDelegate.confirmedIndices != confirmedIndices || oldDelegate.pulseValue != pulseValue || oldDelegate.selectedNuances != selectedNuances || oldDelegate.intensity != intensity || oldDelegate.imagesLoaded != imagesLoaded || oldDelegate.maskStyle != maskStyle;
+    return oldDelegate.selectedIndex != selectedIndex || oldDelegate.confirmedIndices != confirmedIndices || oldDelegate.pulseValue != pulseValue || oldDelegate.selectedNuances != selectedNuances || oldDelegate.intensity != intensity || oldDelegate.imagesLoaded != imagesLoaded || oldDelegate.maskStyle != maskStyle || oldDelegate.pieChartMode != pieChartMode || oldDelegate.confirmedIntensities != confirmedIntensities;
   }
 }
 
@@ -1286,7 +1714,7 @@ class _LoadingMandalaPainter extends CustomPainter {
     // Texte de chargement
     final textPainter = TextPainter(
       text: TextSpan(
-        text: 'Chargement...',
+        text: 'Loading...',
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
