@@ -6,7 +6,7 @@ workflows:
   # WORKFLOW iOS - Build et déploiement TestFlight
   # ============================================
   ios-release:
-    name: iOS Release - Un Autre Regard
+    name: iOS Release - Another Perspective
     max_build_duration: 60
     instance_type: mac_mini_m2
     
@@ -16,13 +16,13 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.unautreregard.app  # À MODIFIER avec ton Bundle ID
+        bundle_identifier: com.unautreregard.app.en
       flutter: stable
       xcode: latest
       cocoapods: default
       vars:
         # Variables d'environnement (à configurer dans Codemagic UI)
-        APP_ID: 123456789  # À MODIFIER - ID de ton app sur App Store Connect
+        APP_ID: 0  # Will be auto-detected via integration
       groups:
         - app_store_credentials  # Groupe de variables pour les credentials
     
@@ -92,7 +92,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - ton.email@example.com  # À MODIFIER
+          - mcoboccara@gmail.com
         notify:
           success: true
           failure: true
@@ -143,7 +143,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - ton.email@example.com  # À MODIFIER
+          - mcoboccara@gmail.com
         notify:
           success: true
           failure: true
