@@ -3,6 +3,9 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'persistent_storage_service.dart';
 
+/// Méthode d'authentification utilisée par le compte
+enum AuthMethod { password, google, apple, facebook }
+
 /// SERVICE D'AUTHENTIFICATION COMPLET ET UNIFIÃ‰
 /// GÃ¨re : Authentification + Profils + Persistance + Multi-comptes
 class CompleteAuthService {
@@ -101,10 +104,12 @@ class CompleteAuthService {
     print('âœ… DÃ©connexion effectuÃ©e');
   }
   
-  /// VÃ©rifier si un email existe
+  /// VÃ©rifier si un email existe (password OU social)
   Future<bool> emailExists(String email) async {
     await init();
-    return _prefs!.containsKey('password_${email.toLowerCase().trim()}');
+    final emailKey = email.toLowerCase().trim();
+    return _prefs!.containsKey('password_$emailKey') ||
+           _prefs!.containsKey('auth_method_$emailKey');
   }
 
   /// Réinitialiser le mot de passe et retourner le nouveau mot de passe temporaire
@@ -169,6 +174,91 @@ class CompleteAuthService {
 
     print('✅ Nouveau mot de passe défini pour: $emailKey');
     return true;
+  }
+
+  // ========== AUTHENTIFICATION SOCIALE ==========
+
+  /// Connexion/inscription via un provider social (Google, Apple)
+  /// Crée le compte si nouveau, connecte si existant, lie si email déjà utilisé avec password
+  Future<bool> socialLogin({
+    required String email,
+    required AuthMethod method,
+    String? displayName,
+    String? photoUrl,
+  }) async {
+    await init();
+
+    final emailKey = email.toLowerCase().trim();
+
+    if (await emailExists(emailKey)) {
+      // Compte existant — vérifier si c'est un compte password à lier
+      final existingMethod = await getAuthMethod(emailKey);
+      if (existingMethod == AuthMethod.password) {
+        // Lier le compte social au compte password existant
+        await _prefs!.setString('auth_method_$emailKey', method.name);
+        await _prefs!.setBool('social_linked_$emailKey', true);
+        print('🔗 Compte social lié au compte password: $emailKey');
+      }
+
+      // Connecter l'utilisateur existant
+      await _setCurrentUser(emailKey);
+    } else {
+      // Nouveau compte — créer sans password
+      await _prefs!.setString('auth_method_$emailKey', method.name);
+
+      // Ajouter à la liste des utilisateurs
+      final users = await getAllUsers();
+      users.add(emailKey);
+      await _prefs!.setStringList('all_users', users);
+
+      // Créer un profil vide
+      await _createEmptyProfile(emailKey);
+
+      // Injecter le prénom depuis le provider social
+      if (displayName != null && displayName.isNotEmpty) {
+        final profile = _prefs!.getString('profile_$emailKey');
+        if (profile != null) {
+          try {
+            final data = jsonDecode(profile) as Map<String, dynamic>;
+            data['prenom'] = displayName.split(' ').first;
+            await _prefs!.setString('profile_$emailKey', jsonEncode(data));
+          } catch (_) {}
+        }
+      }
+
+      // Connecter immédiatement
+      await _setCurrentUser(emailKey);
+      print('✅ Nouveau compte social créé: $emailKey ($method)');
+    }
+
+    // Stocker les métadonnées sociales
+    if (displayName != null) {
+      await _prefs!.setString('social_display_name_$emailKey', displayName);
+    }
+    if (photoUrl != null) {
+      await _prefs!.setString('social_photo_url_$emailKey', photoUrl);
+    }
+
+    return true;
+  }
+
+  /// Récupérer la méthode d'authentification d'un compte
+  Future<AuthMethod> getAuthMethod(String email) async {
+    await init();
+    final emailKey = email.toLowerCase().trim();
+    final methodStr = _prefs!.getString('auth_method_$emailKey');
+    if (methodStr == null) return AuthMethod.password; // comptes legacy
+    return AuthMethod.values.firstWhere(
+      (m) => m.name == methodStr,
+      orElse: () => AuthMethod.password,
+    );
+  }
+
+  /// Vérifier si un compte social est lié à un compte password
+  Future<bool> isSocialLinked(String email) async {
+    await init();
+    final emailKey = email.toLowerCase().trim();
+    return _prefs!.getBool('social_linked_$emailKey') ?? false;
   }
 
   /// DÃ©finir l'utilisateur actuel

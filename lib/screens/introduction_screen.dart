@@ -6,7 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:audioplayers/audioplayers.dart';
+import '../services/background_music_service.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -26,26 +26,26 @@ class _IntroductionScreenState extends State<IntroductionScreen>
 
   // ── Textes — proposition de valeur ───────────────────────────────────────
   static const _phrases = [
-    "Il y a quelque chose qui t'interroge, qui ne va pas, qui se répète et qui te dépasse.",
-    "La difficulté n'est pas toujours la situation.",
-    "Parfois, c'est le regard porté qui la rend douloureuse et enfermante.",
-    "Je t'invite à la possibilité d'un autre regard.",
-    "Comment ? En questionnant des sources qui ont éclairé ces pensées, situations, dilemmes et questions existentielles qui sont universelles.",
-    "Pour y trouver des perspectives, des sources d'inspiration et d'apaisement.",
+    "There is something that puzzles you, that feels wrong, that keeps repeating and overwhelms you.",
+    "The difficulty is not always the situation itself.",
+    "Sometimes, it is the way you look at it that makes it painful and confining.",
+    "I invite you to consider the possibility of another perspective.",
+    "How? By questioning sources that have shed light on these thoughts, situations, dilemmas and existential questions that are universal.",
+    "To find perspectives, sources of inspiration and inner peace.",
   ];
 
   // Segments avec mise en couleur verte pour la phrase 5 (index 4)
-  // "sont universelles" sera coloré en vert
-  static const _greenSegment = "sont universelles";
+  // "are universal" sera coloré en vert
+  static const _greenSegment = "are universal";
 
   static const _modeEmploi = [
-    "Essayer immédiatement : une source au hasard, une pensée, un éclairage.",
-    "Se connecter ou rester en mode invité pour choisir ses sources.",
-    "Se laisser orienter par un quiz ou une roue du hasard.",
-    "Renseigner son profil pour des éclairages plus ajustés.",
-    "Nommer les émotions du jour ou liées à une pensée.",
-    "Recevoir les éclairages : lire, écouter, approfondir, sauvegarder.",
-    "Retrouver son parcours : historique des éclairages et émotions.",
+    "Try it right away: a random source, a thought, an insight.",
+    "Sign in or stay in guest mode to choose your sources.",
+    "Let yourself be guided by a quiz or a wheel of fortune.",
+    "Fill in your profile for more tailored insights.",
+    "Name the emotions of the day or those linked to a thought.",
+    "Receive insights: read, listen, explore further, save.",
+    "Revisit your journey: history of insights and emotions.",
   ];
 
   // ── État d'avancement des phrases ────────────────────────────────────────
@@ -74,7 +74,6 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   late Animation<double> _logoScale;
 
   // ── Musique ambient ──────────────────────────────────────────────────────
-  final AudioPlayer _audioPlayer = AudioPlayer();
   bool _musicStarted = false;
 
   // ── ScrollController pour auto-scroll ────────────────────────────────────
@@ -157,31 +156,8 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     // Musique ambient — lancée au premier tap utilisateur (autoplay bloqué par navigateur)
   }
 
-  Future<void> _playBackgroundMusic() async {
-    try {
-      await _audioPlayer.setVolume(0.0);
-      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      await _audioPlayer.play(AssetSource('sounds/intro_ambient.mp3'));
-      // Fade-in progressif du volume sur 3 secondes
-      for (int i = 1; i <= 30; i++) {
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (!mounted) return;
-        await _audioPlayer.setVolume(i / 30 * 0.35); // max 35%
-      }
-    } catch (e) {
-      debugPrint('🎵 Musique intro non disponible: $e');
-    }
-  }
-
-  Future<void> _fadeOutMusic() async {
-    try {
-      for (int i = 30; i >= 0; i--) {
-        await Future.delayed(const Duration(milliseconds: 50));
-        if (!mounted) return;
-        await _audioPlayer.setVolume(i / 30 * 0.35);
-      }
-      await _audioPlayer.stop();
-    } catch (_) {}
+  void _playBackgroundMusic() {
+    BackgroundMusicService.instance.play('sounds/universfield-silent-universe-351473.mp3');
   }
 
   // ── Bouton Continuer : dévoile la phrase suivante ────────────────────────
@@ -226,8 +202,6 @@ class _IntroductionScreenState extends State<IntroductionScreen>
 
   @override
   void dispose() {
-    _audioPlayer.stop();
-    _audioPlayer.dispose();
     _logoController.dispose();
     for (final c in _phraseControllers) {
       c.dispose();
@@ -395,7 +369,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'Un Autre Regard',
+            'Another Perspective',
             style: GoogleFonts.cormorantGaramond(
               fontSize: 26,
               fontWeight: FontWeight.w700,
@@ -405,7 +379,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            'Espace d\'introspection & d\'inspiration',
+            'A space for introspection & inspiration',
             style: GoogleFonts.raleway(
               fontSize: 13,
               fontWeight: FontWeight.w400,
@@ -422,8 +396,8 @@ class _IntroductionScreenState extends State<IntroductionScreen>
 
   List<Widget> _buildPhrases() {
     return List.generate(_visiblePhraseCount, (i) {
-      final isAccent = i == 3; // "Je t'invite..." tout en vert
-      final hasGreenSegment = i == 4; // "sont universelles" en vert
+      final isAccent = i == 3; // "I invite you..." tout en vert
+      final hasGreenSegment = i == 4; // "are universal" en vert
       return AnimatedBuilder(
         animation: _phraseControllers[i],
         builder: (context, child) {
@@ -511,7 +485,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         child: Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: Text(
-            'Comment ça marche',
+            'How it works',
             style: GoogleFonts.cormorantGaramond(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -585,7 +559,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
-            'Ce que tu vis est universel.\nCe que tu choisis d\'en voir t\'appartient.',
+            'What you experience is universal.\nWhat you choose to see in it is yours.',
             style: GoogleFonts.cormorantGaramond(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -635,7 +609,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                     onPressed: _onContinue,
                     icon: const Icon(Icons.arrow_downward_rounded, size: 18),
                     label: Text(
-                      'Continuer',
+                      'Continue',
                       style: GoogleFonts.raleway(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -663,7 +637,6 @@ class _IntroductionScreenState extends State<IntroductionScreen>
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    _fadeOutMusic();
                     Navigator.pushReplacementNamed(context, '/home-carousel');
                   },
                   style: ElevatedButton.styleFrom(
@@ -682,16 +655,15 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                       fontSize: 16,
                     ),
                   ),
-                  child: const Text('Expérimente'),
+                  child: const Text('Try it'),
                 ),
                 const SizedBox(width: 16),
                 TextButton(
                   onPressed: () {
-                    _fadeOutMusic();
                     Navigator.pushNamed(context, '/login');
                   },
                   child: Text(
-                    'Se connecter',
+                    'Sign in',
                     style: GoogleFonts.raleway(
                       fontSize: 14,
                       color: _textSecondary,

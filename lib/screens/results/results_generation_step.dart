@@ -231,7 +231,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
                 OutlinedButton.icon(
                   onPressed: widget.onBack,
                   icon: const Icon(Icons.arrow_back),
-                  label: const Text('Retour'),
+                  label: const Text('Back'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF6366F1),
                     side: const BorderSide(color: Color(0xFF6366F1)),
@@ -277,7 +277,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Generation IA en cours...',
+                    'AI generation in progress...',
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -293,7 +293,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
         const SizedBox(height: 16),
         
         Text(
-          'Intelligence artificielle OpenAI en train d\'analyser votre reflexion',
+          'Artificial intelligence analyzing your reflection',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 16,
@@ -322,7 +322,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Erreur de generation',
+                  'Generation error',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -334,7 +334,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
           ),
           const SizedBox(height: 8),
           Text(
-            _errorMessage ?? 'Erreur inconnue',
+            _errorMessage ?? 'Unknown error',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF0F172A),
@@ -344,7 +344,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
           ElevatedButton.icon(
             onPressed: _startGeneration,
             icon: const Icon(Icons.refresh),
-            label: const Text('Reessayer'),
+            label: const Text('Retry'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -385,7 +385,7 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
         
         // TEXTE SIMPLE
         Text(
-          'Generation des perspectives...',
+          'Generating perspectives...',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -449,22 +449,22 @@ class _ResultsGenerationStepState extends State<ResultsGenerationStep>
       case 'generating':
         statusIcon = Icons.hourglass_empty;
         statusColor = const Color(0xFF6366F1);
-        statusText = 'En cours...';
+        statusText = 'In progress...';
         break;
       case 'completed':
         statusIcon = Icons.check_circle;
         statusColor = Colors.green;
-        statusText = 'Termine';
+        statusText = 'Done';
         break;
       case 'error':
         statusIcon = Icons.error;
         statusColor = Colors.red;
-        statusText = 'Erreur';
+        statusText = 'Error';
         break;
       default:
         statusIcon = Icons.pending;
         statusColor = Colors.grey;
-        statusText = 'En attente';
+        statusText = 'Waiting';
     }
     
     return Container(

@@ -32,64 +32,64 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingPageData> _pages = [
     OnboardingPageData(
-      title: "Bienvenue !",
-      subtitle: "Créons ensemble ton espace personnel",
-      description: "Pour t'offrir des perspectives personnalisées, nous allons créer ton profil contextuel. Ces informations resteront privées et stockées uniquement sur ton appareil.",
+      title: "Welcome!",
+      subtitle: "Let's create your personal space together",
+      description: "To offer you personalized perspectives, we'll create your contextual profile. This information will remain private and stored only on your device.",
       icon: Icons.person_add,
       isIntro: true,
     ),
     OnboardingPageData(
-      title: "Profil personnel",
-      subtitle: "Qui es-tu ?",
-      description: "Partage quelques éléments sur ta situation de vie",
-      placeholder: "Ex: 34 ans, en couple, 2 enfants en bas âge, vis en banlieue parisienne, aime la lecture et la randonnée...",
+      title: "Personal Profile",
+      subtitle: "Who are you?",
+      description: "Share a few details about your life situation",
+      placeholder: "E.g.: 34 years old, in a relationship, 2 young children, lives in the suburbs, enjoys reading and hiking...",
       field: 'personalInfo',
       icon: Icons.person,
     ),
     OnboardingPageData(
-      title: "Santé & Énergie",
-      subtitle: "Comment vas-tu physiquement ?",
-      description: "Ton état de santé, ton sommeil, ton niveau d'énergie",
-      placeholder: "Ex: Sommeil parfois agité, mal de dos récurrent, pratique la course à pied 2x/semaine, fatigue en fin de journée...",
+      title: "Health & Energy",
+      subtitle: "How are you physically?",
+      description: "Your health, sleep, energy level",
+      placeholder: "E.g.: Sometimes restless sleep, recurring back pain, running twice a week, tired by end of day...",
       field: 'healthEnergy',
       icon: Icons.favorite,
     ),
     OnboardingPageData(
-      title: "Travail",
-      subtitle: "Ta vie professionnelle",
-      description: "Ton poste, tes charges, ce qui t'use ou te nourrit",
-      placeholder: "Ex: Manager dans une startup, équipe de 8 personnes, beaucoup de pression mais projets stimulants, télétravail 3j/semaine...",
+      title: "Work",
+      subtitle: "Your professional life",
+      description: "Your role, responsibilities, what drains or fulfills you",
+      placeholder: "E.g.: Manager at a startup, team of 8, high pressure but stimulating projects, remote work 3 days/week...",
       field: 'work',
       icon: Icons.work,
     ),
     OnboardingPageData(
       title: "Finances",
-      subtitle: "Ta situation financière",
-      description: "Tes contraintes du moment, tes principales préoccupations",
-      placeholder: "Ex: Crédit immobilier, économies pour les vacances, préoccupation pour l'avenir des enfants...",
+      subtitle: "Your financial situation",
+      description: "Your current constraints, main concerns",
+      placeholder: "E.g.: Mortgage, saving for vacation, concern about the children's future...",
       field: 'contraintes',
       icon: Icons.account_balance_wallet,
     ),
     OnboardingPageData(
-      title: "Valeurs & Repères",
-      subtitle: "Qu'est-ce qui compte pour toi ?",
-      description: "Tes valeurs spirituelles, éthiques, philosophiques",
-      placeholder: "Ex: Attaché aux valeurs familiales, spiritualité bouddhiste, importance de l'écologie, croyance en la bienveillance...",
+      title: "Values & Beliefs",
+      subtitle: "What matters to you?",
+      description: "Your spiritual, ethical, philosophical values",
+      placeholder: "E.g.: Attached to family values, Buddhist spirituality, importance of ecology, belief in kindness...",
       field: 'valuesBeliefs',
       icon: Icons.auto_awesome,
     ),
     OnboardingPageData(
-      title: "Ressources aidantes",
-      subtitle: "Ce qui t'a déjà aidé",
-      description: "Personnes, pratiques, lectures qui te font du bien",
-      placeholder: "Ex: Discussions avec ma sœur, méditation le matin, lectures de Marc-Aurèle, promenades en nature...",
+      title: "Helpful Resources",
+      subtitle: "What has already helped you",
+      description: "People, practices, readings that do you good",
+      placeholder: "E.g.: Talks with my sister, morning meditation, reading Marcus Aurelius, nature walks...",
       field: 'ressources',
       icon: Icons.healing,
     ),
     OnboardingPageData(
-      title: "Tes approches préférées",
-      subtitle: "Comment veux-tu être accompagné ?",
-      description: "Choisis les perspectives qui résonnent le plus avec toi. Tu pourras les modifier plus tard.",
+      title: "Your Preferred Approaches",
+      subtitle: "How do you want to be guided?",
+      description: "Choose the perspectives that resonate most with you. You can change them later.",
       icon: Icons.psychology,
       isApproachSelection: true,
     ),
@@ -136,7 +136,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Row(
             children: [
               Text(
-                'Étape ${_currentPage + 1} sur ${_pages.length}',
+                'Step ${_currentPage + 1} of ${_pages.length}',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -190,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                   ),
                   child: Text(
-                    'Retour',
+                    'Back',
                     style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -211,11 +211,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     elevation: 2,
                   ),
                   child: Text(
-                    _currentPage == 0 
-                        ? 'Commencer'
-                        : _currentPage == _pages.length - 1 
-                            ? 'Terminer'
-                            : 'Suivant',
+                    _currentPage == 0
+                        ? 'Get Started'
+                        : _currentPage == _pages.length - 1
+                            ? 'Finish'
+                            : 'Next',
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
@@ -232,7 +232,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             TextButton(
               onPressed: _skipToMain,
               child: Text(
-                'Terminer plus tard',
+                'Finish Later',
                 style: GoogleFonts.inter(
                   color: const Color(0xFF64748B),
                   fontSize: 14,
@@ -354,7 +354,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   valueListenable: _controllers[pageData.field!]!,
                   builder: (context, value, child) {
                     return Text(
-                      '${value.text.length} caractères',
+                      '${value.text.length} characters',
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         color: const Color(0xFF94A3B8),

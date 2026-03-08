@@ -61,7 +61,7 @@ class _BrainGestationDemoState extends State<BrainGestationDemo> {
             children: [
               // Titre
               Text(
-                '🧠 Widget de Gestation',
+                '🧠 Gestation Widget',
                 style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -72,7 +72,7 @@ class _BrainGestationDemoState extends State<BrainGestationDemo> {
               const SizedBox(height: 8),
               
               Text(
-                'Flux d\'énergie symbolisant la réflexion en cours',
+                'Energy flow symbolizing the ongoing reflection',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: Colors.white60,
@@ -107,7 +107,7 @@ class _BrainGestationDemoState extends State<BrainGestationDemo> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          '✨ Génération terminée !',
+                          '✨ Generation complete!',
                           style: GoogleFonts.poppins(),
                         ),
                         backgroundColor: Colors.green,
@@ -156,11 +156,11 @@ class _BrainGestationDemoState extends State<BrainGestationDemo> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _transitionDone 
-                          ? 'Transition terminée'
-                          : _isComplete 
-                              ? 'Transition en cours...'
-                              : 'Génération en cours...',
+                      _transitionDone
+                          ? 'Transition complete'
+                          : _isComplete
+                              ? 'Transition in progress...'
+                              : 'Generation in progress...',
                       style: GoogleFonts.inter(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
@@ -182,7 +182,7 @@ class _BrainGestationDemoState extends State<BrainGestationDemo> {
                     onPressed: _simulateGeneration,
                     icon: const Icon(Icons.play_arrow),
                     label: Text(
-                      'Simuler (5s)',
+                      'Simulate (5s)',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -202,7 +202,7 @@ class _BrainGestationDemoState extends State<BrainGestationDemo> {
                     onPressed: _toggleComplete,
                     icon: Icon(_isComplete ? Icons.refresh : Icons.check),
                     label: Text(
-                      _isComplete ? 'Reset' : 'Terminer',
+                      _isComplete ? 'Reset' : 'Complete',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -241,10 +241,10 @@ class _BrainGestationDemoState extends State<BrainGestationDemo> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildInstruction('1', 'Ajoute tes images dans assets/univers_visuel/'),
-                    _buildInstruction('2', 'brain_loading.png → Image avec anneaux'),
-                    _buildInstruction('3', 'brain_complete.webp → Cerveau ciel bleu'),
-                    _buildInstruction('4', 'Déclare les assets dans pubspec.yaml'),
+                    _buildInstruction('1', 'Add your images to assets/univers_visuel/'),
+                    _buildInstruction('2', 'brain_loading.png → Image with rings'),
+                    _buildInstruction('3', 'brain_complete.webp → Brain blue sky'),
+                    _buildInstruction('4', 'Declare the assets in pubspec.yaml'),
                   ],
                 ),
               ),

@@ -8,6 +8,8 @@ import '../config/emotion_config.dart';
 import '../models/reflection.dart';
 import '../models/emotional_state.dart';
 import '../services/ai_service.dart';
+import '../services/persistent_storage_service.dart';
+import '../services/emotional_tracking_service.dart';
 import '../widgets/nav_cartouche.dart';
 import '../widgets/brain_gestation_widget.dart';
 import 'eclairages_carousel_screen.dart';
@@ -42,30 +44,30 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
   ReflectionType _selectedType = ReflectionType.thought;
   bool _showSuggestions = false;
 
-  /// Sources actives de l'utilisateur (ou défauts) — résolu depuis AIService
+  /// Active user sources (or defaults) — resolved from AIService
   List<ApproachConfig> _activeSources = [];
 
   final List<String> _thoughtSuggestions = [
-    "Je ne suis pas a la hauteur...",
-    "Je me sens bloque(e)",
-    "Cette personne me met en colere",
-    "J'ai peur de l'echec",
+    "I'm not good enough...",
+    "I feel stuck",
+    "This person makes me angry",
+    "I'm afraid of failure",
   ];
 
   final List<String> _situationSuggestions = [
-    "Conflit avec un proche",
-    "Stress au travail",
-    "Probleme de communication",
+    "Conflict with a loved one",
+    "Stress at work",
+    "Communication problem",
   ];
 
   final List<String> _existentialSuggestions = [
-    "Quel est le sens de ma vie ?",
-    "Suis-je sur la bonne voie ?",
+    "What is the meaning of my life?",
+    "Am I on the right path?",
   ];
 
   final List<String> _dilemmaSuggestions = [
-    "Changer de travail ou rester ?",
-    "Dire la verite ou me taire ?",
+    "Change jobs or stay?",
+    "Tell the truth or stay silent?",
   ];
 
   @override
@@ -74,14 +76,14 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
     _thoughtController.addListener(() {
       setState(() {});
     });
-    // Charger les sources actives de l'utilisateur
+    // Load user's active sources
     _loadActiveSources();
   }
 
-  /// Charge les sources actives depuis AIService (profil utilisateur ou défauts)
+  /// Load active sources from AIService (user profile or defaults)
   Future<void> _loadActiveSources() async {
     try {
-      // S'assurer que les approches sont chargées (y compris défauts si vide)
+      // Ensure approaches are loaded (including defaults if empty)
       if (AIService.instance.userApproches.isEmpty) {
         await AIService.instance.loadUserApproaches();
       }
@@ -99,7 +101,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
         });
       }
     } catch (e) {
-      print('ThoughtInputScreen: Erreur _loadActiveSources: $e');
+      print('ThoughtInputScreen: Error _loadActiveSources: $e');
     }
   }
 
@@ -113,13 +115,13 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
   String _getPlaceholderText() {
     switch (_selectedType) {
       case ReflectionType.thought:
-        return 'Je pense que...\nJe me sens...\nJ\'ai l\'impression que...';
+        return 'I think that...\nI feel...\nI have the impression that...';
       case ReflectionType.situation:
-        return 'Decris la situation qui te preoccupe...';
+        return 'Describe the situation that worries you...';
       case ReflectionType.existential:
-        return 'Quelle question existentielle te traverse ?';
+        return 'What existential question is on your mind?';
       case ReflectionType.dilemma:
-        return 'Quel choix difficile dois-tu faire ?';
+        return 'What difficult choice do you have to make?';
     }
   }
 
@@ -167,7 +169,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
     final text = _thoughtController.text.trim();
     if (text.isEmpty) {
       setState(() {
-        _errorMessage = 'Saisis ta pensee avant de continuer.';
+        _errorMessage = 'Enter your thought before continuing.';
       });
       return;
     }
@@ -180,6 +182,8 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
     FocusScope.of(context).unfocus();
 
     try {
+      final userProfile = PersistentStorageService.instance.getUserProfile();
+
       if (widget.preselectedSource != null) {
         final response =
             await AIService.instance.generateApproachSpecificResponse(
@@ -187,7 +191,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
           reflectionText: text,
           reflectionType: _selectedType,
           emotionalState: EmotionalState.empty(),
-          userProfile: null,
+          userProfile: userProfile,
           intensiteEmotionnelle: 5,
         );
 
@@ -213,8 +217,8 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
       } else {
         final sources = _pickRandomSources(_activeSources.length > 0 ? _activeSources.length : 3);
 
-        // Ecart 1: Generer la premiere source, naviguer immediatement,
-        // passer les restantes a EclairagesCarouselScreen pour generation progressive
+        // Step 1: Generate the first source, navigate immediately,
+        // pass the remaining ones to EclairagesCarouselScreen for progressive generation
         final firstSource = sources.first;
         final response =
             await AIService.instance.generateApproachSpecificResponse(
@@ -222,7 +226,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
           reflectionText: text,
           reflectionType: _selectedType,
           emotionalState: EmotionalState.empty(),
-          userProfile: null,
+          userProfile: userProfile,
           intensiteEmotionnelle: 5,
         );
         final meta = AIService.instance.lastFigureMeta;
@@ -250,7 +254,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Erreur lors de la generation. Reessaie.';
+          _errorMessage = 'Error during generation. Please try again.';
           _isGenerating = false;
         });
       }
@@ -262,13 +266,14 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
     final text = _thoughtController.text.trim();
     if (text.isEmpty) {
       setState(() {
-        _errorMessage = 'Saisis ta pensee avant de continuer.';
+        _errorMessage = 'Enter your thought before continuing.';
       });
       return;
     }
 
     Navigator.of(context).push(
       MaterialPageRoute(
+        settings: const RouteSettings(name: '/emotions'),
         builder: (_) => EmotionWheelScreen(
           entryMode: EmotionWheelEntryMode.exprime,
           thoughtText: text,
@@ -280,61 +285,20 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
   }
 
   void _showPositiveThought() {
-    final thoughts = [
-      "Chaque jour est une nouvelle opportunité de grandir.",
-      "Tu as déjà surmonté tant d'obstacles. Tu es plus fort(e) que tu ne le penses.",
-      "Prends le temps de respirer. Ce moment difficile passera.",
-      "Tu mérites d'être heureux(se) et en paix.",
-      "Tes émotions sont valides. Accueille-les avec bienveillance.",
-      "Un petit pas aujourd'hui peut mener à un grand changement demain.",
-    ];
-    final random = DateTime.now().millisecondsSinceEpoch % thoughts.length;
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/univers_visuel/pensee_positive.png',
-                width: 64, height: 64,
-                errorBuilder: (_, __, ___) => const Icon(Icons.lightbulb, color: Color(0xFFFBBF24), size: 48),
-              ),
-              const SizedBox(height: 20),
-              Text('Pensée du moment', style: GoogleFonts.cormorantGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF92400E))),
-              const SizedBox(height: 16),
-              Text(thoughts[random], style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF78350F), height: 1.5), textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFBBF24), foregroundColor: const Color(0xFF78350F), padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: Text('Merci !', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
-        ),
-      ),
+      barrierDismissible: false,
+      builder: (ctx) => _PositiveThoughtDialog(),
     );
   }
 
   List<ApproachConfig> _pickRandomSources(int count) {
-    // Utiliser les sources actives de l'utilisateur (ou défauts) si disponibles
+    // Use user's active sources (or defaults) if available
     if (_activeSources.isNotEmpty) {
       final shuffled = List<ApproachConfig>.from(_activeSources)..shuffle();
       return shuffled.take(count).toList();
     }
-    // Fallback : toutes les sources
+    // Fallback: all sources
     final all = ApproachCategories.allApproaches.toList()..shuffle();
     return all.take(count).toList();
   }
@@ -353,7 +317,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header avec logo menu + titre
+              // Header with menu logo + title
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -376,7 +340,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Exprime ce qui te traverse',
+                        'Express what\'s on your mind',
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 19,
                           fontWeight: FontWeight.bold,
@@ -388,14 +352,14 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                     NavCartouche(
                       assetPath: 'assets/univers_visuel/pensee_positive.png',
                       fallbackIcon: Icons.lightbulb_outline,
-                      tooltip: 'Pensée positive',
+                      tooltip: 'Positive thought',
                       onTap: _showPositiveThought,
                     ),
                     const SizedBox(width: 8),
                     NavCartouche(
                       assetPath: 'assets/univers_visuel/menu_principal.png',
                       fallbackIcon: Icons.grid_view_rounded,
-                      tooltip: 'Menu principal',
+                      tooltip: 'Main menu',
                       onTap: () => Navigator.pushNamedAndRemoveUntil(
                         context, '/menu', (route) => false,
                       ),
@@ -567,7 +531,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Exprime ce qui te traverse',
+                    'Express what\'s on your mind',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -591,7 +555,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                         : Colors.white.withValues(alpha: 0.4),
                     size: 22,
                   ),
-                  tooltip: 'Voir des exemples',
+                  tooltip: 'See examples',
                 ),
               ],
             ),
@@ -634,7 +598,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  '${_thoughtController.text.length} caracteres',
+                  '${_thoughtController.text.length} characters',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: Colors.white.withValues(alpha: 0.3),
@@ -664,7 +628,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Exemples',
+            'Examples',
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -732,7 +696,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
     );
   }
 
-  // === BOUTONS BAS — 2 cartouches côte à côte + retour ===
+  // === BOTTOM BUTTONS — 2 cartouches side by side + back ===
   Widget _buildTwoButtons() {
     final canContinue = _thoughtController.text.trim().isNotEmpty;
     final activeColor = const Color(0xFF2E8B7B);
@@ -755,10 +719,10 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 2 cartouches côte à côte
+            // 2 cartouches side by side
             Row(
               children: [
-                // Cartouche 1 : Regarde autrement
+                // Cartouche 1: See differently
                 Expanded(
                   child: GestureDetector(
                     onTap: canContinue ? _generateDirect : null,
@@ -771,11 +735,19 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+                          Image.asset(
+                            'assets/univers_visuel/regardeautrement.png',
+                            width: 24, height: 24,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('regardeautrement.png ERROR: $error');
+                              return const Icon(Icons.auto_awesome, size: 20, color: Colors.white);
+                            },
+                          ),
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              'Regarde\nautrement',
+                              'See\ndifferently',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -790,7 +762,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // Cartouche 2 : Saisis tes émotions et regarde autrement
+                // Cartouche 2: Enter your emotions and see differently
                 Expanded(
                   child: GestureDetector(
                     onTap: canContinue ? _navigateToEmotions : null,
@@ -803,11 +775,19 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.favorite_rounded, size: 18, color: Colors.white),
+                          Image.asset(
+                            'assets/univers_visuel/emotionsdujour.png',
+                            width: 24, height: 24,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('emotionsdujour.png ERROR: $error');
+                              return const Icon(Icons.favorite_rounded, size: 20, color: Colors.white);
+                            },
+                          ),
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              'Saisis tes émotions\net regarde autrement',
+                              'Enter your emotions\nand see differently',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -826,7 +806,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
 
             const SizedBox(height: 10),
 
-            // Cartouche Retour
+            // Back cartouche
             GestureDetector(
               onTap: () => Navigator.of(context).pop(),
               child: Container(
@@ -842,7 +822,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                     const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
-                      'Retour',
+                      'Back',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -872,7 +852,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
     );
   }
 
-  // === SOURCES ACTIVES (badges scrollables) ===
+  // === ACTIVE SOURCES (scrollable badges) ===
   Widget _buildActiveSourcesBadges() {
     if (_activeSources.isEmpty) return const SizedBox.shrink();
 
@@ -882,7 +862,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'Tes sources d\'inspiration',
+            'Your sources of inspiration',
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -1014,7 +994,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                   ],
                 ),
               ),
-              // Indicateur d'intensité
+              // Intensity indicator
               if (widget.emotionIntensity != null)
                 Container(
                   width: 36,
@@ -1037,7 +1017,7 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
                 ),
             ],
           ),
-          // Nuances sélectionnées
+          // Selected nuances
           if (widget.selectedNuances != null &&
               widget.selectedNuances!.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -1064,6 +1044,158 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// POSITIVE THOUGHT DIALOG (AI-generated)
+// ============================================================================
+
+class _PositiveThoughtDialog extends StatefulWidget {
+  @override
+  State<_PositiveThoughtDialog> createState() => _PositiveThoughtDialogState();
+}
+
+class _PositiveThoughtDialogState extends State<_PositiveThoughtDialog> {
+  String? _thought;
+  bool _isLoading = true;
+  bool _isError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _generate();
+  }
+
+  Future<void> _generate() async {
+    try {
+      final userProfile = PersistentStorageService.instance.getUserProfile();
+
+      String? historique7Jours;
+      try {
+        final entries = await EmotionalTrackingService.instance.getEntriesForLastDays(7);
+        if (entries.isNotEmpty) {
+          final buffer = StringBuffer();
+          for (final entry in entries) {
+            final dateStr = '${entry.date.day}/${entry.date.month}/${entry.date.year}';
+            final emotionsStr = entry.emotions.entries
+                .map((e) => '${e.key} ${e.value.intensity}/100')
+                .join(', ');
+            buffer.writeln('$dateStr : $emotionsStr');
+          }
+          historique7Jours = buffer.toString().trim();
+        }
+      } catch (_) {}
+
+      final result = await AIService.instance.generatePositiveThought(
+        userProfile: userProfile,
+        historique7Jours: historique7Jours,
+      );
+
+      if (mounted) {
+        final isErr = result.startsWith('❌');
+        setState(() {
+          _thought = isErr ? null : result;
+          _isLoading = false;
+          _isError = isErr;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isError = true;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/univers_visuel/pensee_positive.png',
+              width: 64,
+              height: 64,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.lightbulb, color: Color(0xFFFBBF24), size: 48),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Thought of the moment',
+              style: GoogleFonts.cormorantGaramond(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF92400E),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFBBF24)),
+                  ),
+                ),
+              )
+            else if (_isError)
+              Text(
+                'Unable to generate a thought at the moment.',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: const Color(0xFF78350F),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              )
+            else
+              Text(
+                _thought ?? '',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: const Color(0xFF78350F),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFBBF24),
+                foregroundColor: const Color(0xFF78350F),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Thanks!',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

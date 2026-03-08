@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(python -c \"import cairo; print\\('pycairo OK'\\)\" 2>&1 && python -c \"import cairosvg; print\\('cairosvg OK'\\)\" 2>&1 && python -c \"import svglib; print\\('svglib OK'\\)\" 2>&1 && python -c \"import playwright; print\\('playwright OK'\\)\" 2>&1)",
+      "Bash(python:*)",
+      "Bash(mkdir -p \"/c/Users/mcopc/Documents/un_autre_regard - ESSAI/assets/univers_visuel/emotions 2048 test\" && cd \"/c/Users/mcopc/Documents/un_autre_regard - ESSAI\" && python -c \"\nimport cairo\nSIZE = 256\nsurface = cairo.ImageSurface\\(cairo.FORMAT_ARGB32, SIZE, SIZE\\)\nctx = cairo.Context\\(surface\\)\nctx.set_antialias\\(cairo.ANTIALIAS_BEST\\)\nctx.arc\\(SIZE/2, SIZE/2, SIZE*0.4, 0, 2*3.14159\\)\nctx.set_source_rgb\\(0.18, 0.77, 0.71\\)\nctx.set_line_width\\(SIZE*0.03\\)\nctx.stroke\\(\\)\nsurface.write_to_png\\('assets/univers_visuel/emotions 2048 test/_pycairo_test.png'\\)\nprint\\('pycairo OK - fichier test cree'\\)\n\" 2>&1)"
+    ]
+  }
+}

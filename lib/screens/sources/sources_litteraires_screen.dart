@@ -35,123 +35,123 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
   final List<LiterarySource> _sources = [
     LiterarySource(
       id: 'romantisme',
-      name: 'Romantisme',
+      name: 'Romanticism',
       iconPath: 'assets/univers_visuel/romantisme.png',
-      description: 'Mouvement du XIXᵉ valorisant l\'expression des émotions, la nature et l\'individu.',
-      modeOfThought: 'Primauté du cœur, sensibilité exacerbée, quête d\'intensité.',
-      worldView: 'Le monde est un miroir de l\'âme ; le destin personnel est central.',
+      description: '19th-century movement valuing emotional expression, nature and the individual.',
+      modeOfThought: 'Primacy of the heart, heightened sensitivity, quest for intensity.',
+      worldView: 'The world is a mirror of the soul; personal destiny is central.',
     ),
     LiterarySource(
       id: 'realisme',
-      name: 'Réalisme',
+      name: 'Realism',
       iconPath: 'assets/univers_visuel/realisme.png',
-      description: 'Courant du XIXᵉ cherchant à représenter la réalité sociale telle qu\'elle est.',
-      modeOfThought: 'Observation minutieuse, rationalité, lucidité sociale.',
-      worldView: 'Le monde est dur, structuré par classes sociales, contraintes matérielles.',
+      description: '19th-century movement seeking to represent social reality as it is.',
+      modeOfThought: 'Meticulous observation, rationality, social lucidity.',
+      worldView: 'The world is harsh, structured by social classes and material constraints.',
     ),
     LiterarySource(
       id: 'naturalisme',
-      name: 'Naturalisme',
+      name: 'Naturalism',
       iconPath: 'assets/univers_visuel/naturalisme.png',
-      description: 'Version radicalisée du réalisme, influencée par la science et le déterminisme.',
-      modeOfThought: 'Analyse des hérédités, des instincts, des milieux ; approche quasi-scientifique.',
-      worldView: 'Le monde détermine les individus, les choix sont limités.',
+      description: 'Radicalized version of realism, influenced by science and determinism.',
+      modeOfThought: 'Analysis of heredity, instincts, environments; quasi-scientific approach.',
+      worldView: 'The world determines individuals, choices are limited.',
     ),
     LiterarySource(
       id: 'symbolisme',
-      name: 'Symbolisme',
+      name: 'Symbolism',
       iconPath: 'assets/univers_visuel/symbolisme.png',
-      description: 'Mouvement de la fin du XIXᵉ explorant le rêve, l\'allégorie, les symboles.',
-      modeOfThought: 'Intuition, mystère, langage poétique suggestif.',
-      worldView: 'Le réel est un voile ; les vérités profondes sont cachées.',
+      description: 'Late 19th-century movement exploring dreams, allegory and symbols.',
+      modeOfThought: 'Intuition, mystery, suggestive poetic language.',
+      worldView: 'Reality is a veil; deep truths are hidden.',
     ),
     LiterarySource(
       id: 'surrealisme',
-      name: 'Surréalisme',
+      name: 'Surrealism',
       iconPath: 'assets/univers_visuel/surrealisme.png',
-      description: 'Mouvement du XXᵉ centré sur l\'inconscient, le rêve, l\'imaginaire sans censure.',
-      modeOfThought: 'Association libre, rupture avec la logique, exploration intérieure.',
-      worldView: 'Le monde est un espace à libérer des contraintes mentales.',
+      description: '20th-century movement centered on the unconscious, dreams and uncensored imagination.',
+      modeOfThought: 'Free association, break with logic, inner exploration.',
+      worldView: 'The world is a space to be freed from mental constraints.',
     ),
     LiterarySource(
       id: 'existentialisme',
-      name: 'Existentialisme',
+      name: 'Existentialism',
       iconPath: 'assets/univers_visuel/existentialisme.png',
-      description: 'Littérature centrée sur la liberté, la responsabilité et l\'angoisse existentielle.',
-      modeOfThought: 'Questionnement éthique, lucidité radicale, recherche d\'authenticité.',
-      worldView: 'Le monde n\'a pas de sens donné : l\'individu doit créer le sien.',
+      description: 'Literature centered on freedom, responsibility and existential anxiety.',
+      modeOfThought: 'Ethical questioning, radical lucidity, search for authenticity.',
+      worldView: 'The world has no given meaning: the individual must create their own.',
     ),
     LiterarySource(
       id: 'humanisme',
-      name: 'Humanisme',
+      name: 'Humanism',
       iconPath: 'assets/univers_visuel/humanisme.png',
-      description: 'Courant valorisant la dignité humaine, la raison et l\'épanouissement.',
-      modeOfThought: 'Réflexion rationnelle, optimisme mesuré, contemplation morale.',
-      worldView: 'Le monde est perfectible grâce à la pensée et au dialogue.',
+      description: 'Movement valuing human dignity, reason and fulfillment.',
+      modeOfThought: 'Rational reflection, measured optimism, moral contemplation.',
+      worldView: 'The world is perfectible through thought and dialogue.',
     ),
     LiterarySource(
       id: 'absurdisme',
-      name: 'Absurdisme',
+      name: 'Absurdism',
       iconPath: 'assets/univers_visuel/absurdisme.png',
-      description: 'Mouvement abordant l\'insensé de la condition humaine et la quête de sens impossible.',
-      modeOfThought: 'Ironie, lucidité, confrontation au vide existentiel.',
-      worldView: 'Le monde est absurde mais l\'humain peut y opposer sa dignité.',
+      description: 'Movement addressing the senselessness of the human condition and the impossible quest for meaning.',
+      modeOfThought: 'Irony, lucidity, confrontation with existential void.',
+      worldView: 'The world is absurd but humans can oppose it with their dignity.',
     ),
     LiterarySource(
       id: 'modernisme',
-      name: 'Modernisme',
+      name: 'Modernism',
       iconPath: 'assets/univers_visuel/modernisme.png',
-      description: 'Courant littéraire du début XXᵉ bouleversant les formes classiques.',
-      modeOfThought: 'Fragmentation du récit, subjectivité, introspection.',
-      worldView: 'La réalité est multiple, instable, subjective.',
+      description: 'Early 20th-century literary movement that disrupted classical forms.',
+      modeOfThought: 'Narrative fragmentation, subjectivity, introspection.',
+      worldView: 'Reality is multiple, unstable, subjective.',
     ),
     LiterarySource(
       id: 'postmodernisme',
-      name: 'Postmodernisme',
+      name: 'Postmodernism',
       iconPath: 'assets/univers_visuel/postmodernisme.png',
-      description: 'Mouvement jouant avec les codes, la pluralité des vérités, les récits entrecroisés.',
-      modeOfThought: 'Ironie, mélange des genres, remise en cause des méta-récits.',
-      worldView: 'Le monde est complexe, hybride, sans centre unique.',
+      description: 'Movement playing with codes, plurality of truths and intertwined narratives.',
+      modeOfThought: 'Irony, genre mixing, questioning of meta-narratives.',
+      worldView: 'The world is complex, hybrid, with no single center.',
     ),
     LiterarySource(
       id: 'tragedie_classique',
-      name: 'Tragédie classique',
+      name: 'Classical Tragedy',
       iconPath: 'assets/univers_visuel/tragedie_classique.png',
-      description: 'Genre dramatique explorant le destin, la fatalité et les passions humaines.',
-      modeOfThought: 'Catharsis, confrontation au destin, noblesse face à l\'inévitable.',
-      worldView: 'L\'homme est soumis à des forces qui le dépassent ; la grandeur est dans l\'acceptation.',
+      description: 'Dramatic genre exploring destiny, fatality and human passions.',
+      modeOfThought: 'Catharsis, confrontation with fate, nobility in the face of the inevitable.',
+      worldView: 'Humanity is subject to forces beyond its control; greatness lies in acceptance.',
     ),
     LiterarySource(
       id: 'roman_psychologique',
-      name: 'Roman psychologique',
+      name: 'Psychological Novel',
       iconPath: 'assets/univers_visuel/roman_psychologique.png',
-      description: 'Genre littéraire centré sur l\'analyse fine des états intérieurs.',
-      modeOfThought: 'Introspection, nuances émotionnelles, complexité des motivations.',
-      worldView: 'La vérité se trouve dans les profondeurs de la psyché humaine.',
+      description: 'Literary genre focused on the fine analysis of inner states.',
+      modeOfThought: 'Introspection, emotional nuances, complexity of motivations.',
+      worldView: 'Truth is found in the depths of the human psyche.',
     ),
     LiterarySource(
       id: 'mythologie',
-      name: 'Mythologie',
+      name: 'Mythology',
       iconPath: 'assets/univers_visuel/mythologie.png',
-      description: 'Récits fondateurs explorant les archétypes universels de l\'humanité.',
-      modeOfThought: 'Symbolisme, récits initiatiques, épreuves transformatrices.',
-      worldView: 'Le monde est animé par des forces archétypales ; les mythes éclairent notre condition.',
+      description: 'Founding narratives exploring universal archetypes of humanity.',
+      modeOfThought: 'Symbolism, initiatory tales, transformative ordeals.',
+      worldView: 'The world is animated by archetypal forces; myths illuminate our condition.',
     ),
     LiterarySource(
       id: 'science_fiction',
-      name: 'Science-fiction',
+      name: 'Science Fiction',
       iconPath: 'assets/univers_visuel/science_fiction.png',
-      description: 'Genre explorant les futurs possibles et les implications de la technologie.',
-      modeOfThought: 'Extrapolation, questionnement éthique, imagination prospective.',
-      worldView: 'Le futur est un miroir de nos choix présents ; la technologie transforme l\'humain.',
+      description: 'Genre exploring possible futures and the implications of technology.',
+      modeOfThought: 'Extrapolation, ethical questioning, prospective imagination.',
+      worldView: 'The future is a mirror of our present choices; technology transforms humanity.',
     ),
     LiterarySource(
       id: 'fantasy',
       name: 'Fantasy',
       iconPath: 'assets/univers_visuel/fantasy.png',
-      description: 'Genre imaginaire explorant des mondes magiques et des quêtes héroïques.',
-      modeOfThought: 'Voyage initiatique, combat du bien contre le mal, transformation intérieure.',
-      worldView: 'Le monde recèle des dimensions cachées ; l\'héroïsme révèle notre vraie nature.',
+      description: 'Imaginative genre exploring magical worlds and heroic quests.',
+      modeOfThought: 'Initiatory journey, battle of good against evil, inner transformation.',
+      worldView: 'The world holds hidden dimensions; heroism reveals our true nature.',
     ),
   ];
 
@@ -183,16 +183,16 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
     try {
       final profileData = await CompleteAuthService.instance.getProfile();
       final Map<String, dynamic> updatedProfile = Map<String, dynamic>.from(profileData ?? {});
-      
+
       updatedProfile['courantsLitteraires'] = _selectedSources.toList();
       updatedProfile['lastUpdated'] = DateTime.now().toIso8601String();
-      
+
       await CompleteAuthService.instance.saveProfile(updatedProfile);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_selectedSources.length} courant(s) littéraire(s) enregistré(s)'),
+            content: Text('${_selectedSources.length} literary movement(s) saved'),
             backgroundColor: const Color(0xFF10B981),
           ),
         );
@@ -203,7 +203,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -214,7 +214,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Courants Littéraires',
+      title: 'Literary Movements',
       showMenuButton: true,
       showPositiveButton: true,
       showBackButton: true,
@@ -237,7 +237,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '${_selectedSources.length} sélectionné(s)',
+                            '${_selectedSources.length} selected',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -292,7 +292,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_selectedSources.length} sélectionné(s)',
+                    '${_selectedSources.length} selected',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -302,9 +302,9 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           Image.asset(
             'assets/univers_visuel/categorie_litteraires.png',
             width: 120,
@@ -321,22 +321,22 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
               );
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Text(
-            'Courants Littéraires',
+            'Literary Movements',
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0F172A),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
-            'Choisissez les courants qui vous parlent',
+            'Choose the movements that speak to you',
             style: GoogleFonts.inter(
               fontSize: 15,
               color: const Color(0xFF64748B),
@@ -350,7 +350,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
 
   Widget _buildSourceCard(LiterarySource source) {
     final isSelected = _selectedSources.contains(source.id);
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -428,7 +428,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected 
+                          color: isSelected
                               ? const Color(0xFF10B981)
                               : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(20),
@@ -441,7 +441,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                             if (isSelected)
                               const SizedBox(width: 4),
                             Text(
-                              isSelected ? 'Choisi' : 'Choisir',
+                              isSelected ? 'Selected' : 'Select',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -456,7 +456,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                 ),
               ),
             ),
-            
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -472,7 +472,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     Text(
                       source.description,
                       style: GoogleFonts.inter(
@@ -482,9 +482,9 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Mode de pensée',
+                      'Way of Thinking',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -501,9 +501,9 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Vision du monde',
+                      'Worldview',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -544,7 +544,7 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Valider mes choix',
+          'Confirm my choices',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

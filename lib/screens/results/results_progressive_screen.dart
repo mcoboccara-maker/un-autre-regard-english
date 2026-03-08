@@ -78,7 +78,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Tes perspectives',
+      title: 'Your perspectives',
       headerIconPath: 'assets/univers_visuel/perspectives.png',
       showTitle: false,
       showBackButton: false,
@@ -164,7 +164,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
         const SizedBox(height: 16),
 
         Text(
-          'Voici différents regards sur ta pensée',
+          'Here are different perspectives on your thought',
           style: GoogleFonts.cormorantGaramond(
             fontSize: 22,
             fontWeight: FontWeight.w600,
@@ -422,7 +422,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              isExpanded ? 'Réduire' : 'Découvrir pourquoi',
+              isExpanded ? 'Collapse' : 'Discover why',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -504,7 +504,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Approfondissement',
+                'Deepening',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -557,7 +557,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
             _buildActionButton(
               iconPath: 'assets/univers_visuel/pensee2.png',
               fallbackIcon: isDeepening ? Icons.hourglass_top : Icons.auto_awesome,
-              label: isDeepening ? 'En cours...' : 'Approfondir',
+              label: isDeepening ? 'In progress...' : 'Deepen',
               color: approach.color,
               onPressed: isDeepening ? null : () => _deepen(approach),
             ),
@@ -568,7 +568,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
                 ? 'assets/univers_visuel/stop.png'  // A CREER si besoin
                 : 'assets/univers_visuel/ecouter.png', // A CREER si besoin
             fallbackIcon: isSpeaking ? Icons.stop : Icons.volume_up,
-            label: isSpeaking ? 'Stop' : 'Écouter',
+            label: isSpeaking ? 'Stop' : 'Listen',
             color: const Color(0xFF64748B),
             onPressed: () => _toggleTts(approach, response),
           ),
@@ -581,7 +581,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
                 ? 'assets/univers_visuel/evaluation/evaluation${evaluation.rating}.png'
                 : 'assets/univers_visuel/evaluation/evaluation5.png',
             fallbackIcon: evaluation != null ? Icons.star : Icons.star_border,
-            label: 'Évaluer',
+            label: 'Rate',
             color: evaluation != null ? const Color(0xFFD4AF37) : const Color(0xFF64748B),
             onPressed: () {
               setState(() {
@@ -647,7 +647,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ton avis sur cette perspective',
+            'Your opinion on this perspective',
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -659,7 +659,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
           Row(
             children: [
               Text(
-                'Note :',
+                'Rating:',
                 style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF78350F)),
               ),
               Expanded(
@@ -711,7 +711,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
           TextField(
             maxLines: 2,
             decoration: InputDecoration(
-              hintText: 'Un commentaire ? (optionnel)',
+              hintText: 'A comment? (optional)',
               hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF)),
               filled: true,
               fillColor: Colors.white,
@@ -977,7 +977,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
               errorBuilder: (_, __, ___) => const Icon(Icons.refresh, size: 20),
             ),
             label: Text(
-              'Nouvelle réflexion',
+              'New reflection',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -1008,7 +1008,7 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
               errorBuilder: (_, __, ___) => const Icon(Icons.home, size: 18),
             ),
             label: Text(
-              'Retour au menu',
+              'Back to menu',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w500,
                 fontSize: 14,

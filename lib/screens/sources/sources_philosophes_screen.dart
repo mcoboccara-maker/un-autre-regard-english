@@ -33,152 +33,152 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
   bool _isLoading = true;
 
   final List<Philosopher> _sources = [
-    // PHILOSOPHES ANTIQUES
+    // ANCIENT PHILOSOPHERS
     Philosopher(
       id: 'socrate',
-      name: 'Socrate',
+      name: 'Socrates',
       iconPath: 'assets/univers_visuel/socrate.png',
-      description: 'Philosophe grec fondateur du questionnement critique.',
-      modeOfThought: 'Maïeutique : questionner pour révéler la vérité intérieure.',
-      worldView: 'La vérité se cherche en soi-même à travers le dialogue.',
+      description: 'Greek philosopher, founder of critical questioning.',
+      modeOfThought: 'Maieutics: questioning to reveal inner truth.',
+      worldView: 'Truth is sought within oneself through dialogue.',
     ),
     Philosopher(
       id: 'platon',
-      name: 'Platon',
+      name: 'Plato',
       iconPath: 'assets/univers_visuel/platon.png',
-      description: 'Philosophe grec fondateur de l\'idéalisme.',
-      modeOfThought: 'Retour vers l\'essentiel, quête de vérité, séparation entre illusion et réalité.',
-      worldView: 'Le réel visible n\'est qu\'une copie imparfaite des Idées.',
+      description: 'Greek philosopher, founder of idealism.',
+      modeOfThought: 'Return to the essential, quest for truth, separation between illusion and reality.',
+      worldView: 'The visible world is only an imperfect copy of the Ideas.',
     ),
     Philosopher(
       id: 'aristote',
-      name: 'Aristote',
+      name: 'Aristotle',
       iconPath: 'assets/univers_visuel/aristote.png',
-      description: 'Philosophe grec, père de la logique et de l\'éthique de la vertu.',
-      modeOfThought: 'Rigueur logique, observation, classification, vertu par mesure.',
-      worldView: 'Le réel s\'analyse par observation ; le bonheur vient de la vertu.',
+      description: 'Greek philosopher, father of logic and virtue ethics.',
+      modeOfThought: 'Logical rigor, observation, classification, virtue through moderation.',
+      worldView: 'Reality is analyzed through observation; happiness comes from virtue.',
     ),
     Philosopher(
       id: 'epicure',
-      name: 'Épicure',
+      name: 'Epicurus',
       iconPath: 'assets/univers_visuel/epicure.png',
-      description: 'Philosophe grec fondateur de l\'épicurisme.',
-      modeOfThought: 'Analyse des désirs, sobriété volontaire, recherche de paix.',
-      worldView: 'Le bonheur = absence de souffrance + amitiés + simplicité.',
+      description: 'Greek philosopher, founder of Epicureanism.',
+      modeOfThought: 'Analysis of desires, voluntary sobriety, pursuit of peace.',
+      worldView: 'Happiness = absence of suffering + friendships + simplicity.',
     ),
-    
-    // STOÏCIENS
+
+    // STOICS
     Philosopher(
       id: 'seneque',
-      name: 'Sénèque',
+      name: 'Seneca',
       iconPath: 'assets/univers_visuel/seneque.png',
-      description: 'Grand stoïcien romain, maître de la sagesse pratique.',
-      modeOfThought: 'Maîtrise des émotions, discipline, recentrage sur ce qui dépend de soi.',
-      worldView: 'Le monde est instable, mais la paix vient de l\'intérieur.',
+      description: 'Great Roman Stoic, master of practical wisdom.',
+      modeOfThought: 'Mastery of emotions, discipline, refocusing on what depends on us.',
+      worldView: 'The world is unstable, but peace comes from within.',
     ),
     Philosopher(
       id: 'epictete',
-      name: 'Épictète',
+      name: 'Epictetus',
       iconPath: 'assets/univers_visuel/epictete.png',
-      description: 'Esclave devenu philosophe stoïcien.',
-      modeOfThought: 'Acceptation radicale, distinction entre le contrôlable et l\'incontrôlable.',
-      worldView: 'La liberté réside dans notre jugement, pas dans les circonstances.',
+      description: 'Slave who became a Stoic philosopher.',
+      modeOfThought: 'Radical acceptance, distinction between the controllable and the uncontrollable.',
+      worldView: 'Freedom lies in our judgment, not in circumstances.',
     ),
     Philosopher(
       id: 'marc_aurele',
-      name: 'Marc Aurèle',
+      name: 'Marcus Aurelius',
       iconPath: 'assets/univers_visuel/marc_aurele.png',
-      description: 'Empereur philosophe, stoïcien tardif.',
-      modeOfThought: 'Lucidité, responsabilité, sérénité face aux contraintes du rôle social.',
-      worldView: 'Tout fait partie d\'un ordre naturel plus vaste.',
+      description: 'Philosopher emperor, late Stoic.',
+      modeOfThought: 'Lucidity, responsibility, serenity in the face of social role constraints.',
+      worldView: 'Everything is part of a greater natural order.',
     ),
-    
-    // PHILOSOPHES MODERNES
+
+    // MODERN PHILOSOPHERS
     Philosopher(
       id: 'spinoza',
       name: 'Spinoza',
       iconPath: 'assets/univers_visuel/spinoza.png',
-      description: 'Philosophe rationaliste du XVIIe siècle, penseur de la joie.',
-      modeOfThought: 'Pensée rationnelle, libération par la compréhension des affects.',
-      worldView: 'Dieu = Nature ; tout suit des lois nécessaires.',
+      description: '17th-century rationalist philosopher, thinker of joy.',
+      modeOfThought: 'Rational thought, liberation through understanding affects.',
+      worldView: 'God = Nature; everything follows necessary laws.',
     ),
     Philosopher(
       id: 'kant',
       name: 'Kant',
       iconPath: 'assets/univers_visuel/kant.png',
-      description: 'Philosophe allemand de la raison morale.',
-      modeOfThought: 'Rigueur, devoir, cohérence morale, autonomie.',
-      worldView: 'Le monde doit être compris par la raison et la responsabilité.',
+      description: 'German philosopher of moral reason.',
+      modeOfThought: 'Rigor, duty, moral coherence, autonomy.',
+      worldView: 'The world must be understood through reason and responsibility.',
     ),
     Philosopher(
       id: 'schopenhauer',
       name: 'Schopenhauer',
       iconPath: 'assets/univers_visuel/schopenhauer.png',
-      description: 'Philosophe du pessimisme lucide.',
-      modeOfThought: 'Acceptation, lucidité, estomper le vouloir pour apaiser la souffrance.',
-      worldView: 'Le monde est volonté aveugle, source de souffrance.',
+      description: 'Philosopher of lucid pessimism.',
+      modeOfThought: 'Acceptance, lucidity, subduing the will to ease suffering.',
+      worldView: 'The world is blind will, a source of suffering.',
     ),
     Philosopher(
       id: 'nietzsche',
       name: 'Nietzsche',
       iconPath: 'assets/univers_visuel/nietzsche.png',
-      description: 'Philosophe du dépassement de soi.',
-      modeOfThought: 'Affirmation de soi, critique des illusions, création de sens personnel.',
-      worldView: 'Le monde est chaos créateur, à transformer, pas à subir.',
+      description: 'Philosopher of self-overcoming.',
+      modeOfThought: 'Self-affirmation, critique of illusions, creation of personal meaning.',
+      worldView: 'The world is creative chaos, to be transformed, not endured.',
     ),
-    
-    // EXISTENTIALISTES
+
+    // EXISTENTIALISTS
     Philosopher(
       id: 'kierkegaard',
       name: 'Kierkegaard',
       iconPath: 'assets/univers_visuel/kierkegaard.png',
-      description: 'Précurseur de l\'existentialisme chrétien.',
-      modeOfThought: 'Passion intérieure, authenticité, choix existentiels décisifs.',
-      worldView: 'L\'individu est seul face à lui-même et à ses choix.',
+      description: 'Precursor of Christian existentialism.',
+      modeOfThought: 'Inner passion, authenticity, decisive existential choices.',
+      worldView: 'The individual stands alone before themselves and their choices.',
     ),
     Philosopher(
       id: 'sartre',
       name: 'Sartre',
       iconPath: 'assets/univers_visuel/sartre.png',
-      description: 'Philosophe existentialiste français, penseur de la liberté.',
-      modeOfThought: 'Liberté radicale, engagement, authenticité, responsabilité totale.',
-      worldView: 'L\'existence précède l\'essence ; l\'humain est condamné à être libre.',
+      description: 'French existentialist philosopher, thinker of freedom.',
+      modeOfThought: 'Radical freedom, commitment, authenticity, total responsibility.',
+      worldView: 'Existence precedes essence; humans are condemned to be free.',
     ),
     Philosopher(
       id: 'simone_de_beauvoir',
       name: 'Simone de Beauvoir',
       iconPath: 'assets/univers_visuel/simonedebeauvoir.png',
-      description: 'Philosophe existentialiste et féministe.',
-      modeOfThought: 'Liberté, responsabilité, refus des rôles imposés.',
-      worldView: 'L\'être humain se construit par ses choix.',
+      description: 'Existentialist philosopher and feminist.',
+      modeOfThought: 'Freedom, responsibility, refusal of imposed roles.',
+      worldView: 'Human beings construct themselves through their choices.',
     ),
     Philosopher(
       id: 'camus',
       name: 'Camus',
       iconPath: 'assets/univers_visuel/camus.png',
-      description: 'Philosophe de l\'absurde.',
-      modeOfThought: 'Révolte lucide, dignité, présence au monde, refus du désespoir.',
-      worldView: 'Le monde est dénué de sens objectif ; le sens est à construire.',
+      description: 'Philosopher of the absurd.',
+      modeOfThought: 'Lucid revolt, dignity, presence in the world, refusal of despair.',
+      worldView: 'The world is devoid of objective meaning; meaning must be built.',
     ),
-    
-    // PHILOSOPHES POLITIQUES
+
+    // POLITICAL PHILOSOPHERS
     Philosopher(
       id: 'hannah_arendt',
       name: 'Hannah Arendt',
       iconPath: 'assets/univers_visuel/arendt.png',
-      description: 'Philosophe politique du XXe siècle.',
-      modeOfThought: 'Lucidité civique, vigilance morale, humanisme politique.',
-      worldView: 'Le monde humain se construit par l\'action, le dialogue et la responsabilité.',
+      description: '20th-century political philosopher.',
+      modeOfThought: 'Civic lucidity, moral vigilance, political humanism.',
+      worldView: 'The human world is built through action, dialogue and responsibility.',
     ),
-    
-    // PHILOSOPHES ORIENTAUX
+
+    // EASTERN PHILOSOPHERS
     Philosopher(
       id: 'confucius',
       name: 'Confucius',
       iconPath: 'assets/univers_visuel/confucius.png',
-      description: 'Penseur chinois ; éthique relationnelle ; notions de Ren, Li, Yi, Xiao ; importance de l\'auto-cultivation.',
-      modeOfThought: 'Analyse du cas précis ; exemplarité morale ; harmonisation des relations ; transformation par l\'étude et les rites.',
-      worldView: 'La réalité humaine est un réseau de relations ; l\'harmonie se construit par la vertu individuelle ; le modèle du Junzi comme idéal.',
+      description: 'Chinese thinker; relational ethics; concepts of Ren, Li, Yi, Xiao; importance of self-cultivation.',
+      modeOfThought: 'Case-by-case analysis; moral exemplarity; harmonization of relationships; transformation through study and rites.',
+      worldView: 'Human reality is a network of relationships; harmony is built through individual virtue; the Junzi model as an ideal.',
     ),
   ];
 
@@ -210,16 +210,16 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
     try {
       final profileData = await CompleteAuthService.instance.getProfile();
       final Map<String, dynamic> updatedProfile = Map<String, dynamic>.from(profileData ?? {});
-      
+
       updatedProfile['philosophesSelectionnes'] = _selectedSources.toList();
       updatedProfile['lastUpdated'] = DateTime.now().toIso8601String();
-      
+
       await CompleteAuthService.instance.saveProfile(updatedProfile);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_selectedSources.length} philosophe(s) enregistré(s)'),
+            content: Text('${_selectedSources.length} philosopher(s) saved'),
             backgroundColor: const Color(0xFF10B981),
           ),
         );
@@ -230,7 +230,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -241,7 +241,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Philosophes',
+      title: 'Philosophers',
       showMenuButton: true,
       showPositiveButton: true,
       showBackButton: true,
@@ -264,7 +264,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '${_selectedSources.length} sélectionné(s)',
+                            '${_selectedSources.length} selected',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -319,7 +319,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_selectedSources.length} sélectionné(s)',
+                    '${_selectedSources.length} selected',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -329,9 +329,9 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           Image.asset(
             'assets/univers_visuel/philosophes.png',
             width: 120,
@@ -355,22 +355,22 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
               );
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Text(
-            'Philosophes',
+            'Philosophers',
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0F172A),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
-            'Choisissez les penseurs qui vous inspirent',
+            'Choose the thinkers who inspire you',
             style: GoogleFonts.inter(
               fontSize: 15,
               color: const Color(0xFF64748B),
@@ -384,7 +384,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
 
   Widget _buildSourceCard(Philosopher source) {
     final isSelected = _selectedSources.contains(source.id);
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -462,7 +462,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected 
+                          color: isSelected
                               ? const Color(0xFF10B981)
                               : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(20),
@@ -475,7 +475,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                             if (isSelected)
                               const SizedBox(width: 4),
                             Text(
-                              isSelected ? 'Choisi' : 'Choisir',
+                              isSelected ? 'Selected' : 'Select',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -490,7 +490,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                 ),
               ),
             ),
-            
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -506,7 +506,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     Text(
                       source.description,
                       style: GoogleFonts.inter(
@@ -516,9 +516,9 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Mode de pensée',
+                      'Way of Thinking',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -535,9 +535,9 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Vision du monde',
+                      'Worldview',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -578,7 +578,7 @@ class _SourcesPhilosophesScreenState extends State<SourcesPhilosophesScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Valider mes choix',
+          'Confirm my choices',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

@@ -77,8 +77,6 @@ une image ou un concept issu de la source choisie,
 en lien avec les motifs dominants observés dans l'historique.
 
 ${userPrenom != null && userPrenom.isNotEmpty ? 'Utilise le prénom $userPrenom et le tutoiement.' : 'Utilise le tutoiement.'}
-
-Langue : français
 ''';
   }
 }

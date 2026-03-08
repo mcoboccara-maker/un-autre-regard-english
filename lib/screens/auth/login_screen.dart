@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/user_profile.dart';
 import '../../services/complete_auth_service.dart';
 import '../../services/email_service.dart';
+import '../../services/social_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,20 +17,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  
+
   // Constantes pour le mode invité
   static const String guestEmail = 'invite@unautreregard.app';
   static const String guestPassword = 'invite';
-  
+
   List<String> _existingEmails = [];
   bool _isLoading = false;
   bool _isLoadingGuest = false;
   bool _showExistingAccounts = false;
   bool _obscurePassword = true;
   bool _isNewUser = true;
-  
+
   // 🆕 État pour afficher/masquer le formulaire
   bool _showForm = false;
+  bool _isLoadingSocial = false;
 
   @override
   void initState() {
@@ -58,16 +60,16 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       // Vérifier si le compte invité existe, sinon le créer
       final existingUsers = await CompleteAuthService.instance.getAllUsers();
-      
+
       if (!existingUsers.contains(guestEmail)) {
         print('Création du compte invité...');
         await CompleteAuthService.instance.register(guestEmail, guestPassword);
       }
-      
+
       // Connexion en tant qu'invité
       print('Connexion en mode invité...');
       final success = await CompleteAuthService.instance.login(guestEmail, guestPassword);
-      
+
       if (success) {
         // Effacer l'historique de l'invité à chaque nouvelle connexion
         print('🗑️ Effacement de l\'historique invité...');
@@ -91,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
           await CompleteAuthService.instance.saveProfile(profile);
           print('✅ Sources invité réinitialisées (défauts seront appliqués)');
         }
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -99,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Icon(Icons.check_circle, color: Colors.white),
                   const SizedBox(width: 12),
-                  Text('Bienvenue en mode invité !', style: GoogleFonts.inter()),
+                  Text('Welcome in guest mode!', style: GoogleFonts.inter()),
                 ],
               ),
               backgroundColor: const Color(0xFF10B981),
@@ -107,19 +109,19 @@ class _LoginScreenState extends State<LoginScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
-          
+
           await Future.delayed(const Duration(milliseconds: 500));
           Navigator.pushReplacementNamed(context, '/menu');
         }
       } else {
-        throw Exception('Échec de la connexion invité');
+        throw Exception('Guest login failed');
       }
     } catch (e) {
       print('❌ Erreur mode invité: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e', style: GoogleFonts.inter()),
+            content: Text('Error: $e', style: GoogleFonts.inter()),
             backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -157,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  
+
                   // Bouton retour
                   Row(
                     children: [
@@ -174,23 +176,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 30),
-                  
+
                   // Header simplifié
                   _buildSimpleHeader(),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // ════════════════════════════════════════
                   // 🆕 LES 3 OPTIONS AU MÊME NIVEAU
                   // ════════════════════════════════════════
-                  
+
                   // Option 1 : MODE INVITÉ (carte complète avec rappel)
                   _buildGuestCard(),
-                  
-                  const SizedBox(height: 16),
-                  
+
+                  const SizedBox(height: 20),
+
+                  // ════════════════════════════════════════
+                  // CONNEXION SOCIALE (Google, Apple)
+                  // ════════════════════════════════════════
+                  _buildSocialLoginSection(),
+
+                  const SizedBox(height: 20),
+
                   // Options 2 & 3 : INSCRIPTION et CONNEXION (côte à côte)
                   Row(
                     children: [
@@ -199,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(child: _buildLoginCard()),
                     ],
                   ),
-                  
+
                   // ════════════════════════════════════════
                   // FORMULAIRE (apparaît si inscription ou connexion sélectionné)
                   // ════════════════════════════════════════
@@ -207,13 +216,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 32),
                     _buildFormSection(),
                   ],
-                  
+
                   // Comptes existants
                   if (_showExistingAccounts && !_isNewUser && _showForm) ...[
                     const SizedBox(height: 32),
                     _buildExistingAccountsSection(),
                   ],
-                  
+
                   const SizedBox(height: 32),
                 ],
               ),
@@ -244,12 +253,12 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ).animate().scale(delay: 200.ms),
         ),
-        
+
         const SizedBox(height: 24),
-        
-        // Titre "Bienvenue dans Un Autre Regard" en GRAS
+
+        // Titre "Welcome to Another Perspective" en GRAS
         Text(
-          'Bienvenue dans',
+          'Welcome to',
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w500,
@@ -257,9 +266,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 300.ms),
-        
+
         Text(
-          'Un Autre Regard',
+          'Another Perspective',
           style: GoogleFonts.inter(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -267,11 +276,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.2, end: 0),
-        
+
         const SizedBox(height: 12),
-        
+
         Text(
-          'Choisis comment tu veux commencer',
+          'Choose how you want to get started',
           style: GoogleFonts.inter(
             fontSize: 15,
             color: Colors.white.withOpacity(0.8),
@@ -281,6 +290,293 @@ class _LoginScreenState extends State<LoginScreen> {
         ).animate().fadeIn(delay: 400.ms),
       ],
     );
+  }
+
+  // ════════════════════════════════════════
+  // SECTION CONNEXION SOCIALE
+  // ════════════════════════════════════════
+
+  Widget _buildSocialLoginSection() {
+    return Column(
+      children: [
+        // Divider "or continue with"
+        _buildDividerWithText('or continue with'),
+
+        const SizedBox(height: 16),
+
+        // Bouton Google Sign-In
+        _buildSocialButton(
+          onPressed: (_isLoading || _isLoadingSocial) ? null : _handleGoogleSignIn,
+          label: 'Continue with Google',
+          iconWidget: Image.asset(
+            'assets/univers_visuel/google.png',
+            width: 24,
+            height: 24,
+            errorBuilder: (_, __, ___) => Text(
+              'G',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF4285F4),
+              ),
+            ),
+          ),
+          backgroundColor: Colors.white,
+          textColor: const Color(0xFF1A3A3A),
+          borderColor: const Color(0xFFE0E0E0),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Bouton Facebook Sign-In
+        _buildSocialButton(
+          onPressed: (_isLoading || _isLoadingSocial) ? null : _handleFacebookSignIn,
+          label: 'Continue with Facebook',
+          iconWidget: const Icon(Icons.facebook, color: Colors.white, size: 24),
+          backgroundColor: const Color(0xFF1877F2),
+          textColor: Colors.white,
+          borderColor: const Color(0xFF1877F2),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Bouton Apple Sign-In (iOS/macOS uniquement)
+        FutureBuilder<bool>(
+          future: SocialAuthService.instance.isAppleSignInAvailable(),
+          builder: (context, snapshot) {
+            if (snapshot.data != true) return const SizedBox.shrink();
+            return _buildSocialButton(
+              onPressed: (_isLoading || _isLoadingSocial) ? null : _handleAppleSignIn,
+              label: 'Continue with Apple',
+              iconWidget: const Icon(Icons.apple, color: Colors.white, size: 24),
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+              borderColor: Colors.black,
+            );
+          },
+        ),
+
+        const SizedBox(height: 16),
+
+        // Divider "or with an email"
+        _buildDividerWithText('or with an email'),
+      ],
+    ).animate().fadeIn(delay: 550.ms);
+  }
+
+  Widget _buildSocialButton({
+    required VoidCallback? onPressed,
+    required String label,
+    required Widget iconWidget,
+    required Color backgroundColor,
+    required Color textColor,
+    required Color borderColor,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: borderColor),
+          ),
+          elevation: 0,
+          padding: EdgeInsets.zero,
+        ),
+        child: _isLoadingSocial
+            ? SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: textColor.withValues(alpha: 0.6),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  iconWidget,
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildDividerWithText(String text) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(height: 1, color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(height: 1, color: Colors.white.withValues(alpha: 0.3)),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoadingSocial = true);
+    try {
+      final email = await SocialAuthService.instance.signInWithGoogle();
+      debugPrint('🔍 Google Sign-In résultat: $email');
+      if (email == null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In: no email returned', style: GoogleFonts.inter()),
+            backgroundColor: const Color(0xFFF59E0B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+      if (email != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Google sign-in successful!', style: GoogleFonts.inter()),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) Navigator.pushReplacementNamed(context, '/menu');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google error: $e', style: GoogleFonts.inter()),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingSocial = false);
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    setState(() => _isLoadingSocial = true);
+    try {
+      final email = await SocialAuthService.instance.signInWithApple();
+      if (email != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Apple sign-in successful!', style: GoogleFonts.inter()),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) Navigator.pushReplacementNamed(context, '/menu');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Apple error: $e', style: GoogleFonts.inter()),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingSocial = false);
+    }
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    setState(() => _isLoadingSocial = true);
+    try {
+      final email = await SocialAuthService.instance.signInWithFacebook();
+      if (email == null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Facebook Sign-In: no email returned', style: GoogleFonts.inter()),
+            backgroundColor: const Color(0xFFF59E0B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+      if (email != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Facebook sign-in successful!', style: GoogleFonts.inter()),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) Navigator.pushReplacementNamed(context, '/menu');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Facebook error: $e', style: GoogleFonts.inter()),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingSocial = false);
+    }
   }
 
   /// ════════════════════════════════════════
@@ -352,15 +648,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-              
+
               const SizedBox(width: 16),
-              
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mode Invité',
+                      'Guest Mode',
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -369,7 +665,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Essaie l\'application librement',
+                      'Try the app freely',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: const Color(0xFF5A8A8A),
@@ -380,9 +676,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // ════════════════════════════════════════
           // TEXTE DE RAPPEL (demandé par l'utilisateur)
           // ════════════════════════════════════════
@@ -408,7 +704,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Rappel : dans ce mode tu as accès à toutes les fonctionnalités mais pas de sauvegarde de ton historique de pensées et émotions',
+                    'Note: in this mode you have access to all features but your thought and emotion history will not be saved',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: const Color(0xFF8B7355),
@@ -419,10 +715,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
-          // Bouton "Entrer en tant qu'invité"
+
+          // Bouton "Enter as guest"
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -446,7 +742,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     )
                   : Text(
-                      'Entrer en tant qu\'invité',
+                      'Enter as guest',
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -464,7 +760,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// ════════════════════════════════════════
   Widget _buildCreateAccountCard() {
     final isSelected = _showForm && _isNewUser;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -478,7 +774,7 @@ class _LoginScreenState extends State<LoginScreen> {
           color: isSelected ? const Color(0xFF2E8B7B) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? const Color(0xFF2E8B7B)
                 : const Color(0xFFE0E0E0),
             width: isSelected ? 2 : 1,
@@ -506,7 +802,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Créer un\ncompte',
+              'Create an\naccount',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
@@ -526,7 +822,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// ════════════════════════════════════════
   Widget _buildLoginCard() {
     final isSelected = _showForm && !_isNewUser;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -540,7 +836,7 @@ class _LoginScreenState extends State<LoginScreen> {
           color: isSelected ? const Color(0xFF2E8B7B) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? const Color(0xFF2E8B7B)
                 : const Color(0xFFE0E0E0),
             width: isSelected ? 2 : 1,
@@ -568,7 +864,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Se\nconnecter',
+              'Sign\nIn',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
@@ -613,7 +909,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                _isNewUser ? 'Créer votre compte' : 'Se connecter',
+                _isNewUser ? 'Create your account' : 'Sign In',
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -622,14 +918,14 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Champ Email
           _buildFieldWithIcon(
             iconPath: 'assets/univers_visuel/mail.png',
             fallbackIcon: Icons.email_outlined,
-            label: 'Adresse email',
+            label: 'Email address',
             child: TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
@@ -638,7 +934,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: const Color(0xFF1A3A3A),
               ),
               decoration: InputDecoration(
-                hintText: 'votre.email@exemple.com',
+                hintText: 'your.email@example.com',
                 hintStyle: GoogleFonts.inter(
                   color: const Color(0xFF94A3B8),
                   fontSize: 14,
@@ -661,23 +957,23 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Veuillez saisir votre email';
+                  return 'Please enter your email';
                 }
                 if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                  return 'Veuillez saisir un email valide';
+                  return 'Please enter a valid email';
                 }
                 return null;
               },
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Champ Mot de passe
           _buildFieldWithIcon(
             iconPath: 'assets/univers_visuel/password.png',
             fallbackIcon: Icons.lock_outlined,
-            label: 'Mot de passe',
+            label: 'Password',
             child: TextFormField(
               controller: _passwordController,
               obscureText: _obscurePassword,
@@ -686,7 +982,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: const Color(0xFF1A3A3A),
               ),
               decoration: InputDecoration(
-                hintText: _isNewUser ? 'Créez un mot de passe sécurisé' : 'Votre mot de passe',
+                hintText: _isNewUser ? 'Create a secure password' : 'Your password',
                 hintStyle: GoogleFonts.inter(
                   color: const Color(0xFF94A3B8),
                   fontSize: 14,
@@ -716,17 +1012,17 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Veuillez saisir votre mot de passe';
+                  return 'Please enter your password';
                 }
                 if (_isNewUser && value.length < 6) {
-                  return 'Le mot de passe doit contenir au moins 6 caractères';
+                  return 'Password must be at least 6 characters';
                 }
                 return null;
               },
             ),
           ),
 
-          // Lien "Mot de passe oublié ?" (seulement en mode connexion)
+          // Lien "Forgot password?" (seulement en mode connexion)
           if (!_isNewUser) ...[
             const SizedBox(height: 12),
             Align(
@@ -734,7 +1030,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: GestureDetector(
                 onTap: _handleForgotPassword,
                 child: Text(
-                  'Mot de passe oublié ?',
+                  'Forgot password?',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: const Color(0xFF2E8B7B),
@@ -772,7 +1068,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     )
                   : Text(
-                      _isNewUser ? 'Créer mon compte' : 'Se connecter',
+                      _isNewUser ? 'Create my account' : 'Sign In',
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -809,15 +1105,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                fallbackIcon, 
-                color: const Color(0xFF2E8B7B), 
+                fallbackIcon,
+                color: const Color(0xFF2E8B7B),
                 size: 28,
               ),
             );
           },
         ),
         const SizedBox(width: 12),
-        
+
         // Colonne droite : label + champ
         Expanded(
           child: Column(
@@ -853,7 +1149,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(width: 12),
             Text(
-              'Comptes existants',
+              'Existing accounts',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF64748B),
@@ -869,7 +1165,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        
+
         ...(_existingEmails.map((email) => Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: InkWell(
@@ -930,7 +1226,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Email sélectionné : $email',
+          'Email selected: $email',
           style: GoogleFonts.inter(),
         ),
         backgroundColor: const Color(0xFF2E8B7B),
@@ -955,7 +1251,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Veuillez d\'abord saisir votre adresse email',
+                  'Please enter your email address first',
                   style: GoogleFonts.inter(),
                 ),
               ),
@@ -969,6 +1265,34 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    // Vérifier si c'est un compte social (pas de mot de passe à réinitialiser)
+    final authMethod = await CompleteAuthService.instance.getAuthMethod(email);
+    if (authMethod != AuthMethod.password) {
+      final providerName = authMethod == AuthMethod.google ? 'Google' : 'Apple';
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'This account uses $providerName sign-in. No password to reset.',
+                    style: GoogleFonts.inter(),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFF59E0B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+      return;
+    }
+
     // Afficher dialogue de confirmation
     final confirmed = await showDialog<bool>(
       context: context,
@@ -979,20 +1303,20 @@ class _LoginScreenState extends State<LoginScreen> {
             const Icon(Icons.lock_reset, color: Color(0xFF2E8B7B)),
             const SizedBox(width: 12),
             Text(
-              'Mot de passe oublié',
+              'Forgot Password',
               style: GoogleFonts.inter(fontWeight: FontWeight.w600),
             ),
           ],
         ),
         content: Text(
-          'Un nouveau mot de passe temporaire sera envoyé à :\n\n$email\n\nVoulez-vous continuer ?',
+          'A temporary password will be sent to:\n\n$email\n\nDo you want to continue?',
           style: GoogleFonts.inter(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Annuler',
+              'Cancel',
               style: GoogleFonts.inter(color: Colors.grey),
             ),
           ),
@@ -1005,7 +1329,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             child: Text(
-              'Envoyer',
+              'Send',
               style: GoogleFonts.inter(color: Colors.white),
             ),
           ),
@@ -1040,7 +1364,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Aucun compte trouvé avec cet email',
+                    'No account found with this email',
                     style: GoogleFonts.inter(),
                   ),
                 ),
@@ -1077,7 +1401,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Erreur: ${result.message}',
+                    'Error: ${result.message}',
                     style: GoogleFonts.inter(),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -1097,7 +1421,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pop(context); // Fermer le loader
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: $e', style: GoogleFonts.inter()),
+          content: Text('Error: $e', style: GoogleFonts.inter()),
           backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1125,7 +1449,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Définir un nouveau mot de passe',
+                  'Set a new password',
                   style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
               ),
@@ -1137,21 +1461,21 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Un mot de passe temporaire a été envoyé à $email',
+                  'A temporary password has been sent to $email',
                   style: GoogleFonts.inter(fontSize: 13, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 20),
 
                 // Champ mot de passe temporaire
                 Text(
-                  'Mot de passe temporaire',
+                  'Temporary password',
                   style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: tempPasswordController,
                   decoration: InputDecoration(
-                    hintText: 'Entrez le mot de passe reçu par email',
+                    hintText: 'Enter the password received by email',
                     hintStyle: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1164,7 +1488,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Champ nouveau mot de passe
                 Text(
-                  'Nouveau mot de passe',
+                  'New password',
                   style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 6),
@@ -1172,7 +1496,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: newPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    hintText: 'Choisissez votre nouveau mot de passe',
+                    hintText: 'Choose your new password',
                     hintStyle: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -1197,7 +1521,7 @@ class _LoginScreenState extends State<LoginScreen> {
             TextButton(
               onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
               child: Text(
-                'Annuler',
+                'Cancel',
                 style: GoogleFonts.inter(color: Colors.grey),
               ),
             ),
@@ -1210,14 +1534,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       if (tempPwd.isEmpty || newPwd.isEmpty) {
                         setDialogState(() {
-                          errorMessage = 'Veuillez remplir les deux champs';
+                          errorMessage = 'Please fill in both fields';
                         });
                         return;
                       }
 
                       if (newPwd.length < 4) {
                         setDialogState(() {
-                          errorMessage = 'Le nouveau mot de passe doit faire au moins 4 caractères';
+                          errorMessage = 'New password must be at least 4 characters';
                         });
                         return;
                       }
@@ -1241,7 +1565,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
-                                      'Mot de passe modifié avec succès !',
+                                      'Password changed successfully!',
                                       style: GoogleFonts.inter(),
                                     ),
                                   ),
@@ -1257,7 +1581,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       } else {
                         setDialogState(() {
                           isLoading = false;
-                          errorMessage = 'Mot de passe temporaire incorrect';
+                          errorMessage = 'Incorrect temporary password';
                         });
                       }
                     },
@@ -1277,7 +1601,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     )
                   : Text(
-                      'Valider',
+                      'Confirm',
                       style: GoogleFonts.inter(color: Colors.white),
                     ),
             ),
@@ -1299,17 +1623,17 @@ class _LoginScreenState extends State<LoginScreen> {
       bool success;
       if (_isNewUser) {
         success = await CompleteAuthService.instance.register(email, password);
-        
+
         if (success) {
           await Future.delayed(const Duration(milliseconds: 500));
-          
+
           final profile = UserProfile.empty().copyWith(
             email: email,
             lastUpdated: DateTime.now(),
           );
-          
+
           await CompleteAuthService.instance.saveProfile(profile.toJson());
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1317,7 +1641,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.white),
                     const SizedBox(width: 12),
-                    Text('Compte créé avec succès !', style: GoogleFonts.inter()),
+                    Text('Account created successfully!', style: GoogleFonts.inter()),
                   ],
                 ),
                 backgroundColor: const Color(0xFF10B981),
@@ -1325,7 +1649,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             );
-            
+
             await Future.delayed(const Duration(milliseconds: 1000));
             Navigator.pushReplacementNamed(context, '/menu');
           }
@@ -1337,7 +1661,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Icon(Icons.info, color: Colors.white),
                     const SizedBox(width: 12),
-                    Text('Cet email est déjà utilisé', style: GoogleFonts.inter()),
+                    Text('This email is already in use', style: GoogleFonts.inter()),
                   ],
                 ),
                 backgroundColor: const Color(0xFFF59E0B),
@@ -1350,10 +1674,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         success = await CompleteAuthService.instance.login(email, password);
-        
+
         if (success) {
           await Future.delayed(const Duration(milliseconds: 500));
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1361,7 +1685,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.white),
                     const SizedBox(width: 12),
-                    Text('Connexion réussie !', style: GoogleFonts.inter()),
+                    Text('Sign-in successful!', style: GoogleFonts.inter()),
                   ],
                 ),
                 backgroundColor: const Color(0xFF10B981),
@@ -1369,7 +1693,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             );
-            
+
             await Future.delayed(const Duration(milliseconds: 1000));
             Navigator.pushReplacementNamed(context, '/menu');
           }
@@ -1381,7 +1705,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Icon(Icons.error_outline, color: Colors.white),
                     const SizedBox(width: 12),
-                    Text('Email ou mot de passe incorrect', style: GoogleFonts.inter()),
+                    Text('Incorrect email or password', style: GoogleFonts.inter()),
                   ],
                 ),
                 backgroundColor: const Color(0xFFEF4444),
@@ -1396,7 +1720,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e', style: GoogleFonts.inter()),
+            content: Text('Error: $e', style: GoogleFonts.inter()),
             backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

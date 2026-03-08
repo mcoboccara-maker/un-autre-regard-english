@@ -525,7 +525,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
     final spotSize = screenWidth * 1.2;
 
     return AppScaffold(
-      title: 'Tes perspectives',
+      title: 'Your perspectives',
       headerIconPath: 'assets/univers_visuel/perspectives.png',
       showTitle: false,
       showBackButton: false,
@@ -682,7 +682,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Préparation de la perspective...',
+                  'Preparing the perspective...',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     color: Colors.white70,
@@ -757,7 +757,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                   const BrainGestationWidget(isComplete: false),
                   const SizedBox(height: 24),
                   Text(
-                    'Préparation de l\'éclairage...',
+                    'Preparing the insight...',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       color: Colors.white70,
@@ -873,7 +873,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 errorBuilder: (_, __, ___) => const Icon(Icons.home, size: 18),
               ),
               label: Text(
-                'Retour au menu',
+                'Back to menu',
                 style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
               ),
               style: OutlinedButton.styleFrom(
@@ -929,8 +929,8 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             Flexible(
               child: Text(
                 count == 1 
-                    ? 'Nouvelle perspective disponible'
-                    : 'Nouvelles perspectives disponibles',
+                    ? 'New perspective available'
+                    : 'New perspectives available',
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -1046,8 +1046,8 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
               Flexible(
                 child: Text(
                   _isComplete 
-                      ? '$revealedCount/$completedCount perspectives lues'
-                      : 'Génération... $completedCount/$totalCount',
+                      ? '$revealedCount/$completedCount perspectives read'
+                      : 'Generating... $completedCount/$totalCount',
                   style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 13,
@@ -1065,8 +1065,8 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
         // Titre
         Text(
           _isComplete 
-              ? 'Voici différents regards sur ta pensée'
-              : 'Génération en cours...',
+              ? 'Here are different perspectives on your thought'
+              : 'Generation in progress...',
           style: GoogleFonts.cormorantGaramond(
             fontSize: 22,
             fontWeight: FontWeight.w600,
@@ -1078,7 +1078,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
         if (_isComplete) ...[
           const SizedBox(height: 8),
           Text(
-            'Tu peux ajouter une note personnelle et sauvegarder',
+            'You can add a personal note and save',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF64748B),
@@ -1171,7 +1171,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Réflexion en gestation...',
+                    'Reflection in progress...',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: const Color(0xFF6366F1),
@@ -1219,7 +1219,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'Toutes les perspectives sont générées',
+              'All perspectives have been generated',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF2E8B7B),
@@ -1229,7 +1229,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Tu peux sauvegarder tes éclairages',
+              'You can save your insights',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF64748B),
@@ -1354,7 +1354,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                         ),
                       ),
                       Text(
-                        'Éclairage IA',
+                        'AI Insight',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: Colors.white70,
@@ -1421,7 +1421,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                       Icon(Icons.auto_awesome, size: 16, color: approach.color),
                       const SizedBox(width: 8),
                       Text(
-                        'Approfondissement',
+                        'Deepening',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1509,7 +1509,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                       size: 18,
                     ),
               label: Text(
-                isDeepening ? 'En cours...' : (hasDeepened ? 'Approfondi' : 'Approfondir'),
+                isDeepening ? 'In progress...' : (hasDeepened ? 'Deepened' : 'Deepen'),
                 style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               style: ElevatedButton.styleFrom(
@@ -1536,7 +1536,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 size: 18,
               ),
               label: Text(
-                isSaved ? 'Sauvegardé' : 'Sauvegarder',
+                isSaved ? 'Saved' : 'Save',
                 style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               style: OutlinedButton.styleFrom(
@@ -1599,7 +1599,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erreur lors de l\'approfondissement'),
+            content: Text('Error during deepening'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -1652,7 +1652,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('${approach.name} sauvegardé'),
+                  child: Text('${approach.name} saved'),
                 ),
               ],
             ),
@@ -1669,7 +1669,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur de sauvegarde: $e'),
+            content: Text('Save error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1696,7 +1696,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
               Icon(Icons.edit_note, size: 16, color: const Color(0xFF64748B)),
               const SizedBox(width: 6),
               Text(
-                'Ma note personnelle (optionnel)',
+                'My personal note (optional)',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -1748,7 +1748,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           ),
           const SizedBox(width: 8),
           Text(
-            'Écouter',
+            'Listen',
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -1759,7 +1759,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
 
           // Bouton "Texte complet"
           _buildVoiceButton(
-            label: isSpeakingFull ? 'Stop' : 'Complet',
+            label: isSpeakingFull ? 'Stop' : 'Full',
             icon: isSpeakingFull ? Icons.stop_rounded : Icons.play_arrow_rounded,
             isActive: isSpeakingFull,
             color: approach.color,
@@ -1772,7 +1772,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           _buildVoiceButton(
             label: isGenerating
                 ? '...'
-                : (isSpeakingSynthesis ? 'Stop' : 'Synthèse'),
+                : (isSpeakingSynthesis ? 'Stop' : 'Summary'),
             icon: isGenerating
                 ? Icons.hourglass_top_rounded
                 : (isSpeakingSynthesis ? Icons.stop_rounded : Icons.auto_awesome),
@@ -1938,7 +1938,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
   Widget _buildCommentField(ApproachConfig approach, String? currentComment) {
     return TextField(
       decoration: InputDecoration(
-        hintText: 'Ma note personnelle sur cet éclairage...',
+        hintText: 'My personal note on this insight...',
         hintStyle: GoogleFonts.inter(
           fontSize: 13,
           color: const Color(0xFF94A3B8),
@@ -1993,7 +1993,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Génération ${approach.name}...',
+              'Generating ${approach.name}...',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: approach.color,
@@ -2029,7 +2029,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             ),
           ),
           Text(
-            'En attente',
+            'Waiting',
             style: GoogleFonts.inter(
               fontSize: 12,
               color: const Color(0xFF94A3B8),
@@ -2066,7 +2066,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                   ),
                 ),
                 Text(
-                  'Erreur de génération',
+                  'Generation error',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.red.withOpacity(0.7),
@@ -2117,10 +2117,10 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
             const SizedBox(width: 10),
             Text(
               allSaved
-                  ? 'Tout sauvegardé ✓'
+                  ? 'All saved ✓'
                   : _isSendingEmail
-                      ? 'Sauvegarde en cours...'
-                      : 'Tout sauvegarder',
+                      ? 'Saving...'
+                      : 'Save all',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
@@ -2188,7 +2188,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${_responses.length} éclairages sauvegardés',
+                    '${_responses.length} insights saved',
                   ),
                 ),
               ],
@@ -2210,7 +2210,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur de sauvegarde: $e'),
+            content: Text('Save error: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -2236,7 +2236,7 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Erreur de génération',
+                  'Generation error',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -2248,14 +2248,14 @@ class _StreamingResultsScreenState extends State<StreamingResultsScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            _errorMessage ?? 'Erreur inconnue',
+            _errorMessage ?? 'Unknown error',
             style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF0F172A)),
           ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _startGeneration,
             icon: const Icon(Icons.refresh),
-            label: const Text('Réessayer'),
+            label: const Text('Retry'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,

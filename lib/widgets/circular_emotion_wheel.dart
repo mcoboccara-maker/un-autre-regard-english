@@ -130,7 +130,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ma roue emotionnelle',
+                  'My emotional wheel',
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 18,
@@ -208,7 +208,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
     return Column(
       children: [
         Text(
-          'MON ÉTAT',
+          'MY EMOTIONAL',
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -217,7 +217,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
           ),
         ),
         Text(
-          'ÉMOTIONNEL',
+          'STATE',
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -241,8 +241,8 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
-      'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -257,7 +257,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
         height: 250,
         alignment: Alignment.center,
         child: Text(
-          'Aucune emotion selectionnee',
+          'No emotion selected',
           style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
         ),
       );
@@ -443,7 +443,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
         height: 200,
         alignment: Alignment.center,
         child: Text(
-          'Aucune emotion selectionnee',
+          'No emotion selected',
           style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
         ),
       );
@@ -500,7 +500,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
         // Colonne Appui (ressources)
         Expanded(
           child: _buildScoreColumn(
-            title: 'Appui',
+            title: 'Support',
             iconPath: 'assets/univers_visuel/appui.png',
             color: const Color(0xFF10B981),
             emotions: _resourceEmotions.take(3).toList(),
@@ -555,7 +555,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
           const SizedBox(height: 6),
           if (emotions.isEmpty)
             Text(
-              'Aucune',
+              'None',
               style: GoogleFonts.poppins(
                 fontSize: 10,
                 color: Colors.grey,
@@ -602,7 +602,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Partagé depuis ',
+          'Shared from ',
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: Colors.white60,
@@ -634,7 +634,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
-            'Details emotionnels',
+            'Emotional details',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -759,7 +759,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
                         Divider(color: emotion.color.withOpacity(0.3)),
                         const SizedBox(height: 8),
                         Text(
-                          'Nuances ressenties :',
+                          'Felt nuances:',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -819,7 +819,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
             )
           : const Icon(Icons.share),
       label: Text(
-        _isSharing ? 'Preparation...' : 'Partager ma roue emotionnelle',
+        _isSharing ? 'Preparing...' : 'Share my emotional wheel',
         style: GoogleFonts.poppins(
           fontWeight: FontWeight.w600,
         ),
@@ -842,7 +842,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Le partage n\'est disponible que sur mobile (Android/iOS)',
+              'Sharing is only available on mobile (Android/iOS)',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: Colors.orange,
@@ -866,7 +866,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
 
       // Sauvegarder temporairement
       final tempDir = await getTemporaryDirectory();
-      final fileName = 'etat_emotionnel_${widget.date.day}_${widget.date.month}_${widget.date.year}.png';
+      final fileName = 'emotional_state_${widget.date.day}_${widget.date.month}_${widget.date.year}.png';
       final file = await File('${tempDir.path}/$fileName').create();
       await file.writeAsBytes(pngBytes);
 
@@ -881,7 +881,7 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Roue emotionnelle partagee !',
+              'Emotional wheel shared!',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: Colors.green,
@@ -900,12 +900,12 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
               children: [
                 Icon(Icons.error, color: Colors.red),
                 SizedBox(width: 8),
-                Expanded(child: Text('Erreur de partage')),
+                Expanded(child: Text('Sharing error')),
               ],
             ),
             content: SingleChildScrollView(
               child: SelectableText(
-                'Détails:\n$e\n\nStack:\n$stackTrace',
+                'Details:\n$e\n\nStack:\n$stackTrace',
                 style: GoogleFonts.poppins(fontSize: 12),
               ),
             ),

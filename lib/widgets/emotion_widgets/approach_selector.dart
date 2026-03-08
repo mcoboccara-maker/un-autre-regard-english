@@ -39,14 +39,14 @@ class _ApproachSelectorState extends State<ApproachSelector>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Choisis tes perspectives',
+                'Choose your perspectives',
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                '${_selectedApproaches.length} approches sélectionnées',
+                '${_selectedApproaches.length} approaches selected',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: Colors.grey[600],
@@ -63,9 +63,9 @@ class _ApproachSelectorState extends State<ApproachSelector>
           unselectedLabelColor: Colors.grey,
           indicatorColor: Colors.blue,
           tabs: const [
-            Tab(text: 'Spirituelles'),
-            Tab(text: 'Psychologiques'),
-            Tab(text: 'Littéraires'),
+            Tab(text: 'Spiritual'),
+            Tab(text: 'Psychological'),
+            Tab(text: 'Literary'),
           ],
         ),
         

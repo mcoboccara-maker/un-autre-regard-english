@@ -34,18 +34,18 @@ class OrientationConfig {
   // ========================================
   // 📋 LES 14 QUESTIONS
   // ========================================
-  
+
   static const List<OrientationQuestion> questions = [
     // ----------------------------------------
     // Q1 - MONDE INTÉRIEUR
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q1',
-      theme: 'Ton monde intérieur',
+      theme: 'Your inner world',
       options: [
         OrientationOption(
           id: 'serenite',
-          label: 'SÉRÉNITÉ',
+          label: 'SERENITY',
           imagePath: 'assets/univers_visuel/orientation/Q1serenite.png',
           sourceScores: {
             // Philosophes
@@ -65,7 +65,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'intensite',
-          label: 'INTENSITÉ',
+          label: 'INTENSITY',
           imagePath: 'assets/univers_visuel/orientation/Q1intensite.png',
           sourceScores: {
             // Philosophes
@@ -110,11 +110,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q2',
-      theme: 'Ton énergie dominante',
+      theme: 'Your dominant energy',
       options: [
         OrientationOption(
           id: 'fluide',
-          label: 'FLUIDE',
+          label: 'FLUID',
           imagePath: 'assets/univers_visuel/orientation/Q2fluide.png',
           sourceScores: {
             // Philosophes
@@ -134,7 +134,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'structuree',
-          label: 'STRUCTURÉE',
+          label: 'STRUCTURED',
           imagePath: 'assets/univers_visuel/orientation/Q2structuree.png',
           sourceScores: {
             // Philosophes
@@ -154,7 +154,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'dispersee',
-          label: 'DISPERSÉE',
+          label: 'SCATTERED',
           imagePath: 'assets/univers_visuel/orientation/Q2dispersee.png',
           sourceScores: {
             // Philosophes
@@ -179,11 +179,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q3',
-      theme: 'Quand tu doutes',
+      theme: 'When you doubt',
       options: [
         OrientationOption(
           id: 'recentre',
-          label: 'RECENTRÉ',
+          label: 'REFOCUSED',
           imagePath: 'assets/univers_visuel/orientation/Q3recentre.png',
           sourceScores: {
             // Philosophes
@@ -248,11 +248,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q4',
-      theme: 'Ton style de pensée',
+      theme: 'Your thinking style',
       options: [
         OrientationOption(
           id: 'geometrique',
-          label: 'GÉOMÉTRIQUE',
+          label: 'GEOMETRIC',
           imagePath: 'assets/univers_visuel/orientation/Q4geometrique.png',
           sourceScores: {
             // Philosophes
@@ -271,7 +271,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'naturel',
-          label: 'NATUREL',
+          label: 'NATURAL',
           imagePath: 'assets/univers_visuel/orientation/Q4naturel.png',
           sourceScores: {
             // Philosophes
@@ -291,7 +291,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'deforme',
-          label: 'DÉFORMÉ',
+          label: 'DISTORTED',
           imagePath: 'assets/univers_visuel/orientation/Q4deforme.png',
           sourceScores: {
             // Philosophes
@@ -316,11 +316,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q5',
-      theme: 'Ton rapport aux autres',
+      theme: 'Your relationship with others',
       options: [
         OrientationOption(
           id: 'humanisme',
-          label: 'HUMANISME',
+          label: 'HUMANISM',
           imagePath: 'assets/univers_visuel/orientation/Q5humanisme.png',
           sourceScores: {
             // Philosophes
@@ -340,7 +340,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'seule',
-          label: 'SEUL(E)',
+          label: 'ALONE',
           imagePath: 'assets/univers_visuel/orientation/Q5seule.png',
           sourceScores: {
             // Philosophes
@@ -360,7 +360,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'cynisme',
-          label: 'CYNISME',
+          label: 'CYNICISM',
           imagePath: 'assets/univers_visuel/orientation/Q5Cynisme.png',
           sourceScores: {
             // Philosophes
@@ -383,11 +383,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q6',
-      theme: 'Ton rapport aux émotions',
+      theme: 'Your relationship with emotions',
       options: [
         OrientationOption(
           id: 'pulsation',
-          label: 'PULSATION DOUCE',
+          label: 'GENTLE PULSE',
           imagePath: 'assets/univers_visuel/orientation/Q6pulsationdouce.png',
           sourceScores: {
             // Philosophes
@@ -406,7 +406,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'mecanique',
-          label: 'MÉCANIQUE',
+          label: 'MECHANICAL',
           imagePath: 'assets/univers_visuel/orientation/Q6mecanique.png',
           sourceScores: {
             // Philosophes
@@ -425,7 +425,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'resistance',
-          label: 'RÉSISTANCE',
+          label: 'RESISTANCE',
           imagePath: 'assets/univers_visuel/orientation/Q6resistance.png',
           sourceScores: {
             // Philosophes
@@ -450,11 +450,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q7',
-      theme: 'Le style qui te parle',
+      theme: 'The style that speaks to you',
       options: [
         OrientationOption(
           id: 'symbolisme',
-          label: 'SYMBOLISME',
+          label: 'SYMBOLISM',
           imagePath: 'assets/univers_visuel/orientation/Q7symbolisme.png',
           sourceScores: {
             // Philosophes
@@ -471,7 +471,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'surrealisme',
-          label: 'SURRÉALISME',
+          label: 'SURREALISM',
           imagePath: 'assets/univers_visuel/orientation/Q7surrealisme.png',
           sourceScores: {
             // Philosophes
@@ -489,7 +489,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'classicisme',
-          label: 'CLASSICISME',
+          label: 'CLASSICISM',
           imagePath: 'assets/univers_visuel/orientation/Q7classicisme.png',
           sourceScores: {
             // Philosophes
@@ -513,11 +513,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q8',
-      theme: 'Comment tu comprends le monde',
+      theme: 'How you understand the world',
       options: [
         OrientationOption(
           id: 'harmonie',
-          label: 'HARMONIE',
+          label: 'HARMONY',
           imagePath: 'assets/univers_visuel/orientation/Q8harmonie.png',
           sourceScores: {
             // Philosophes
@@ -535,7 +535,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'questionnement',
-          label: 'QUESTIONNEMENT',
+          label: 'QUESTIONING',
           imagePath: 'assets/univers_visuel/orientation/Q8questionnement.png',
           sourceScores: {
             // Philosophes
@@ -553,7 +553,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'pluralite',
-          label: 'PLURALITÉ',
+          label: 'PLURALITY',
           imagePath: 'assets/univers_visuel/orientation/Q8pluralite.png',
           sourceScores: {
             // Philosophes
@@ -577,11 +577,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q9',
-      theme: 'Comment tu comprends les choses',
+      theme: 'How you understand things',
       options: [
         OrientationOption(
           id: 'deduction',
-          label: 'DÉDUCTION',
+          label: 'DEDUCTION',
           imagePath: 'assets/univers_visuel/orientation/Q9deduction.png',
           sourceScores: {
             // Philosophes
@@ -599,7 +599,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'ressenti',
-          label: 'RESSENTI',
+          label: 'FEELING',
           imagePath: 'assets/univers_visuel/orientation/Q9ressenti.png',
           sourceScores: {
             // Philosophes
@@ -619,7 +619,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'holistique',
-          label: 'HOLISTIQUE',
+          label: 'HOLISTIC',
           imagePath: 'assets/univers_visuel/orientation/Q9holistique.png',
           sourceScores: {
             // Philosophes
@@ -643,11 +643,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q10',
-      theme: 'Ta relation au temps',
+      theme: 'Your relationship with time',
       options: [
         OrientationOption(
           id: 'analyse',
-          label: 'ANALYSE',
+          label: 'ANALYSIS',
           imagePath: 'assets/univers_visuel/orientation/Q10analyse.png',
           sourceScores: {
             // Philosophes
@@ -666,7 +666,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'connexion',
-          label: 'CONNEXION SENSIBLE',
+          label: 'SENSITIVE CONNECTION',
           imagePath: 'assets/univers_visuel/orientation/Q10connexionsensible.png',
           sourceScores: {
             // Philosophes
@@ -685,7 +685,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'verite_brute',
-          label: 'VÉRITÉ BRUTE',
+          label: 'RAW TRUTH',
           imagePath: 'assets/univers_visuel/orientation/Q10veritebrute.png',
           sourceScores: {
             // Philosophes
@@ -711,11 +711,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q11',
-      theme: 'Face à une pensée qui te fait souffrir',
+      theme: 'Facing a thought that makes you suffer',
       options: [
         OrientationOption(
           id: 'questionner',
-          label: 'QUESTIONNER',
+          label: 'QUESTION',
           imagePath: 'assets/univers_visuel/orientation/Q11questionner.png',
           sourceScores: {
             // Philosophes
@@ -731,7 +731,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'origine',
-          label: 'ORIGINE',
+          label: 'ORIGIN',
           imagePath: 'assets/univers_visuel/orientation/Q11origine.png',
           sourceScores: {
             // Philosophes
@@ -747,7 +747,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'qui_parle',
-          label: 'QUI PARLE',
+          label: 'WHO SPEAKS',
           imagePath: 'assets/univers_visuel/orientation/Q11quisparle.png',
           sourceScores: {
             // Philosophes
@@ -769,11 +769,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q12',
-      theme: 'Le type d\'histoires qui te captivent',
+      theme: 'The type of stories that captivate you',
       options: [
         OrientationOption(
           id: 'quete',
-          label: 'QUÊTES ÉPIQUES',
+          label: 'EPIC QUESTS',
           imagePath: 'assets/univers_visuel/orientation/Q12quete.png',
           sourceScores: {
             // Philosophes
@@ -790,7 +790,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'futur',
-          label: 'FUTURS POSSIBLES',
+          label: 'POSSIBLE FUTURES',
           imagePath: 'assets/univers_visuel/orientation/Q12futur.png',
           sourceScores: {
             // Philosophes
@@ -807,7 +807,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'miroirs',
-          label: 'JEUX DE MIROIRS',
+          label: 'MIRROR GAMES',
           imagePath: 'assets/univers_visuel/orientation/Q12miroirs.png',
           sourceScores: {
             // Philosophes
@@ -830,11 +830,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q13',
-      theme: 'Comment tu décides ce qui est bien',
+      theme: 'How you decide what is right',
       options: [
         OrientationOption(
           id: 'efficacite',
-          label: 'EFFICACITÉ',
+          label: 'EFFICIENCY',
           imagePath: 'assets/univers_visuel/orientation/Q13efficace.png',
           sourceScores: {
             // Philosophes
@@ -851,7 +851,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'systeme',
-          label: 'SYSTÈME',
+          label: 'SYSTEM',
           imagePath: 'assets/univers_visuel/orientation/Q13systeme.png',
           sourceScores: {
             // Philosophes
@@ -868,7 +868,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'harmonie_rel',
-          label: 'HARMONIE',
+          label: 'HARMONY',
           imagePath: 'assets/univers_visuel/orientation/Q13harmonie.png',
           sourceScores: {
             // Philosophes
@@ -892,11 +892,11 @@ class OrientationConfig {
     // ----------------------------------------
     OrientationQuestion(
       id: 'Q14',
-      theme: 'Face à l\'angoisse existentielle',
+      theme: 'Facing existential anguish',
       options: [
         OrientationOption(
           id: 'saut',
-          label: 'SAUTER',
+          label: 'LEAP',
           imagePath: 'assets/univers_visuel/orientation/Q14saut.png',
           sourceScores: {
             // Philosophes
@@ -914,7 +914,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'obscurite',
-          label: 'OBSCURITÉ',
+          label: 'DARKNESS',
           imagePath: 'assets/univers_visuel/orientation/Q14obscurite.png',
           sourceScores: {
             // Philosophes
@@ -931,7 +931,7 @@ class OrientationConfig {
         ),
         OrientationOption(
           id: 'force',
-          label: 'FORCE',
+          label: 'STRENGTH',
           imagePath: 'assets/univers_visuel/orientation/Q14force.png',
           sourceScores: {
             // Philosophes
@@ -955,16 +955,16 @@ class OrientationConfig {
   // ========================================
   // 📊 TOUTES LES SOURCES (pour le calcul)
   // ========================================
-  
+
   static const Map<String, SourceInfo> allSources = {
     // PHILOSOPHES (17)
-    'socrate': SourceInfo(id: 'socrate', name: 'Socrate', category: 'philosophe'),
-    'platon': SourceInfo(id: 'platon', name: 'Platon', category: 'philosophe'),
-    'aristote': SourceInfo(id: 'aristote', name: 'Aristote', category: 'philosophe'),
-    'epicure': SourceInfo(id: 'epicure', name: 'Épicure', category: 'philosophe'),
-    'seneque': SourceInfo(id: 'seneque', name: 'Sénèque', category: 'philosophe'),
-    'epictete': SourceInfo(id: 'epictete', name: 'Épictète', category: 'philosophe'),
-    'marc_aurele': SourceInfo(id: 'marc_aurele', name: 'Marc Aurèle', category: 'philosophe'),
+    'socrate': SourceInfo(id: 'socrate', name: 'Socrates', category: 'philosophe'),
+    'platon': SourceInfo(id: 'platon', name: 'Plato', category: 'philosophe'),
+    'aristote': SourceInfo(id: 'aristote', name: 'Aristotle', category: 'philosophe'),
+    'epicure': SourceInfo(id: 'epicure', name: 'Epicurus', category: 'philosophe'),
+    'seneque': SourceInfo(id: 'seneque', name: 'Seneca', category: 'philosophe'),
+    'epictete': SourceInfo(id: 'epictete', name: 'Epictetus', category: 'philosophe'),
+    'marc_aurele': SourceInfo(id: 'marc_aurele', name: 'Marcus Aurelius', category: 'philosophe'),
     'spinoza': SourceInfo(id: 'spinoza', name: 'Spinoza', category: 'philosophe'),
     'kant': SourceInfo(id: 'kant', name: 'Kant', category: 'philosophe'),
     'schopenhauer': SourceInfo(id: 'schopenhauer', name: 'Schopenhauer', category: 'philosophe'),
@@ -975,57 +975,57 @@ class OrientationConfig {
     'camus': SourceInfo(id: 'camus', name: 'Camus', category: 'philosophe'),
     'hannah_arendt': SourceInfo(id: 'hannah_arendt', name: 'Hannah Arendt', category: 'philosophe'),
     'confucius': SourceInfo(id: 'confucius', name: 'Confucius', category: 'philosophe'),
-    'diogene': SourceInfo(id: 'diogene', name: 'Diogène', category: 'philosophe'),
+    'diogene': SourceInfo(id: 'diogene', name: 'Diogenes', category: 'philosophe'),
     'montaigne': SourceInfo(id: 'montaigne', name: 'Montaigne', category: 'philosophe'),
     'rousseau': SourceInfo(id: 'rousseau', name: 'Rousseau', category: 'philosophe'),
     'hume': SourceInfo(id: 'hume', name: 'Hume', category: 'philosophe'),
     'foucault': SourceInfo(id: 'foucault', name: 'Foucault', category: 'philosophe'),
     'descartes': SourceInfo(id: 'descartes', name: 'Descartes', category: 'philosophe'),
-    
+
     // COURANTS PHILOSOPHIQUES (14)
-    'stoicisme': SourceInfo(id: 'stoicisme', name: 'Stoïcisme', category: 'philosophique'),
-    'epicurisme': SourceInfo(id: 'epicurisme', name: 'Épicurisme', category: 'philosophique'),
-    'existentialisme_philo': SourceInfo(id: 'existentialisme_philo', name: 'Existentialisme', category: 'philosophique'),
-    'humanisme_philo': SourceInfo(id: 'humanisme_philo', name: 'Humanisme', category: 'philosophique'),
-    'vitalisme': SourceInfo(id: 'vitalisme', name: 'Vitalisme', category: 'philosophique'),
-    'absurdisme_philo': SourceInfo(id: 'absurdisme_philo', name: 'Absurdisme', category: 'philosophique'),
-    'rationalisme': SourceInfo(id: 'rationalisme', name: 'Rationalisme', category: 'philosophique'),
-    'empirisme': SourceInfo(id: 'empirisme', name: 'Empirisme', category: 'philosophique'),
-    'pragmatisme': SourceInfo(id: 'pragmatisme', name: 'Pragmatisme', category: 'philosophique'),
-    'phenomenologie': SourceInfo(id: 'phenomenologie', name: 'Phénoménologie', category: 'philosophique'),
-    'idealisme': SourceInfo(id: 'idealisme', name: 'Idéalisme', category: 'philosophique'),
-    'utilitarisme': SourceInfo(id: 'utilitarisme', name: 'Utilitarisme', category: 'philosophique'),
-    'structuralisme': SourceInfo(id: 'structuralisme', name: 'Structuralisme', category: 'philosophique'),
-    'philosophies_orientales': SourceInfo(id: 'philosophies_orientales', name: 'Philosophies orientales', category: 'philosophique'),
-    
+    'stoicisme': SourceInfo(id: 'stoicisme', name: 'Stoicism', category: 'philosophique'),
+    'epicurisme': SourceInfo(id: 'epicurisme', name: 'Epicureanism', category: 'philosophique'),
+    'existentialisme_philo': SourceInfo(id: 'existentialisme_philo', name: 'Existentialism', category: 'philosophique'),
+    'humanisme_philo': SourceInfo(id: 'humanisme_philo', name: 'Humanism', category: 'philosophique'),
+    'vitalisme': SourceInfo(id: 'vitalisme', name: 'Vitalism', category: 'philosophique'),
+    'absurdisme_philo': SourceInfo(id: 'absurdisme_philo', name: 'Absurdism', category: 'philosophique'),
+    'rationalisme': SourceInfo(id: 'rationalisme', name: 'Rationalism', category: 'philosophique'),
+    'empirisme': SourceInfo(id: 'empirisme', name: 'Empiricism', category: 'philosophique'),
+    'pragmatisme': SourceInfo(id: 'pragmatisme', name: 'Pragmatism', category: 'philosophique'),
+    'phenomenologie': SourceInfo(id: 'phenomenologie', name: 'Phenomenology', category: 'philosophique'),
+    'idealisme': SourceInfo(id: 'idealisme', name: 'Idealism', category: 'philosophique'),
+    'utilitarisme': SourceInfo(id: 'utilitarisme', name: 'Utilitarianism', category: 'philosophique'),
+    'structuralisme': SourceInfo(id: 'structuralisme', name: 'Structuralism', category: 'philosophique'),
+    'philosophies_orientales': SourceInfo(id: 'philosophies_orientales', name: 'Eastern Philosophies', category: 'philosophique'),
+
     // COURANTS LITTÉRAIRES (15)
-    'romantisme': SourceInfo(id: 'romantisme', name: 'Romantisme', category: 'litteraire'),
-    'realisme': SourceInfo(id: 'realisme', name: 'Réalisme', category: 'litteraire'),
-    'naturalisme': SourceInfo(id: 'naturalisme', name: 'Naturalisme', category: 'litteraire'),
-    'symbolisme': SourceInfo(id: 'symbolisme', name: 'Symbolisme', category: 'litteraire'),
-    'surrealisme': SourceInfo(id: 'surrealisme', name: 'Surréalisme', category: 'litteraire'),
-    'existentialisme': SourceInfo(id: 'existentialisme', name: 'Existentialisme', category: 'litteraire'),
-    'humanisme': SourceInfo(id: 'humanisme', name: 'Humanisme', category: 'litteraire'),
-    'absurdisme': SourceInfo(id: 'absurdisme', name: 'Absurdisme', category: 'litteraire'),
-    'modernisme': SourceInfo(id: 'modernisme', name: 'Modernisme', category: 'litteraire'),
-    'postmodernisme': SourceInfo(id: 'postmodernisme', name: 'Postmodernisme', category: 'litteraire'),
-    'tragedie_classique': SourceInfo(id: 'tragedie_classique', name: 'Tragédie classique', category: 'litteraire'),
-    'roman_psychologique': SourceInfo(id: 'roman_psychologique', name: 'Roman psychologique', category: 'litteraire'),
-    'mythologie': SourceInfo(id: 'mythologie', name: 'Mythologie', category: 'litteraire'),
-    'science_fiction': SourceInfo(id: 'science_fiction', name: 'Science-fiction', category: 'litteraire'),
+    'romantisme': SourceInfo(id: 'romantisme', name: 'Romanticism', category: 'litteraire'),
+    'realisme': SourceInfo(id: 'realisme', name: 'Realism', category: 'litteraire'),
+    'naturalisme': SourceInfo(id: 'naturalisme', name: 'Naturalism', category: 'litteraire'),
+    'symbolisme': SourceInfo(id: 'symbolisme', name: 'Symbolism', category: 'litteraire'),
+    'surrealisme': SourceInfo(id: 'surrealisme', name: 'Surrealism', category: 'litteraire'),
+    'existentialisme': SourceInfo(id: 'existentialisme', name: 'Existentialism', category: 'litteraire'),
+    'humanisme': SourceInfo(id: 'humanisme', name: 'Humanism', category: 'litteraire'),
+    'absurdisme': SourceInfo(id: 'absurdisme', name: 'Absurdism', category: 'litteraire'),
+    'modernisme': SourceInfo(id: 'modernisme', name: 'Modernism', category: 'litteraire'),
+    'postmodernisme': SourceInfo(id: 'postmodernisme', name: 'Postmodernism', category: 'litteraire'),
+    'tragedie_classique': SourceInfo(id: 'tragedie_classique', name: 'Classical Tragedy', category: 'litteraire'),
+    'roman_psychologique': SourceInfo(id: 'roman_psychologique', name: 'Psychological Novel', category: 'litteraire'),
+    'mythologie': SourceInfo(id: 'mythologie', name: 'Mythology', category: 'litteraire'),
+    'science_fiction': SourceInfo(id: 'science_fiction', name: 'Science Fiction', category: 'litteraire'),
     'fantasy': SourceInfo(id: 'fantasy', name: 'Fantasy', category: 'litteraire'),
-    
+
     // SOURCES PSYCHOLOGIQUES (10)
     'act': SourceInfo(id: 'act', name: 'ACT', category: 'psychologique'),
-    'tcc': SourceInfo(id: 'tcc', name: 'TCC', category: 'psychologique'),
-    'jungienne': SourceInfo(id: 'jungienne', name: 'Psychologie Jungienne', category: 'psychologique'),
-    'logotherapie': SourceInfo(id: 'logotherapie', name: 'Logothérapie', category: 'psychologique'),
-    'schemas_young': SourceInfo(id: 'schemas_young', name: 'Schémas de Young', category: 'psychologique'),
+    'tcc': SourceInfo(id: 'tcc', name: 'CBT', category: 'psychologique'),
+    'jungienne': SourceInfo(id: 'jungienne', name: 'Jungian Psychology', category: 'psychologique'),
+    'logotherapie': SourceInfo(id: 'logotherapie', name: 'Logotherapy', category: 'psychologique'),
+    'schemas_young': SourceInfo(id: 'schemas_young', name: 'Young Schema Therapy', category: 'psychologique'),
     'the_work': SourceInfo(id: 'the_work', name: 'The Work', category: 'psychologique'),
-    'humaniste_rogers': SourceInfo(id: 'humaniste_rogers', name: 'Approche Humaniste', category: 'psychologique'),
-    'psychanalyse': SourceInfo(id: 'psychanalyse', name: 'Psychanalyse', category: 'psychologique'),
-    'analyse_transactionnelle': SourceInfo(id: 'analyse_transactionnelle', name: 'Analyse Transactionnelle', category: 'psychologique'),
-    'systemique': SourceInfo(id: 'systemique', name: 'Approche Systémique', category: 'psychologique'),
+    'humaniste_rogers': SourceInfo(id: 'humaniste_rogers', name: 'Humanistic Approach', category: 'psychologique'),
+    'psychanalyse': SourceInfo(id: 'psychanalyse', name: 'Psychoanalysis', category: 'psychologique'),
+    'analyse_transactionnelle': SourceInfo(id: 'analyse_transactionnelle', name: 'Transactional Analysis', category: 'psychologique'),
+    'systemique': SourceInfo(id: 'systemique', name: 'Systemic Approach', category: 'psychologique'),
   };
 }
 

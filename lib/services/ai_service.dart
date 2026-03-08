@@ -122,9 +122,9 @@ class AIService {
   /// Message de configuration
   String getSetupMessage() {
     if (_userApproaches.isEmpty) {
-      return 'Aucune approche sélectionnée. Veuillez compléter votre profil.';
+      return 'No approach selected. Please complete your profile.';
     }
-    return 'Vos approches sélectionnées : ${_userApproaches.join(", ")}';
+    return 'Your selected approaches: ${_userApproaches.join(", ")}';
   }
 
   /// Formatage des noms d'approches  
@@ -219,21 +219,21 @@ class AIService {
     
     switch (statusCode) {
       case 400:
-        return 'Requête invalide. ${apiMessage ?? "Vérifiez les paramètres."}';
+        return 'Invalid request. ${apiMessage ?? "Please check the parameters."}';
       case 401:
-        return 'Clé API invalide ou expirée. Veuillez vérifier votre configuration.';
+        return 'Invalid or expired API key. Please check your configuration.';
       case 403:
-        return 'Accès refusé. ${apiMessage ?? "Vérifiez vos permissions API."}';
+        return 'Access denied. ${apiMessage ?? "Please check your API permissions."}';
       case 404:
-        return 'Service non trouvé. L\'API Claude est peut-être indisponible.';
+        return 'Service not found. The Claude API may be unavailable.';
       case 429:
-        return 'Limite de requêtes atteinte. Veuillez patienter quelques secondes et réessayer.';
+        return 'Request limit reached. Please wait a few seconds and try again.';
       case 500:
-        return 'Erreur serveur Claude. Le service est temporairement indisponible.';
+        return 'Claude server error. The service is temporarily unavailable.';
       case 529:
-        return 'API Claude surchargée. Veuillez réessayer dans quelques instants.';
+        return 'Claude API overloaded. Please try again in a moment.';
       default:
-        return 'Erreur inattendue ($statusCode). ${apiMessage ?? "Veuillez réessayer."}';
+        return 'Unexpected error ($statusCode). ${apiMessage ?? "Please try again."}';
     }
   }
 
@@ -298,7 +298,7 @@ class AIService {
         ).timeout(
           Duration(seconds: _requestTimeoutSeconds),
           onTimeout: () {
-            throw TimeoutException('La requête a pris trop de temps (>${_requestTimeoutSeconds}s)');
+            throw TimeoutException('The request took too long (>${_requestTimeoutSeconds}s)');
           },
         );
 
@@ -341,10 +341,10 @@ class AIService {
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return '[ERREUR_API] Délai d\'attente dépassé après $_maxRetryAttempts tentatives. Vérifiez votre connexion internet.';
+        return '[ERREUR_API] Timeout exceeded after $_maxRetryAttempts attempts. Please check your internet connection.';
       } on FormatException catch (e) {
         print('AIService: ❌ Erreur parsing JSON: $e');
-        return '[ERREUR_API] Erreur de format dans la réponse du serveur.';
+        return '[ERREUR_API] Format error in the server response.';
       } catch (e) {
         print('AIService: ❌ Erreur requête Claude: $e');
         
@@ -362,10 +362,10 @@ class AIService {
             await Future.delayed(Duration(seconds: delaySeconds));
             continue;
           }
-          return '[ERREUR_API] Cette source n\'a pas pu répondre. Tu peux continuer avec les autres perspectives ou soumettre à nouveau ta pensée un peu plus tard.';
+          return '[ERREUR_API] This source could not respond. You can continue with the other perspectives or submit your thought again a bit later.';
         }
         if (errorStr.contains('handshake') || errorStr.contains('certificate')) {
-          return '[ERREUR_API] Erreur de sécurité SSL. Vérifiez la date/heure de votre appareil.';
+          return '[ERREUR_API] SSL security error. Please check the date/time on your device.';
         }
         
         // Message générique pour les autres erreurs (sans détails techniques)
@@ -374,7 +374,7 @@ class AIService {
     }
     
     // Ne devrait jamais arriver, mais par sécurité
-    return '[ERREUR_API] Erreur inattendue après $_maxRetryAttempts tentatives.';
+    return '[ERREUR_API] Unexpected error after $_maxRetryAttempts attempts.';
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -530,7 +530,7 @@ class AIService {
       }
       
       if (response.isEmpty) {
-        return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
+        return '❌ Error generating the response. Please try again.';
       }
       
       // Extraire et sauvegarder les métadonnées de la figure
@@ -667,7 +667,7 @@ class AIService {
       }
       
       if (response.isEmpty) {
-        return '❌ Erreur lors de la génération de la réponse. Veuillez réessayer.';
+        return '❌ Error generating the response. Please try again.';
       }
       
       // Extraire et sauvegarder les métadonnées de la figure
@@ -836,7 +836,7 @@ class AIService {
       
       return response.isNotEmpty 
         ? response 
-        : '❌ Impossible de générer une pensée positive pour le moment.';
+        : '❌ Unable to generate a positive thought at this time.';
     } catch (e) {
       print('AIService: Erreur pensée positive: $e');
       return '❌ Impossible de générer une pensée positive pour le moment.';
@@ -925,7 +925,7 @@ class AIService {
         responses[approach] = response;
       } catch (e) {
         print('AIService: Erreur pour $approach: $e');
-        responses[approach] = '❌ Une erreur est survenue lors de la génération de cette perspective.';
+        responses[approach] = '❌ An error occurred while generating this perspective.';
       }
     }
     
@@ -967,20 +967,20 @@ class AIService {
     } else if (userProfile?.age != null) {
       return userProfile!.age.toString();
     }
-    return 'Non renseigné';
+    return 'Not specified';
   }
 
   /// Obtenir le nom d'affichage du type de réflexion
   String _getTypeDisplayName(ReflectionType type) {
     switch (type) {
       case ReflectionType.thought:
-        return 'Pensée';
+        return 'Thought';
       case ReflectionType.situation:
-        return 'Situation émotionnelle';
+        return 'Emotional situation';
       case ReflectionType.existential:
-        return 'Question existentielle';
+        return 'Existential question';
       case ReflectionType.dilemma:
-        return 'Dilemme';
+        return 'Dilemma';
     }
   }
 

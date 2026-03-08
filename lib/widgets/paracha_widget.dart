@@ -97,7 +97,7 @@ class _ParashaPreviewCardState extends State<ParashaPreviewCard> {
         const Icon(Icons.error_outline, color: Colors.white70, size: 32),
         const SizedBox(height: 8),
         Text(
-          'Impossible de charger la paracha',
+          'Unable to load the parasha',
           style: GoogleFonts.inter(color: Colors.white70),
         ),
       ],
@@ -276,7 +276,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(text: 'Texte'),
+            Tab(text: 'Text'),
             Tab(text: 'Rashi'),
             Tab(text: 'Aliyot'),
           ],
@@ -305,7 +305,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
           const Icon(Icons.error_outline, size: 64, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
-            'Erreur de chargement',
+            'Loading error',
             style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
@@ -323,7 +323,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
               });
               _loadData();
             },
-            child: const Text('Réessayer'),
+            child: const Text('Retry'),
           ),
         ],
       ),
@@ -332,7 +332,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
 
   Widget _buildTextTab() {
     if (_text == null) {
-      return const Center(child: Text('Texte non disponible'));
+      return const Center(child: Text('Text not available'));
     }
 
     final hebrewVerses = _text!.hebrew?.textAsList ?? [];
@@ -360,7 +360,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
 
     if (commentators.isEmpty) {
       return const Center(
-        child: Text('Aucun commentaire disponible'),
+        child: Text('No commentary available'),
       );
     }
 
@@ -369,7 +369,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
       children: [
         // Liste des commentateurs disponibles
         Text(
-          'Commentateurs disponibles',
+          'Available commentators',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -414,18 +414,18 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
 
     if (aliyot.isEmpty) {
       return const Center(
-        child: Text('Aliyot non disponibles'),
+        child: Text('Aliyot not available'),
       );
     }
 
     final aliyotNames = [
       'ראשון (Kohen)',
       'שני (Levi)',
-      'שלישי (3ème)',
-      'רביעי (4ème)',
-      'חמישי (5ème)',
-      'שישי (6ème)',
-      'שביעי (7ème)',
+      'שלישי (3rd)',
+      'רביעי (4th)',
+      'חמישי (5th)',
+      'שישי (6th)',
+      'שביעי (7th)',
       'מפטיר (Maftir)',
     ];
 
@@ -508,7 +508,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
               ),
               const SizedBox(height: 20),
               Text(
-                'Verset $number',
+                'Verse $number',
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -542,7 +542,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
   void _loadCommentary(String commentator) {
     // TODO: Charger le commentaire complet
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Chargement de $commentator...')),
+      SnackBar(content: Text('Loading $commentator...')),
     );
   }
 
@@ -556,7 +556,7 @@ class _ParashaDetailPageState extends State<ParashaDetailPage>
   void _loadAliyah(String ref) {
     // TODO: Charger le texte de l'aliyah spécifique
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Chargement de $ref...')),
+      SnackBar(content: Text('Loading $ref...')),
     );
   }
 }

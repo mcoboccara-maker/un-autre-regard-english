@@ -74,7 +74,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            '🎭 Comment te sens-tu ?',
+            '🎭 How are you feeling?',
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -85,7 +85,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
           const SizedBox(height: 4),
           
           Text(
-            'Exprime ce que tu ressens dans ce contexte',
+            'Express what you feel in this context',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF64748B),
@@ -111,7 +111,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${EmotionCategories.allEmotions.length} états émotionnels disponibles',
+                  '${EmotionCategories.allEmotions.length} emotional states available',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: const Color(0xFF7C3AED),
@@ -182,7 +182,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
-                        '✨ Émotions ressources',
+                        '✨ Resource emotions',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: Colors.grey[500],
@@ -231,7 +231,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Touche une carte pour exprimer ce que tu ressens',
+                'Tap a card to express how you feel',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: const Color(0xFF6366F1),
@@ -255,7 +255,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
           Icon(Icons.check_circle, color: const Color(0xFF10B981), size: 18),
           const SizedBox(width: 10),
           Text(
-            '${activeEmotions.length} émotion(s) sélectionnée(s)',
+            '${activeEmotions.length} emotion(s) selected',
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -360,7 +360,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Intensité:',
+                      'Intensity:',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -390,8 +390,8 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
                   icon: Icon(Icons.tune, size: 16, color: emotion.color),
                   label: Text(
                     nuances.isEmpty
-                        ? 'Préciser les nuances'
-                        : '${nuances.length} nuance(s) sélectionnée(s)',
+                        ? 'Specify nuances'
+                        : '${nuances.length} nuance(s) selected',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       color: emotion.color,
@@ -600,7 +600,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
                   },
                 ),
                 label: Text(
-                  'Retour',
+                  'Back',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
@@ -626,7 +626,7 @@ class _EmotionsSelectionStepState extends State<EmotionsSelectionStep> {
                 onPressed: hasEmotions ? widget.onNext : null,
                 icon: const Icon(Icons.auto_awesome, size: 18),
                 label: Text(
-                  'Voir mes perspectives',
+                  'See my perspectives',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
@@ -729,14 +729,14 @@ class _NuancesDialogState extends State<_NuancesDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Nuances de ${widget.emotion.name}',
+                        'Nuances of ${widget.emotion.name}',
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
-                        '${_selected.length} sélectionnée(s)',
+                        '${_selected.length} selected',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -801,7 +801,7 @@ class _NuancesDialogState extends State<_NuancesDialog> {
                     });
                   },
                   child: Text(
-                    'Tout effacer',
+                    'Clear all',
                     style: GoogleFonts.poppins(color: Colors.grey[600]),
                   ),
                 ),
@@ -816,7 +816,7 @@ class _NuancesDialogState extends State<_NuancesDialog> {
                     ),
                   ),
                   child: Text(
-                    'Valider',
+                    'Confirm',
                     style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                   ),
                 ),

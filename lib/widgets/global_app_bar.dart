@@ -4,6 +4,7 @@ import '../services/persistent_storage_service.dart';
 import '../services/ai_service.dart';
 import '../services/complete_auth_service.dart';
 import '../models/user_profile.dart';
+import 'nav_cartouche.dart';
 
 class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -75,64 +76,29 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
         // Actions supplémentaires
         if (additionalActions != null) ...additionalActions!,
         
-        // Bouton Pensée positive avec icône PNG
-        GestureDetector(
-          onTap: () => _showPositiveThought(context),
-          child: Container(
-            width: 40,
-            height: 40,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Image.asset(
-              'assets/univers_visuel/pensee_positive.png',  // CORRIGÉ: pensee_positive.png
-              width: 32,
-              height: 32,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFFF59E0B),
-                  size: 24,
-                );
-              },
-            ),
+        // Bouton Pensée positive — NavCartouche uniforme
+        Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: NavCartouche(
+            assetPath: 'assets/univers_visuel/pensee_positive.png',
+            fallbackIcon: Icons.lightbulb_outline,
+            tooltip: 'Positive Thought',
+            onTap: () => _showPositiveThought(context),
           ),
         ),
-        
-        const SizedBox(width: 8),
-        
-        // Bouton Menu principal avec icône PNG
-        GestureDetector(
-          onTap: () {
-            Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false);
-          },
-          child: Container(
-            width: 40,
-            height: 40,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Image.asset(
-              'assets/univers_visuel/menu_principal.png',
-              width: 32,
-              height: 32,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.home,
-                  color: Color(0xFF6366F1),
-                  size: 24,
-                );
-              },
-            ),
+
+        // Bouton Menu principal — NavCartouche uniforme
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: NavCartouche(
+            assetPath: 'assets/univers_visuel/menu_principal.png',
+            fallbackIcon: Icons.home_outlined,
+            tooltip: 'Main Menu',
+            onTap: () {
+              Navigator.pushNamedAndRemoveUntil(context, '/menu', (route) => false);
+            },
           ),
         ),
-        const SizedBox(width: 16),
       ],
     );
   }
@@ -166,7 +132,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Generation de ta pensee positive...',
+                'Generating your positive thought...',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -212,7 +178,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -271,7 +237,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
-                      'Fermer',
+                      'Close',
                       style: GoogleFonts.inter(
                         color: const Color(0xFF64748B),
                       ),
@@ -284,7 +250,7 @@ class GlobalAppBar extends StatelessWidget implements PreferredSizeWidget {
                       _showPositiveThought(context);
                     },
                     icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Autre pensee'),
+                    label: const Text('Another thought'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF59E0B),
                       foregroundColor: Colors.white,

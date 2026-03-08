@@ -44,7 +44,7 @@ class _ExprimeCeQuiTeTraverseCardState
   Widget build(BuildContext context) {
     return _AnimatedCardShell(
       onTap: widget.onTap,
-      label: 'Exprime ce qui\nte traverse',
+      label: 'Express what\ncrosses your mind',
       baseImage: 'assets/univers_visuel/exprime_ce_qui_te_traverse.png',
       animation: _ctrl,
       painterBuilder: (t) => _BrainEnergyPainter(t),
@@ -89,7 +89,7 @@ class _PartageCeQueTuRessensCardState
   Widget build(BuildContext context) {
     return _AnimatedCardShell(
       onTap: widget.onTap,
-      label: 'Partage ce que\ntu ressens',
+      label: 'Share what\nyou feel',
       baseImage: 'assets/univers_visuel/partage_ce_que_tu_ressens.png',
       animation: _ctrl,
       painterBuilder: (t) => _HeartPulsePainter(t),
@@ -132,7 +132,7 @@ class _TonCheminParcouruCardState extends State<TonCheminParcouruCard>
   Widget build(BuildContext context) {
     return _AnimatedCardShell(
       onTap: widget.onTap,
-      label: 'Ton chemin\nparcouru',
+      label: 'Your journey\nso far',
       baseImage: 'assets/univers_visuel/mon_chemin_parcouru.png',
       animation: _ctrl,
       painterBuilder: (t) => _RiverFlowPainter(t),
@@ -177,7 +177,7 @@ class _ConnecteToiAuxSourcesCardState
   Widget build(BuildContext context) {
     return _AnimatedCardShell(
       onTap: widget.onTap,
-      label: 'Connecte toi\naux sources',
+      label: 'Connect with\nthe sources',
       baseImage: 'assets/univers_visuel/connecte_toi_aux_sources.png',
       animation: _ctrl,
       painterBuilder: (t) => _CosmosRotationPainter(t),
@@ -653,9 +653,11 @@ class _AnimatedCardShell extends StatelessWidget {
             Container(color: const Color(0xFF0A1628)),
               // COUCHE 1 : Image de base FIXE, zoomée 1.15x
               // pour éliminer totalement les coins blancs des PNG
+              // COUCHE 1 : Image zoomée + remontée pour masquer le texte brûlé du PNG
               Positioned.fill(
                 child: Transform.scale(
-                  scale: 1.22,
+                  scale: 1.35,
+                  alignment: const Alignment(0.0, -0.15),
                   child: Image.asset(
                     baseImage,
                     fit: BoxFit.cover,
@@ -687,19 +689,37 @@ class _AnimatedCardShell extends StatelessWidget {
                 ),
               ),
             ),
-            // COUCHE 3 : Dégradé bas pour la légende
+            // COUCHE 3a : Dégradé HAUT pour masquer texte brûlé en haut du PNG
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: const [0.0, 0.68, 0.88, 1.0],
+                    stops: const [0.0, 0.12, 0.25, 1.0],
+                    colors: [
+                      Colors.black.withValues(alpha: 0.75),
+                      Colors.black.withValues(alpha: 0.35),
+                      Colors.transparent,
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // COUCHE 3b : Dégradé BAS renforcé pour masquer texte brûlé + légende
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.55, 0.75, 1.0],
                     colors: [
                       Colors.transparent,
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.55),
-                      Colors.black.withValues(alpha: 0.88),
+                      Colors.black.withValues(alpha: 0.70),
+                      Colors.black.withValues(alpha: 0.95),
                     ],
                   ),
                 ),

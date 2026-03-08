@@ -37,81 +37,81 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
       id: 'act',
       name: 'ACT (Acceptance & Commitment)',
       iconPath: 'assets/univers_visuel/act.png',
-      description: 'Thérapie basée sur l\'acceptation et l\'action alignée avec les valeurs.',
-      modeOfThought: 'Acceptation, défusion cognitive, actions guidées par les valeurs.',
-      worldView: 'La souffrance fait partie de la vie, mais l\'engagement donne du sens.',
+      description: 'Therapy based on acceptance and value-aligned action.',
+      modeOfThought: 'Acceptance, cognitive defusion, value-driven actions.',
+      worldView: 'Suffering is part of life, but commitment gives it meaning.',
     ),
     PsychologicalSource(
       id: 'tcc',
-      name: 'TCC (Thérapie Cognitive Comportementale)',
+      name: 'CBT (Cognitive Behavioral Therapy)',
       iconPath: 'assets/univers_visuel/TCC.png',
-      description: 'Thérapie centrée sur l\'identification et la modification des pensées dysfonctionnelles.',
-      modeOfThought: 'Restructuration cognitive, expériences comportementales.',
-      worldView: 'Les pensées influencent émotions et comportements.',
+      description: 'Therapy focused on identifying and modifying dysfunctional thoughts.',
+      modeOfThought: 'Cognitive restructuring, behavioral experiments.',
+      worldView: 'Thoughts influence emotions and behaviors.',
     ),
     PsychologicalSource(
       id: 'jungienne',
-      name: 'Psychologie Jungienne',
+      name: 'Jungian Psychology',
       iconPath: 'assets/univers_visuel/jungienne.png',
-      description: 'Approche basée sur les archétypes, le symbolique, l\'inconscient collectif.',
-      modeOfThought: 'Rêves, mythes, symboles, individuation.',
-      worldView: 'La psyché est un système symbolique à explorer.',
+      description: 'Approach based on archetypes, symbolism and the collective unconscious.',
+      modeOfThought: 'Dreams, myths, symbols, individuation.',
+      worldView: 'The psyche is a symbolic system to explore.',
     ),
     PsychologicalSource(
       id: 'logotherapie',
-      name: 'Logothérapie (Frankl)',
+      name: 'Logotherapy (Frankl)',
       iconPath: 'assets/univers_visuel/logotherapie_frankl.png',
-      description: 'Thérapie centrée sur la quête de sens comme moteur existentiel.',
-      modeOfThought: 'Orientation vers les valeurs, responsabilité, sens personnel.',
-      worldView: 'Le sens peut être trouvé dans toute situation, même la souffrance.',
+      description: 'Therapy centered on the quest for meaning as an existential driver.',
+      modeOfThought: 'Value orientation, responsibility, personal meaning.',
+      worldView: 'Meaning can be found in any situation, even suffering.',
     ),
     PsychologicalSource(
       id: 'schemas_young',
-      name: 'Thérapie des schémas (Young)',
+      name: 'Schema Therapy (Young)',
       iconPath: 'assets/univers_visuel/schemas_young.png',
-      description: 'Identifie des schémas précoces qui influencent les réactions présentes.',
-      modeOfThought: 'Reparentage, dialogues, travail émotionnel profond.',
-      worldView: 'Les expériences d\'enfance façonnent les schémas émotionnels.',
+      description: 'Identifies early schemas that influence present reactions.',
+      modeOfThought: 'Reparenting, dialogues, deep emotional work.',
+      worldView: 'Childhood experiences shape emotional schemas.',
     ),
     PsychologicalSource(
       id: 'the_work',
       name: 'The Work (Byron Katie)',
       iconPath: 'assets/univers_visuel/theworkkb.png',
-      description: 'Processus de questionnement des pensées stressantes pour revenir au réel.',
-      modeOfThought: 'Observation d\'une pensée → 4 questions → retournements.',
-      worldView: 'La souffrance vient de la résistance à la réalité.',
+      description: 'Process of questioning stressful thoughts to return to reality.',
+      modeOfThought: 'Observing a thought > 4 questions > turnarounds.',
+      worldView: 'Suffering comes from resistance to reality.',
     ),
     PsychologicalSource(
       id: 'humaniste_rogers',
-      name: 'Approche Humaniste (Rogers)',
+      name: 'Humanistic Approach (Rogers)',
       iconPath: 'assets/univers_visuel/approche_humaniste.png',
-      description: 'Approche centrée sur la personne et la bienveillance.',
-      modeOfThought: 'Empathie, authenticité, non-jugement.',
-      worldView: 'Chaque individu a une tendance naturelle à croître.',
+      description: 'Person-centered approach based on benevolence.',
+      modeOfThought: 'Empathy, authenticity, non-judgment.',
+      worldView: 'Every individual has a natural tendency to grow.',
     ),
     PsychologicalSource(
       id: 'psychanalyse',
-      name: 'Psychanalyse',
+      name: 'Psychoanalysis',
       iconPath: 'assets/univers_visuel/psychanalyse.png',
-      description: 'Exploration de l\'inconscient, des pulsions et des conflits internes.',
-      modeOfThought: 'Association libre, analyse des rêves, transfert, interprétation.',
-      worldView: 'L\'inconscient détermine nos comportements ; le comprendre libère.',
+      description: 'Exploration of the unconscious, drives and internal conflicts.',
+      modeOfThought: 'Free association, dream analysis, transference, interpretation.',
+      worldView: 'The unconscious determines our behaviors; understanding it liberates.',
     ),
     PsychologicalSource(
       id: 'analyse_transactionnelle',
-      name: 'Analyse Transactionnelle',
+      name: 'Transactional Analysis',
       iconPath: 'assets/univers_visuel/analyse_transactionnelle.png',
-      description: 'Modèle des états du moi (Parent, Adulte, Enfant) et des transactions.',
-      modeOfThought: 'Identification des états du moi, analyse des jeux psychologiques, scénarios de vie.',
-      worldView: 'Nous sommes influencés par des schémas relationnels modifiables.',
+      description: 'Model of ego states (Parent, Adult, Child) and transactions.',
+      modeOfThought: 'Identification of ego states, analysis of psychological games, life scripts.',
+      worldView: 'We are influenced by modifiable relational patterns.',
     ),
     PsychologicalSource(
       id: 'systemique',
-      name: 'Approche Systémique',
+      name: 'Systemic Approach',
       iconPath: 'assets/univers_visuel/approche_systemique.png',
-      description: 'Vision des problèmes dans le contexte des systèmes relationnels.',
-      modeOfThought: 'Analyse des interactions, boucles de rétroaction, recadrage.',
-      worldView: 'L\'individu fait partie d\'un système ; changer un élément change le tout.',
+      description: 'View of problems within the context of relational systems.',
+      modeOfThought: 'Interaction analysis, feedback loops, reframing.',
+      worldView: 'The individual is part of a system; changing one element changes the whole.',
     ),
   ];
 
@@ -143,16 +143,16 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
     try {
       final profileData = await CompleteAuthService.instance.getProfile();
       final Map<String, dynamic> updatedProfile = Map<String, dynamic>.from(profileData ?? {});
-      
+
       updatedProfile['approchesPsychologiques'] = _selectedSources.toList();
       updatedProfile['lastUpdated'] = DateTime.now().toIso8601String();
-      
+
       await CompleteAuthService.instance.saveProfile(updatedProfile);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_selectedSources.length} approche(s) psychologique(s) enregistrée(s)'),
+            content: Text('${_selectedSources.length} psychological approach(es) saved'),
             backgroundColor: const Color(0xFF10B981),
           ),
         );
@@ -163,7 +163,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -174,7 +174,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Approches Psychologiques',
+      title: 'Psychological Approaches',
       showMenuButton: true,
       showPositiveButton: true,
       showBackButton: true,
@@ -197,7 +197,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '${_selectedSources.length} sélectionnée(s)',
+                            '${_selectedSources.length} selected',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -252,7 +252,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_selectedSources.length} sélectionnée(s)',
+                    '${_selectedSources.length} selected',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -262,9 +262,9 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           Image.asset(
             'assets/univers_visuel/categorie_psychologiques.png',
             width: 120,
@@ -281,22 +281,22 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
               );
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Text(
-            'Approches Psychologiques',
+            'Psychological Approaches',
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0F172A),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
-            'Choisissez les approches qui vous correspondent',
+            'Choose the approaches that resonate with you',
             style: GoogleFonts.inter(
               fontSize: 15,
               color: const Color(0xFF64748B),
@@ -310,7 +310,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
 
   Widget _buildSourceCard(PsychologicalSource source) {
     final isSelected = _selectedSources.contains(source.id);
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -388,7 +388,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected 
+                          color: isSelected
                               ? const Color(0xFF10B981)
                               : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(20),
@@ -401,7 +401,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                             if (isSelected)
                               const SizedBox(width: 4),
                             Text(
-                              isSelected ? 'Choisi' : 'Choisir',
+                              isSelected ? 'Selected' : 'Select',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -416,7 +416,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                 ),
               ),
             ),
-            
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -432,7 +432,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     Text(
                       source.description,
                       style: GoogleFonts.inter(
@@ -442,9 +442,9 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Mode de pensée',
+                      'Way of Thinking',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -461,9 +461,9 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Vision du monde',
+                      'Worldview',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -504,7 +504,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
           elevation: 0,
         ),
         child: Text(
-          'Valider mes choix',
+          'Confirm my choices',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

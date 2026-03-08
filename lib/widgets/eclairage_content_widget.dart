@@ -134,7 +134,7 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
     final List<_ManegeItem> items = [
       ...paragraphs.asMap().entries.map((e) => _ManegeItem(
         type: 'content',
-        title: e.key == 0 ? 'Accroche' : 'Partie ${e.key + 1}',
+        title: e.key == 0 ? 'Hook' : 'Part ${e.key + 1}',
         content: e.value,
         icon: e.key == 0 ? Icons.auto_awesome : Icons.article,
       )),
@@ -280,7 +280,7 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
 
         // Instruction
         Text(
-          'Glissez ou utilisez les flèches',
+          'Swipe or use the arrows',
           style: GoogleFonts.inter(
             fontSize: 12,
             color: widget.accentColor.withOpacity(0.5),
@@ -472,25 +472,25 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
             // Boutons d'action
             _buildManegeActionButton(
               Icons.volume_up,
-              'Écouter',
+              'Listen',
               widget.onListen,
             ),
             const SizedBox(height: 12),
             _buildManegeActionButton(
               Icons.share,
-              'Partager',
+              'Share',
               widget.onShare,
             ),
             const SizedBox(height: 12),
             _buildManegeActionButton(
               Icons.bookmark_outline,
-              'Sauvegarder',
+              'Save',
               widget.onSave,
             ),
             const SizedBox(height: 12),
             _buildManegeActionButton(
               Icons.refresh,
-              'Nouvelle réflexion',
+              'New reflection',
               widget.onNewReflection,
               isPrimary: true,
             ),
@@ -614,7 +614,7 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
               Icon(Icons.swipe, size: 16, color: widget.accentColor.withOpacity(0.5)),
               const SizedBox(width: 6),
               Text(
-                'Glissez pour explorer',
+                'Swipe to explore',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: widget.accentColor.withOpacity(0.5),
@@ -800,7 +800,7 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
                   Icon(Icons.touch_app, size: 16, color: widget.accentColor.withOpacity(0.5)),
                   const SizedBox(width: 6),
                   Text(
-                    'Tapez à gauche/droite',
+                    'Tap left/right',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: widget.accentColor.withOpacity(0.5),
@@ -847,8 +847,8 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
             );
           },
           child: _isFlipped
-              ? _buildFlipCard(back, 'DÉVELOPPEMENT', Icons.psychology, key: const ValueKey(true))
-              : _buildFlipCard(front, 'ACCROCHE', Icons.auto_awesome, key: const ValueKey(false)),
+              ? _buildFlipCard(back, 'DEVELOPMENT', Icons.psychology, key: const ValueKey(true))
+              : _buildFlipCard(front, 'HOOK', Icons.auto_awesome, key: const ValueKey(false)),
         ),
       ),
     );
@@ -925,7 +925,7 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
             ),
             const SizedBox(height: 16),
             Text(
-              'Tapez pour retourner',
+              'Tap to flip',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 color: widget.accentColor.withOpacity(0.5),
@@ -990,7 +990,7 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
                   });
                 },
                 icon: const Icon(Icons.fast_forward, size: 18),
-                label: const Text('Afficher tout'),
+                label: const Text('Show all'),
                 style: TextButton.styleFrom(foregroundColor: widget.accentColor),
               ),
             ),
@@ -1044,14 +1044,14 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
             children: [
               if (remaining > 0)
                 Text(
-                  '$remaining carte${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}',
+                  '$remaining card${remaining > 1 ? 's' : ''} remaining',
                   style: GoogleFonts.inter(fontSize: 14, color: widget.accentColor, fontWeight: FontWeight.w500),
                 )
               else
                 TextButton.icon(
                   onPressed: () => setState(() => _currentStackIndex = 0),
                   icon: const Icon(Icons.replay, size: 18),
-                  label: const Text('Recommencer'),
+                  label: const Text('Start over'),
                   style: TextButton.styleFrom(foregroundColor: widget.accentColor),
                 ),
             ],
@@ -1064,7 +1064,7 @@ class _EclairageContentWidgetState extends State<EclairageContentWidget>
                 children: [
                   Icon(Icons.swipe, size: 16, color: widget.accentColor.withOpacity(0.5)),
                   const SizedBox(width: 6),
-                  Text('Glissez pour passer', style: GoogleFonts.inter(fontSize: 12, color: widget.accentColor.withOpacity(0.5))),
+                  Text('Swipe to continue', style: GoogleFonts.inter(fontSize: 12, color: widget.accentColor.withOpacity(0.5))),
                 ],
               ).animate(onPlay: (c) => c.repeat(reverse: true)).slideX(begin: -0.03, end: 0.03, duration: 1000.ms),
             ),

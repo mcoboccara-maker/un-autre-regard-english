@@ -54,17 +54,17 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
     _suggestedPsychologiques = _getTopByCategory(sortedScores, 'psychologique', 4);
 
     // CORRIGÉ : Par défaut, seule la PREMIÈRE (meilleure) de chaque catégorie est sélectionnée
-    _selectedPhilosophes = _suggestedPhilosophes.isNotEmpty 
-        ? {_suggestedPhilosophes.first.id} 
+    _selectedPhilosophes = _suggestedPhilosophes.isNotEmpty
+        ? {_suggestedPhilosophes.first.id}
         : {};
-    _selectedCourantsPhilo = _suggestedCourantsPhilo.isNotEmpty 
-        ? {_suggestedCourantsPhilo.first.id} 
+    _selectedCourantsPhilo = _suggestedCourantsPhilo.isNotEmpty
+        ? {_suggestedCourantsPhilo.first.id}
         : {};
-    _selectedLitteraires = _suggestedLitteraires.isNotEmpty 
-        ? {_suggestedLitteraires.first.id} 
+    _selectedLitteraires = _suggestedLitteraires.isNotEmpty
+        ? {_suggestedLitteraires.first.id}
         : {};
-    _selectedPsychologiques = _suggestedPsychologiques.isNotEmpty 
-        ? {_suggestedPsychologiques.first.id} 
+    _selectedPsychologiques = _suggestedPsychologiques.isNotEmpty
+        ? {_suggestedPsychologiques.first.id}
         : {};
   }
 
@@ -140,7 +140,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Sources d\'inspiration enregistrées !',
+                    'Sources of inspiration saved!',
                     style: GoogleFonts.poppins(),
                   ),
                 ),
@@ -167,7 +167,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -185,7 +185,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
   Widget build(BuildContext context) {
     // ✅ UTILISATION DE APPSCAFFOLD
     return AppScaffold(
-      title: 'Personnalisation',
+      title: 'Customization',
       headerIconPath: 'assets/univers_visuel/orientation.png',
       showTitle: false,
       showBackButton: false, // On utilise bottomAction à la place
@@ -219,34 +219,34 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
                   children: [
                     _buildCategorySection(
                       iconPath: 'assets/univers_visuel/philosophes.png',
-                      title: 'Philosophes suggérés',
+                      title: 'Suggested philosophers',
                       sources: _suggestedPhilosophes,
                       selectedIds: _selectedPhilosophes,
                       onToggle: (id) => _toggleSelection(_selectedPhilosophes, id),
                       color: const Color(0xFF6366F1),
                     ),
-                    
+
                     _buildCategorySection(
                       iconPath: 'assets/univers_visuel/philosophie.png',
-                      title: 'Courants philosophiques',
+                      title: 'Philosophical schools',
                       sources: _suggestedCourantsPhilo,
                       selectedIds: _selectedCourantsPhilo,
                       onToggle: (id) => _toggleSelection(_selectedCourantsPhilo, id),
                       color: const Color(0xFF8B5CF6),
                     ),
-                    
+
                     _buildCategorySection(
                       iconPath: 'assets/univers_visuel/litterature.png',
-                      title: 'Courants littéraires',
+                      title: 'Literary movements',
                       sources: _suggestedLitteraires,
                       selectedIds: _selectedLitteraires,
                       onToggle: (id) => _toggleSelection(_selectedLitteraires, id),
                       color: const Color(0xFFEC4899),
                     ),
-                    
+
                     _buildCategorySection(
                       iconPath: 'assets/univers_visuel/psychologie.png',
-                      title: 'Approches psychologiques',
+                      title: 'Psychological approaches',
                       sources: _suggestedPsychologiques,
                       selectedIds: _selectedPsychologiques,
                       onToggle: (id) => _toggleSelection(_selectedPsychologiques, id),
@@ -278,7 +278,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
           ),
           const SizedBox(width: 10),
           Text(
-            'Personnalise ton profil',
+            'Customize your profile',
             style: GoogleFonts.poppins(
               color: const Color(0xFF1E293B),
               fontSize: 20,
@@ -311,7 +311,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Voici les sources qui correspondent à tes choix. Tu peux les modifier avant d\'enregistrer.',
+              'Here are the sources that match your choices. You can modify them before saving.',
               style: GoogleFonts.poppins(
                 color: const Color(0xFF64748B),
                 fontSize: 13,
@@ -374,7 +374,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
             children: sources.map((source) {
               final isSelected = selectedIds.contains(source.id);
               final score = widget.scores[source.id] ?? 0;
-              
+
               return GestureDetector(
                 onTap: () => onToggle(source.id),
                 child: AnimatedContainer(
@@ -500,10 +500,10 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
               : Icon(_saved ? Icons.check : Icons.save),
           label: Text(
             _saved
-                ? 'Enregistré !'
+                ? 'Saved!'
                 : _totalSelected == 0
-                    ? 'Sélectionne au moins une source'
-                    : 'Enregistrer $_totalSelected sources',
+                    ? 'Select at least one source'
+                    : 'Save $_totalSelected sources',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           style: ElevatedButton.styleFrom(
@@ -527,7 +527,7 @@ class _OrientationValidationScreenState extends State<OrientationValidationScree
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            'Revenir aux résultats',
+            'Back to results',
             style: GoogleFonts.poppins(
               color: const Color(0xFF64748B),
               fontSize: 13,

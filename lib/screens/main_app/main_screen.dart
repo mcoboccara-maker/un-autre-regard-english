@@ -373,7 +373,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Etape ${_currentStep + 1} sur $_totalSteps',
+                'Step ${_currentStep + 1} of $_totalSteps',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -397,11 +397,11 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   String _getStepTitle() {
     switch (_currentStep) {
       case 0:
-        return 'Votre reflexion';
+        return 'Your reflection';
       case 1:
-        return 'Vos emotions';
+        return 'Your emotions';
       case 2:
-        return 'Vos eclairages';
+        return 'Your insights';
       default:
         return '';
     }
@@ -488,7 +488,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Reflexion sauvegardee avec succes'),
+            content: const Text('Reflection saved successfully'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -499,7 +499,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de la sauvegarde: $e'),
+            content: Text('Error while saving: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),

@@ -108,22 +108,29 @@ class PersistentStorageService {
   // ==================== ÉCLAIRAGES SAUVEGARDÉS ====================
 
   /// Sauvegarder un éclairage complet (swipe Garder)
-  Future<void> saveEclairage(Map<String, dynamic> eclairageJson) async {
+  /// Retourne true si la sauvegarde a réussi, false sinon
+  Future<bool> saveEclairage(Map<String, dynamic> eclairageJson) async {
     await _ensureInitialized();
 
     if (!isUserLoggedIn) {
       print('⚠️ Tentative sauvegarde éclairage sans utilisateur connecté');
-      return;
+      return false;
     }
 
-    final email = _currentUserEmail!;
-    final key = 'saved_eclairages_$email';
+    try {
+      final email = _currentUserEmail!;
+      final key = 'saved_eclairages_$email';
 
-    final existingEclairages = _prefs!.getStringList(key) ?? [];
-    existingEclairages.add(jsonEncode(eclairageJson));
+      final existingEclairages = _prefs!.getStringList(key) ?? [];
+      existingEclairages.add(jsonEncode(eclairageJson));
 
-    await _prefs!.setStringList(key, existingEclairages);
-    print('✓ Éclairage sauvegardé pour: $email');
+      await _prefs!.setStringList(key, existingEclairages);
+      print('✓ Éclairage sauvegardé pour: $email (total: ${existingEclairages.length})');
+      return true;
+    } catch (e) {
+      print('❌ Erreur sauvegarde éclairage: $e');
+      return false;
+    }
   }
 
   /// Récupérer tous les éclairages sauvegardés
@@ -451,25 +458,25 @@ class PersistentStorageService {
     await _ensureInitialized();
     
     if (!isUserLoggedIn) {
-      throw Exception('Aucun utilisateur connecté');
+      throw Exception('No user connected');
     }
     
     try {
       final evaluations = await getAllEvaluations();
       
       if (evaluations.isEmpty) {
-        throw Exception('Aucune évaluation à exporter');
+        throw Exception('No evaluations to export');
       }
       
       // Générer le contenu
       final buffer = StringBuffer();
       buffer.writeln('╔════════════════════════════════════════════════════════╗');
-      buffer.writeln('║           UN AUTRE REGARD - MES PERSPECTIVES           ║');
+      buffer.writeln('║           UN AUTRE REGARD - MY PERSPECTIVES             ║');
       buffer.writeln('╚════════════════════════════════════════════════════════╝');
       buffer.writeln();
-      buffer.writeln('Utilisateur: ${_currentUserEmail}');
-      buffer.writeln('Date d\'export: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} à ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}');
-      buffer.writeln('Nombre de réflexions: ${evaluations.length}');
+      buffer.writeln('User: ${_currentUserEmail}');
+      buffer.writeln('Export date: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} at ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}');
+      buffer.writeln('Number of reflections: ${evaluations.length}');
       buffer.writeln();
       buffer.writeln('════════════════════════════════════════════════════════════');
       buffer.writeln();
@@ -477,7 +484,7 @@ class PersistentStorageService {
       for (int i = 0; i < evaluations.length; i++) {
         final eval = evaluations[i];
         buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        buffer.writeln('RÉFLEXION #${i + 1} - ${eval.createdAt.day}/${eval.createdAt.month}/${eval.createdAt.year}');
+        buffer.writeln('REFLECTION #${i + 1} - ${eval.createdAt.day}/${eval.createdAt.month}/${eval.createdAt.year}');
         buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         buffer.writeln();
         buffer.writeln(eval.toExportText());
@@ -533,7 +540,7 @@ class PersistentStorageService {
     await _ensureInitialized();
 
     if (!isUserLoggedIn) {
-      throw Exception('Aucun utilisateur connecte');
+      throw Exception('No user connected');
     }
 
     try {
@@ -561,7 +568,7 @@ class PersistentStorageService {
       return file.path;
     } catch (e) {
       print('❌ Erreur lors de l\'export: $e');
-      throw Exception('Erreur lors de l\'export: $e');
+      throw Exception('Error during export: $e');
     }
   }
 
@@ -570,7 +577,7 @@ class PersistentStorageService {
     try {
       final file = File(filePath);
       if (!await file.exists()) {
-        throw Exception('Fichier non trouve: $filePath');
+        throw Exception('File not found: $filePath');
       }
       
       final jsonString = await file.readAsString();
@@ -580,7 +587,7 @@ class PersistentStorageService {
       print('✓ Import reussi depuis: $filePath');
     } catch (e) {
       print('❌ Erreur lors de l\'import: $e');
-      throw Exception('Erreur lors de l\'import: $e');
+      throw Exception('Error during import: $e');
     }
   }
 
@@ -675,7 +682,7 @@ class PersistentStorageService {
         }
       }
     } catch (e) {
-      throw Exception('Erreur lors de l\'importation: $e');
+      throw Exception('Error during import: $e');
     }
   }
 

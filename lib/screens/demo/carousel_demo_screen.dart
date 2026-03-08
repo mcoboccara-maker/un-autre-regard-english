@@ -24,11 +24,11 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
 
   List<CarouselCardData> _buildMenuCards() {
     final menuItems = [
-      ('Pensée', Icons.edit_note_rounded),
-      ('Émotion', Icons.favorite_rounded),
+      ('Thought', Icons.edit_note_rounded),
+      ('Emotion', Icons.favorite_rounded),
       ('Sources', Icons.auto_stories_rounded),
-      ('Profil', Icons.person_rounded),
-      ('Historique', Icons.history_rounded),
+      ('Profile', Icons.person_rounded),
+      ('History', Icons.history_rounded),
     ];
 
     return List.generate(menuItems.length, (index) {
@@ -65,7 +65,7 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Tap pour explorer',
+            'Tap to explore',
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 14,
@@ -79,24 +79,24 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
   List<CarouselCardData> _buildEmotionCards() {
     // 18 émotions du CDC
     final emotions = [
-      ('Joie', Color(0xFFFFD700)),
-      ('Tristesse', Color(0xFF4169E1)),
-      ('Colère', Color(0xFFDC143C)),
-      ('Peur', Color(0xFF2F4F4F)),
+      ('Joy', Color(0xFFFFD700)),
+      ('Sadness', Color(0xFF4169E1)),
+      ('Anger', Color(0xFFDC143C)),
+      ('Fear', Color(0xFF2F4F4F)),
       ('Surprise', Color(0xFFFF69B4)),
-      ('Dégoût', Color(0xFF556B2F)),
-      ('Confiance', Color(0xFF20B2AA)),
+      ('Disgust', Color(0xFF556B2F)),
+      ('Trust', Color(0xFF20B2AA)),
       ('Anticipation', Color(0xFFFF8C00)),
-      ('Sérénité', Color(0xFF87CEEB)),
-      ('Acceptation', Color(0xFF98FB98)),
-      ('Appréhension', Color(0xFF708090)),
+      ('Serenity', Color(0xFF87CEEB)),
+      ('Acceptance', Color(0xFF98FB98)),
+      ('Apprehension', Color(0xFF708090)),
       ('Distraction', Color(0xFFDDA0DD)),
-      ('Ennui', Color(0xFFD2B48C)),
-      ('Contrariété', Color(0xFFCD5C5C)),
-      ('Intérêt', Color(0xFF9370DB)),
+      ('Boredom', Color(0xFFD2B48C)),
+      ('Annoyance', Color(0xFFCD5C5C)),
+      ('Interest', Color(0xFF9370DB)),
       ('Admiration', Color(0xFFFFB6C1)),
-      ('Terreur', Color(0xFF191970)),
-      ('Extase', Color(0xFFFFD700)),
+      ('Terror', Color(0xFF191970)),
+      ('Ecstasy', Color(0xFFFFD700)),
     ];
 
     return List.generate(emotions.length, (index) {
@@ -136,7 +136,7 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Démo Manège 3D - Mode ${_currentMode.name.toUpperCase()}',
+          '3D Carousel Demo - Mode ${_currentMode.name.toUpperCase()}',
           style: const TextStyle(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -154,7 +154,7 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
                     : CarouselMode.face;
               });
             },
-            tooltip: 'Changer de mode',
+            tooltip: 'Switch mode',
           ),
         ],
       ),
@@ -187,15 +187,15 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
               onCardTap: (index, card) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Tap sur: ${card.label ?? card.id}'),
+                    content: Text('Tap on: ${card.label ?? card.id}'),
                     duration: const Duration(seconds: 1),
                   ),
                 );
               },
               onCardSwipe: (index, card, direction) {
                 final action = direction == SwipeDirection.right
-                    ? 'Sauvegardé'
-                    : 'Rejeté';
+                    ? 'Saved'
+                    : 'Rejected';
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('$action: ${card.label ?? card.id}'),
@@ -221,7 +221,7 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _controller.previous(),
                   icon: const Icon(Icons.arrow_back),
-                  label: const Text('Précédent'),
+                  label: const Text('Previous'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF102A43),
                     foregroundColor: Colors.white,
@@ -230,7 +230,7 @@ class _CarouselDemoScreenState extends State<CarouselDemoScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _controller.next(),
                   icon: const Icon(Icons.arrow_forward),
-                  label: const Text('Suivant'),
+                  label: const Text('Next'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF102A43),
                     foregroundColor: Colors.white,

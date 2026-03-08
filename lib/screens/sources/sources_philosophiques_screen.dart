@@ -35,115 +35,115 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
   final List<PhilosophicalCurrent> _sources = [
     PhilosophicalCurrent(
       id: 'stoicisme',
-      name: 'Stoïcisme',
+      name: 'Stoicism',
       iconPath: 'assets/univers_visuel/stoicisme.png',
-      description: 'Philosophie antique centrée sur la maîtrise de soi.',
-      modeOfThought: 'Discernement, contrôle de soi, acceptation du destin.',
-      worldView: 'Le réel doit être accepté ; seuls nos jugements comptent.',
+      description: 'Ancient philosophy centered on self-mastery.',
+      modeOfThought: 'Discernment, self-control, acceptance of fate.',
+      worldView: 'Reality must be accepted; only our judgments matter.',
     ),
     PhilosophicalCurrent(
       id: 'epicurisme',
-      name: 'Épicurisme',
+      name: 'Epicureanism',
       iconPath: 'assets/univers_visuel/epicurisme.png',
-      description: 'Recherche du plaisir simple et de la tranquillité.',
-      modeOfThought: 'Tri des désirs, amitié, sobriété.',
-      worldView: 'Le bonheur vient de l\'absence de troubles.',
+      description: 'Pursuit of simple pleasure and tranquility.',
+      modeOfThought: 'Sorting desires, friendship, sobriety.',
+      worldView: 'Happiness comes from the absence of disturbance.',
     ),
     PhilosophicalCurrent(
       id: 'existentialisme_philo',
-      name: 'Existentialisme',
+      name: 'Existentialism',
       iconPath: 'assets/univers_visuel/existentialisme.png',
-      description: 'L\'existence précède l\'essence.',
-      modeOfThought: 'Liberté radicale, responsabilité.',
-      worldView: 'L\'humain crée son sens par ses choix.',
+      description: 'Existence precedes essence.',
+      modeOfThought: 'Radical freedom, responsibility.',
+      worldView: 'Humans create their meaning through their choices.',
     ),
     PhilosophicalCurrent(
       id: 'humanisme_philo',
-      name: 'Humanisme',
+      name: 'Humanism',
       iconPath: 'assets/univers_visuel/humanisme.png',
-      description: 'Valeur première : l\'humain et sa dignité.',
-      modeOfThought: 'Réflexion éthique, autonomie.',
-      worldView: 'Confiance en la raison et le progrès moral.',
+      description: 'Primary value: the human being and their dignity.',
+      modeOfThought: 'Ethical reflection, autonomy.',
+      worldView: 'Trust in reason and moral progress.',
     ),
     PhilosophicalCurrent(
       id: 'vitalisme',
-      name: 'Vitalisme',
+      name: 'Vitalism',
       iconPath: 'assets/univers_visuel/vitalisme.png',
-      description: 'La vie repose sur une force vitale non réductible.',
-      modeOfThought: 'Intuition, puissance de vivre.',
-      worldView: 'La vie est énergie créatrice.',
+      description: 'Life rests on an irreducible vital force.',
+      modeOfThought: 'Intuition, power of living.',
+      worldView: 'Life is creative energy.',
     ),
     PhilosophicalCurrent(
       id: 'absurdisme_philo',
-      name: 'Absurdisme',
+      name: 'Absurdism',
       iconPath: 'assets/univers_visuel/absurdisme.png',
-      description: 'Le monde est dépourvu de sens objectif.',
-      modeOfThought: 'Révolte, lucidité, liberté intérieure.',
-      worldView: 'On peut inventer un sens malgré l\'absurdité.',
+      description: 'The world is devoid of objective meaning.',
+      modeOfThought: 'Revolt, lucidity, inner freedom.',
+      worldView: 'One can invent meaning despite absurdity.',
     ),
     PhilosophicalCurrent(
       id: 'rationalisme',
-      name: 'Rationalisme',
+      name: 'Rationalism',
       iconPath: 'assets/univers_visuel/rationalisme.png',
-      description: 'La raison est la source principale de connaissance.',
-      modeOfThought: 'Déduction logique, cohérence.',
-      worldView: 'Le réel est intelligible.',
+      description: 'Reason is the primary source of knowledge.',
+      modeOfThought: 'Logical deduction, coherence.',
+      worldView: 'Reality is intelligible.',
     ),
     PhilosophicalCurrent(
       id: 'empirisme',
-      name: 'Empirisme',
+      name: 'Empiricism',
       iconPath: 'assets/univers_visuel/empirisme.png',
-      description: 'La connaissance vient de l\'expérience.',
-      modeOfThought: 'Observation, expérimentation.',
-      worldView: 'L\'esprit est modulé par la perception.',
+      description: 'Knowledge comes from experience.',
+      modeOfThought: 'Observation, experimentation.',
+      worldView: 'The mind is shaped by perception.',
     ),
     PhilosophicalCurrent(
       id: 'pragmatisme',
-      name: 'Pragmatisme',
+      name: 'Pragmatism',
       iconPath: 'assets/univers_visuel/pragmatisme.png',
-      description: 'Une idée est vraie si elle fonctionne.',
-      modeOfThought: 'Action, adaptation, résultats.',
-      worldView: 'Le vrai = utile, efficace.',
+      description: 'An idea is true if it works.',
+      modeOfThought: 'Action, adaptation, results.',
+      worldView: 'The true = useful, effective.',
     ),
     PhilosophicalCurrent(
       id: 'phenomenologie',
-      name: 'Phénoménologie',
+      name: 'Phenomenology',
       iconPath: 'assets/univers_visuel/phenomenologie.png',
-      description: 'Décrire l\'expérience vécue.',
-      modeOfThought: 'Attention, description fine du vécu.',
-      worldView: 'Le monde se donne dans la conscience.',
+      description: 'Describing lived experience.',
+      modeOfThought: 'Attention, fine description of lived experience.',
+      worldView: 'The world reveals itself through consciousness.',
     ),
     PhilosophicalCurrent(
       id: 'idealisme',
-      name: 'Idéalisme',
+      name: 'Idealism',
       iconPath: 'assets/univers_visuel/idealisme.png',
-      description: 'Le réel est fondé dans l\'esprit ou les idées.',
-      modeOfThought: 'Analyse des formes mentales.',
-      worldView: 'L\'esprit structure la réalité.',
+      description: 'Reality is grounded in the mind or ideas.',
+      modeOfThought: 'Analysis of mental forms.',
+      worldView: 'The mind structures reality.',
     ),
     PhilosophicalCurrent(
       id: 'utilitarisme',
-      name: 'Utilitarisme',
+      name: 'Utilitarianism',
       iconPath: 'assets/univers_visuel/utilitarisme.png',
-      description: 'Le bien = maximiser le bonheur collectif.',
-      modeOfThought: 'Calcul des effets, conséquences.',
-      worldView: 'Éthique du plus grand bien pour le plus grand nombre.',
+      description: 'The good = maximizing collective happiness.',
+      modeOfThought: 'Calculation of effects, consequences.',
+      worldView: 'Ethics of the greatest good for the greatest number.',
     ),
     PhilosophicalCurrent(
       id: 'structuralisme',
-      name: 'Structuralisme',
+      name: 'Structuralism',
       iconPath: 'assets/univers_visuel/structuralisme.png',
-      description: 'Analyse des structures qui régissent pensée et culture.',
-      modeOfThought: 'Analyse froide, systèmes, déconstruction.',
-      worldView: 'Le monde est structuré par des règles invisibles.',
+      description: 'Analysis of structures governing thought and culture.',
+      modeOfThought: 'Detached analysis, systems, deconstruction.',
+      worldView: 'The world is structured by invisible rules.',
     ),
     PhilosophicalCurrent(
       id: 'philosophies_orientales',
-      name: 'Philosophies orientales',
+      name: 'Eastern Philosophies',
       iconPath: 'assets/univers_visuel/mysticisme.png',
-      description: 'Pensées asiatiques non dogmatiques (taoïsme, bouddhisme philosophique, etc.).',
-      modeOfThought: 'Harmonie, unité, fluidité, non-attachement.',
-      worldView: 'Le monde est interconnecté.',
+      description: 'Non-dogmatic Asian thought (Taoism, philosophical Buddhism, etc.).',
+      modeOfThought: 'Harmony, unity, fluidity, non-attachment.',
+      worldView: 'The world is interconnected.',
     ),
   ];
 
@@ -175,16 +175,16 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
     try {
       final profileData = await CompleteAuthService.instance.getProfile();
       final Map<String, dynamic> updatedProfile = Map<String, dynamic>.from(profileData ?? {});
-      
+
       updatedProfile['courantsPhilosophiques'] = _selectedSources.toList();
       updatedProfile['lastUpdated'] = DateTime.now().toIso8601String();
-      
+
       await CompleteAuthService.instance.saveProfile(updatedProfile);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_selectedSources.length} courant(s) philosophique(s) enregistré(s)'),
+            content: Text('${_selectedSources.length} philosophical current(s) saved'),
             backgroundColor: const Color(0xFF10B981),
           ),
         );
@@ -195,7 +195,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -206,7 +206,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Courants Philosophiques',
+      title: 'Philosophical Currents',
       showMenuButton: true,
       showPositiveButton: true,
       showBackButton: true,
@@ -229,7 +229,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '${_selectedSources.length} sélectionné(s)',
+                            '${_selectedSources.length} selected',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -284,7 +284,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_selectedSources.length} sélectionné(s)',
+                    '${_selectedSources.length} selected',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -294,9 +294,9 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           Image.asset(
             'assets/univers_visuel/categorie_philosophiques.png',
             width: 120,
@@ -313,22 +313,22 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
               );
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Text(
-            'Courants Philosophiques',
+            'Philosophical Currents',
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0F172A),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
-            'Choisissez les courants qui vous inspirent',
+            'Choose the currents that inspire you',
             style: GoogleFonts.inter(
               fontSize: 15,
               color: const Color(0xFF64748B),
@@ -342,7 +342,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
 
   Widget _buildSourceCard(PhilosophicalCurrent source) {
     final isSelected = _selectedSources.contains(source.id);
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -420,7 +420,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected 
+                          color: isSelected
                               ? const Color(0xFF10B981)
                               : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(20),
@@ -433,7 +433,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                             if (isSelected)
                               const SizedBox(width: 4),
                             Text(
-                              isSelected ? 'Choisi' : 'Choisir',
+                              isSelected ? 'Selected' : 'Select',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -448,7 +448,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                 ),
               ),
             ),
-            
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -464,7 +464,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     Text(
                       source.description,
                       style: GoogleFonts.inter(
@@ -474,9 +474,9 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Mode de pensée',
+                      'Way of Thinking',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -493,9 +493,9 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     Text(
-                      'Vision du monde',
+                      'Worldview',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -536,7 +536,7 @@ class _SourcesPhilosophiquesScreenState extends State<SourcesPhilosophiquesScree
           elevation: 0,
         ),
         child: Text(
-          'Valider mes choix',
+          'Confirm my choices',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

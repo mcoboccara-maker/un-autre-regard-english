@@ -36,26 +36,26 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
   bool _showSuggestions = false;
 
   final List<String> _thoughtSuggestions = [
-    "Je ne suis pas à la hauteur...",
-    "Je me sens bloqué(e)",
-    "Cette personne me met en colère",
-    "J'ai peur de l'échec",
+    "I'm not good enough...",
+    "I feel stuck",
+    "This person makes me angry",
+    "I'm afraid of failure",
   ];
 
   final List<String> _situationSuggestions = [
-    "Conflit avec un proche",
-    "Stress au travail",
-    "Problème de communication",
+    "Conflict with a loved one",
+    "Stress at work",
+    "Communication problem",
   ];
 
   final List<String> _existentialSuggestions = [
-    "Quel est le sens de ma vie ?",
-    "Suis-je sur la bonne voie ?",
+    "What is the meaning of my life?",
+    "Am I on the right path?",
   ];
 
   final List<String> _dilemmaSuggestions = [
-    "Changer de travail ou rester ?",
-    "Dire la vérité ou me taire ?",
+    "Change jobs or stay?",
+    "Tell the truth or stay silent?",
   ];
 
   @override
@@ -79,13 +79,13 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
   String _getPlaceholderText() {
     switch (_selectedType) {
       case ReflectionType.thought:
-        return 'Je pense que...\nJe me sens...\nJ\'ai l\'impression que...';
+        return 'I think that...\nI feel...\nI have the impression that...';
       case ReflectionType.situation:
-        return 'Décris la situation qui te préoccupe...';
+        return 'Describe the situation that concerns you...';
       case ReflectionType.existential:
-        return 'Quelle question existentielle te traverse ?';
+        return 'What existential question is on your mind?';
       case ReflectionType.dilemma:
-        return 'Quel choix difficile dois-tu faire ?';
+        return 'What difficult choice do you have to make?';
     }
   }
 
@@ -294,7 +294,7 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Exprime ce qui te traverse',
+                    'Express what you are going through',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -316,7 +316,7 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
                         : Colors.grey[400],
                     size: 22,
                   ),
-                  tooltip: 'Voir des exemples',
+                  tooltip: 'See examples',
                 ),
               ],
             ),
@@ -354,7 +354,7 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  '${_textController.text.length} caractères',
+                  '${_textController.text.length} characters',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: Colors.grey[400],
@@ -389,7 +389,7 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Exemples',
+              'Examples',
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -463,7 +463,7 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
                     : null,
                 icon: const Icon(Icons.auto_awesome, size: 20),
                 label: Text(
-                  'Voir autrement',
+                  'See differently',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
@@ -499,7 +499,7 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
                   errorBuilder: (_, __, ___) => const Icon(Icons.mood, size: 20),
                 ),
                 label: Text(
-                  'Émotions liées et autre regard',
+                  'Related emotions and another perspective',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
@@ -535,7 +535,7 @@ class _ReflectionInputStepState extends State<ReflectionInputStep>
                 errorBuilder: (_, __, ___) => const Icon(Icons.arrow_back, size: 16),
               ),
               label: Text(
-                'Retour au menu',
+                'Back to menu',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: Colors.grey[500],

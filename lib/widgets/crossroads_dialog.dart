@@ -33,24 +33,24 @@ class _CrossroadsDialogState extends State<CrossroadsDialog>
 
   // 3 familles visuelles : temple / forêt / bibliothèque
   static const List<SourceItem> spiritualites = [
-    SourceItem('Judaïsme', 'judaisme.png'),
-    SourceItem('Moussar', 'moussar.png'),
-    SourceItem('Bouddhisme', 'bouddhisme.png'),
-    SourceItem('Soufisme', 'soufisme.png'),
+    SourceItem('Judaism', 'judaisme.png'),
+    SourceItem('Mussar', 'moussar.png'),
+    SourceItem('Buddhism', 'bouddhisme.png'),
+    SourceItem('Sufism', 'soufisme.png'),
   ];
 
   static const List<SourceItem> introspection = [
-    SourceItem('Philosophie antique', 'philo_antique.png'),
-    SourceItem('Philosophie moderne', 'philo_moderne.png'),
-    SourceItem('Psychologie', 'psychologie.png'),
-    SourceItem('Jungienne', 'jungienne.png'),
+    SourceItem('Ancient Philosophy', 'philo_antique.png'),
+    SourceItem('Modern Philosophy', 'philo_moderne.png'),
+    SourceItem('Psychology', 'psychologie.png'),
+    SourceItem('Jungian', 'jungienne.png'),
   ];
 
   static const List<SourceItem> textes = [
-    SourceItem('Poésie', 'poesie.png'),
-    SourceItem('Textes sacrés', 'textes_sacres.png'),
-    SourceItem('Romantisme', 'romantisme.png'),
-    SourceItem('Réalisme', 'realisme.png'),
+    SourceItem('Poetry', 'poesie.png'),
+    SourceItem('Sacred Texts', 'textes_sacres.png'),
+    SourceItem('Romanticism', 'romantisme.png'),
+    SourceItem('Realism', 'realisme.png'),
   ];
 
   void _pickFrom(List<SourceItem> list) {
@@ -110,7 +110,7 @@ class _CrossroadsDialogState extends State<CrossroadsDialog>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Carrefour des inspirations',
+                          'Crossroads of Inspirations',
                           style: GoogleFonts.playfairDisplay(
                             color: Colors.white,
                             fontSize: 18,
@@ -118,7 +118,7 @@ class _CrossroadsDialogState extends State<CrossroadsDialog>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Choisissez un chemin. Une source différente vous attend.',
+                          'Choose a path. A different source awaits you.',
                           style: GoogleFonts.nunito(
                             color: Colors.white70,
                             fontSize: 11,
@@ -167,20 +167,20 @@ class _CrossroadsDialogState extends State<CrossroadsDialog>
                   // Légendes sur les chemins
                   _buildPathLabel(
                     id: 'spiritualites',
-                    text: 'Spiritualités',
-                    subtitle: 'Judaïsme, moussar,\ntraditions',
+                    text: 'Spiritualities',
+                    subtitle: 'Judaism, mussar,\ntraditions',
                     alignment: const Alignment(-0.75, -0.2),
                   ),
                   _buildPathLabel(
                     id: 'introspection',
                     text: 'Introspection',
-                    subtitle: 'Philosophie,\npsychologie',
+                    subtitle: 'Philosophy,\npsychology',
                     alignment: const Alignment(0.0, -0.1),
                   ),
                   _buildPathLabel(
                     id: 'textes',
-                    text: 'Textes & poésie',
-                    subtitle: 'Poèmes, récits,\nclassiques',
+                    text: 'Texts & Poetry',
+                    subtitle: 'Poems, stories,\nclassics',
                     alignment: const Alignment(0.75, -0.2),
                   ),
 

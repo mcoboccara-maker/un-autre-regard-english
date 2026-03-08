@@ -300,7 +300,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Tourne d\'abord la roue pour choisir une source !',
+            'Spin the wheel first to choose a source!',
             style: GoogleFonts.inter(),
           ),
           backgroundColor: Colors.orange[700],
@@ -315,7 +315,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Saisis ta pensée ou situation avant de générer',
+            'Enter your thought or situation before generating',
             style: GoogleFonts.inter(),
           ),
           backgroundColor: Colors.orange[700],
@@ -366,7 +366,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       print('❌ Erreur génération: $e');
       if (mounted) {
         setState(() {
-          _errorMessage = 'Erreur lors de la génération. Réessaie.';
+          _errorMessage = 'Error during generation. Please try again.';
           _isGenerating = false;
         });
       }
@@ -476,7 +476,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         setState(() => _isGeneratingSynthesis = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de la synthèse', style: GoogleFonts.inter()),
+            content: Text('Error during synthesis', style: GoogleFonts.inter()),
             backgroundColor: Colors.red[600],
           ),
         );
@@ -629,7 +629,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
     return Column(
       children: [
         Text(
-          '✨ Roue de la Sagesse',
+          '✨ Wisdom Wheel',
           style: GoogleFonts.playfairDisplay(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -639,7 +639,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         ),
         const SizedBox(height: 6),
         Text(
-          'Tourne la roue, découvre ta perspective',
+          'Spin the wheel, discover your perspective',
           style: GoogleFonts.inter(
             fontSize: 14,
             color: const Color(0xFF64748B), // Gris pour fond clair
@@ -967,7 +967,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Accéder à l\'application',
+                  'Access the app',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -975,7 +975,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                   ),
                 ),
                 Text(
-                  'Connexion, profil, historique...',
+                  'Login, profile, history...',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: const Color(0xFF64748B),
@@ -1036,7 +1036,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tutoriel vidéo',
+                  'Video Tutorial',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1044,7 +1044,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                   ),
                 ),
                 Text(
-                  'Découvrir l\'application en 1min30',
+                  'Discover the app in 1min30',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: const Color(0xFF64748B),
@@ -1139,7 +1139,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
             const Icon(Icons.edit_note, color: Color(0xFF64748B), size: 20),
             const SizedBox(width: 8),
             Text(
-              'Ta pensée ou situation',
+              'Your thought or situation',
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -1173,7 +1173,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
               fontSize: 15,
             ),
             decoration: InputDecoration(
-              hintText: 'Qu\'est-ce qui te traverse l\'esprit ?',
+              hintText: 'What\'s on your mind?',
               hintStyle: GoogleFonts.inter(
                 color: const Color(0xFF94A3B8),
                 fontSize: 14,
@@ -1218,7 +1218,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Génération en cours...',
+              'Generating...',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: const Color(0xFF64748B),
@@ -1237,7 +1237,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         onPressed: _selectedSource == null ? null : _generateResponse,
         icon: const Icon(Icons.auto_awesome, size: 22),
         label: Text(
-          'Générer un éclairage',
+          'Generate an Insight',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
             fontSize: 16,
@@ -1306,11 +1306,11 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                   });
                 },
                 icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1E3A5F)),
-                tooltip: 'Retour à la roue',
+                tooltip: 'Back to wheel',
               ),
               Expanded(
                 child: Text(
-                  _selectedSource?.name ?? 'Résultat',
+                  _selectedSource?.name ?? 'Result',
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -1338,12 +1338,12 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                     size: 26,
                   ),
                 ),
-                tooltip: 'Retour à la roue',
+                tooltip: 'Back to wheel',
               ),
             ],
           ),
         ),
-        
+
         // Contenu scrollable
         Expanded(
           child: SingleChildScrollView(
@@ -1480,7 +1480,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
               const Icon(Icons.format_quote, color: Color(0xFF94A3B8), size: 18),
               const SizedBox(width: 8),
               Text(
-                'TA PENSÉE',
+                'YOUR THOUGHT',
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -1538,7 +1538,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'ÉCLAIRAGE',
+                        'INSIGHT',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -1564,7 +1564,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
                     Icon(Icons.verified, color: Colors.green[600], size: 14),
                     const SizedBox(width: 4),
                     Text(
-                      'Contrôlé',
+                      'Verified',
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
@@ -1720,7 +1720,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         // Bouton lecture complète
         Expanded(
           child: _buildVoiceButton(
-            label: _isSpeakingFull ? 'Stop' : 'Écouter complet',
+            label: _isSpeakingFull ? 'Stop' : 'Listen Full',
             icon: _isSpeakingFull ? Icons.stop : Icons.volume_up,
             isActive: _isSpeakingFull,
             onTap: _speakFull,
@@ -1733,8 +1733,8 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
         Expanded(
           child: _buildVoiceButton(
             label: _isGeneratingSynthesis
-                ? 'Génération...'
-                : (_isSpeakingSynthesis ? 'Stop' : 'Synthèse'),
+                ? 'Generating...'
+                : (_isSpeakingSynthesis ? 'Stop' : 'Summary'),
             icon: _isGeneratingSynthesis
                 ? Icons.hourglass_top
                 : (_isSpeakingSynthesis ? Icons.stop : Icons.auto_awesome),
@@ -1829,7 +1829,7 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       },
       icon: const Icon(Icons.refresh, size: 20),
       label: Text(
-        'Nouvelle réflexion',
+        'New Reflection',
         style: GoogleFonts.inter(fontWeight: FontWeight.w600),
       ),
       style: ElevatedButton.styleFrom(

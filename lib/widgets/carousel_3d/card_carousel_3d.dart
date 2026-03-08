@@ -8,6 +8,8 @@ enum CarouselMode {
   face,
   /// Cartes vues par la tranche (accueil, émotions)
   spine,
+  /// Cartes en cercle vertical (historique) — swipe haut/bas
+  vertical,
 }
 
 /// Direction du swipe décisionnel (Tinder-like)
@@ -149,6 +151,20 @@ class _CardCarousel3DState extends State<CardCarousel3D>
   }
 
   @override
+  void didUpdateWidget(covariant CardCarousel3D oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Quand la liste de cartes change (ajout/suppression),
+    // garder l'index actif valide sans changer de carte
+    if (widget.cards.length != oldWidget.cards.length) {
+      _activeCardIndex = _activeCardIndex.clamp(0, widget.cards.length - 1);
+    }
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._detach();
+      widget.controller?._attach(this);
+    }
+  }
+
+  @override
   void dispose() {
     widget.controller?._detach();
     _rotationController.dispose();
@@ -240,9 +256,13 @@ class _CardCarousel3DState extends State<CardCarousel3D>
         ),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onHorizontalDragStart: _onDragStart,
-          onHorizontalDragUpdate: _onDragUpdate,
-          onHorizontalDragEnd: _onDragEnd,
+          // Mode vertical : drag haut/bas ; modes face/spine : drag gauche/droite
+          onHorizontalDragStart: widget.mode != CarouselMode.vertical ? _onDragStart : null,
+          onHorizontalDragUpdate: widget.mode != CarouselMode.vertical ? _onDragUpdate : null,
+          onHorizontalDragEnd: widget.mode != CarouselMode.vertical ? _onDragEnd : null,
+          onVerticalDragStart: widget.mode == CarouselMode.vertical ? _onDragStartV : null,
+          onVerticalDragUpdate: widget.mode == CarouselMode.vertical ? _onDragUpdateV : null,
+          onVerticalDragEnd: widget.mode == CarouselMode.vertical ? _onDragEndV : null,
           child: LayoutBuilder(
             builder: (context, constraints) {
               _centerX = constraints.maxWidth / 2;
@@ -282,31 +302,14 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     final bool isActive = index == _activeCardIndex;
     final double absAngle = normalizedAngle.abs();
 
-    // Position X basée sur l'angle
-    final double spreadFactor = widget.mode == CarouselMode.face ? 150.0 : 200.0;
-    final double xOffset = math.sin(normalizedAngle * math.pi / 180) * spreadFactor;
-
     // Profondeur Z : carte active (angle ~0) devant, cartes éloignées derrière
     final double zOffset = math.cos(normalizedAngle * math.pi / 180) * 50;
 
-    // Rotation Y
-    double rotationY;
-    if (widget.mode == CarouselMode.spine) {
-      // Mode tranche : rotation forte (75-85°)
-      rotationY = normalizedAngle > 0 ? _spineAngle : -_spineAngle;
-      if (isActive && absAngle < 15) {
-        // Carte active : pivote vers la face
-        rotationY = normalizedAngle * 0.5;
-      }
-    } else {
-      // Mode face : rotation plus douce
-      rotationY = normalizedAngle * 0.2;
-    }
-
-    // Opacité décroissante avec la distance — plus forte en mode face
-    final double opacityFalloff = widget.mode == CarouselMode.face ? 0.85 : 0.7;
+    // Opacité décroissante avec la distance
+    final double opacityFalloff = widget.mode == CarouselMode.vertical ? 0.9 :
+        widget.mode == CarouselMode.face ? 0.85 : 0.7;
     double opacity = 1.0 - (absAngle / 180) * opacityFalloff;
-    opacity = opacity.clamp(0.15, 1.0);
+    opacity = opacity.clamp(0.1, 1.0);
 
     // Scale décroissant avec la distance
     double scale = 1.0 - (absAngle / 180) * 0.3;
@@ -315,6 +318,41 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     // Blur pour les cartes éloignées (effet de profondeur)
     double blur = absAngle > 60 ? (absAngle - 60) / 30 : 0;
     blur = blur.clamp(0.0, 3.0);
+
+    // === Mode VERTICAL : déplacement sur Y, rotation autour de X ===
+    if (widget.mode == CarouselMode.vertical) {
+      final double spreadFactor = 160.0;
+      final double yOffset = math.sin(normalizedAngle * math.pi / 180) * spreadFactor;
+      final double rotationX = normalizedAngle * 0.15;
+
+      return _CardTransformData(
+        index: index,
+        card: widget.cards[index],
+        xOffset: 0.0,
+        yOffset: yOffset,
+        zIndex: zOffset,
+        rotationY: 0.0,
+        rotationX: rotationX,
+        opacity: opacity,
+        scale: scale,
+        blur: blur,
+        isActive: isActive,
+      );
+    }
+
+    // === Modes FACE et SPINE : déplacement sur X, rotation autour de Y ===
+    final double spreadFactor = widget.mode == CarouselMode.face ? 150.0 : 200.0;
+    final double xOffset = math.sin(normalizedAngle * math.pi / 180) * spreadFactor;
+
+    double rotationY;
+    if (widget.mode == CarouselMode.spine) {
+      rotationY = normalizedAngle > 0 ? _spineAngle : -_spineAngle;
+      if (isActive && absAngle < 15) {
+        rotationY = normalizedAngle * 0.5;
+      }
+    } else {
+      rotationY = normalizedAngle * 0.2;
+    }
 
     return _CardTransformData(
       index: index,
@@ -339,14 +377,16 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     final top = _centerY - widget.cardHeight / 2;
 
     return Positioned(
+      key: ValueKey('carousel_card_${data.index}'),
       left: left,
       top: top,
       child: Transform(
         alignment: Alignment.center,
         transform: Matrix4.identity()
           ..setEntry(3, 2, 0.001) // Perspective
-          ..translate(data.xOffset + swipeOffset, 0.0, data.zIndex)
+          ..translate(data.xOffset + swipeOffset, data.yOffset, data.zIndex)
           ..rotateY(data.rotationY * math.pi / 180)
+          ..rotateX(data.rotationX * math.pi / 180)
           ..rotateZ(swipeRotation)
           ..scale(data.scale),
         child: Opacity(
@@ -441,6 +481,43 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     }
   }
 
+  // === Gestion des gestes - Rotation verticale (mode vertical) ===
+
+  void _onDragStartV(DragStartDetails details) {
+    if (_isSwipingCard) return;
+    if (widget.canNavigate != null && !widget.canNavigate!()) return;
+    _isDragging = true;
+    _dragStartX = details.globalPosition.dy; // réutilise _dragStartX pour Y
+    _rotationController.stop();
+  }
+
+  void _onDragUpdateV(DragUpdateDetails details) {
+    if (!_isDragging || _isSwipingCard) return;
+
+    setState(() {
+      final sensitivity = widget.cards.length > 10 ? 0.3 : 0.2;
+      // Inverser le signe : drag vers le haut (dy négatif) = avancer
+      _currentAngle -= details.delta.dy * sensitivity;
+    });
+  }
+
+  void _onDragEndV(DragEndDetails details) {
+    if (!_isDragging) return;
+    _isDragging = false;
+
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() > 500) {
+      final cardsToMove = (velocity.abs() / 1000).ceil();
+      // Inverser : swipe vers le haut (vélocité négative) = carte suivante
+      final direction = velocity < 0 ? 1 : -1;
+      final targetIndex = (_activeCardIndex + direction * cardsToMove)
+          .clamp(0, widget.cards.length - 1);
+      animateToIndex(targetIndex);
+    } else {
+      _snapToNearest();
+    }
+  }
+
   // === Gestion des gestes - Swipe décisionnel (Tinder) ===
 
   void _onSwipeStart(DragStartDetails details) {
@@ -524,8 +601,10 @@ class _CardTransformData {
   final int index;
   final CarouselCardData card;
   final double xOffset;
+  final double yOffset;
   final double zIndex;
   final double rotationY;
+  final double rotationX;
   final double opacity;
   final double scale;
   final double blur;
@@ -534,9 +613,11 @@ class _CardTransformData {
   _CardTransformData({
     required this.index,
     required this.card,
-    required this.xOffset,
+    this.xOffset = 0.0,
+    this.yOffset = 0.0,
     required this.zIndex,
-    required this.rotationY,
+    this.rotationY = 0.0,
+    this.rotationX = 0.0,
     required this.opacity,
     required this.scale,
     required this.blur,

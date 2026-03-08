@@ -398,7 +398,7 @@ class _LightingScreenState extends State<LightingScreen>
               ),
               const SizedBox(width: 12),
               Text(
-                'Ta pensée',
+                'Your thought',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -476,7 +476,7 @@ class _LightingScreenState extends State<LightingScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Éclairage',
+                  'Insight',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: Colors.white.withOpacity(0.5),
@@ -630,7 +630,7 @@ class _LightingScreenState extends State<LightingScreen>
               ),
               const SizedBox(width: 10),
               Text(
-                'Approfondir',
+                'Go Deeper',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -683,7 +683,7 @@ class _LightingScreenState extends State<LightingScreen>
             IconButton(
               onPressed: widget.onClose,
               icon: const Icon(Icons.close, color: Colors.white70),
-              tooltip: 'Fermer',
+              tooltip: 'Close',
             ),
 
             // Right actions
@@ -702,7 +702,7 @@ class _LightingScreenState extends State<LightingScreen>
                       color: Colors.white70,
                     ),
                   ),
-                  tooltip: 'Menu principal',
+                  tooltip: 'Main Menu',
                 ),
                 // New thought button
                 IconButton(
@@ -717,7 +717,7 @@ class _LightingScreenState extends State<LightingScreen>
                       color: Colors.white70,
                     ),
                   ),
-                  tooltip: 'Nouvelle pensée',
+                  tooltip: 'New Thought',
                 ),
               ],
             ),
@@ -755,14 +755,14 @@ class _LightingScreenState extends State<LightingScreen>
             // Voice - Full text
             _buildVoiceButton(
               icon: _isSpeaking ? Icons.stop_rounded : Icons.play_arrow_rounded,
-              label: _isSpeaking ? 'Stop' : 'Écouter',
+              label: _isSpeaking ? 'Stop' : 'Listen',
               onTap: _toggleSpeech,
             ),
             const SizedBox(width: 16),
             // Voice - Synthesis
             _buildVoiceButton(
               icon: Icons.auto_awesome,
-              label: 'Synthèse',
+              label: 'Summary',
               onTap: _playSynthesis,
             ),
           ],
@@ -831,7 +831,7 @@ class _LightingScreenState extends State<LightingScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Génération de la synthèse...',
+          'Generating summary...',
           style: GoogleFonts.inter(fontSize: 14),
         ),
         backgroundColor: const Color(0xFF2E8B7B),
@@ -927,7 +927,7 @@ class DeepeningSheet extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Approfondissement · $sourceName',
+                          'Deepening · $sourceName',
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

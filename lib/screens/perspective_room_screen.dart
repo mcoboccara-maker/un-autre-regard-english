@@ -131,36 +131,36 @@ enum DeepeningState { notRequested, loading, ready, failed }
 
 const Map<String, List<String>> kSourceQuestions = {
   'philosophie': [
-    'Qu\'est-ce que ce regard change pour toi ?',
-    'Où se situe ta liberté ici ?',
+    'What does this perspective change for you?',
+    'Where does your freedom lie here?',
   ],
   'stoicisme': [
-    'Qu\'est-ce qui dépend réellement de toi ?',
-    'Que se passe-t-il si tu cesses de lutter contre le reste ?',
+    'What truly depends on you?',
+    'What happens if you stop fighting the rest?',
   ],
   'existentialisme': [
-    'Qu\'assumes-tu déjà dans cette situation ?',
-    'Qu\'est-ce que tu choisis, même implicitement ?',
+    'What are you already taking on in this situation?',
+    'What are you choosing, even implicitly?',
   ],
   'litterature': [
-    'En quoi ce personnage te ressemble-t-il ?',
-    'Que révèle cette histoire de ta situation ?',
+    'In what way does this character resemble you?',
+    'What does this story reveal about your situation?',
   ],
   'psychologie': [
-    'Que cherches-tu à protéger ici ?',
-    'Qu\'est-ce qui se répète ?',
+    'What are you trying to protect here?',
+    'What keeps repeating?',
   ],
   'spiritualite': [
-    'Que pourrais-tu déposer ?',
-    'Où ressens-tu une résistance ?',
+    'What could you let go of?',
+    'Where do you feel resistance?',
   ],
   'hasard': [
-    'Qu\'est-ce que tu n\'avais pas envisagé ?',
-    'Si tu faisais confiance à ce mouvement ?',
+    'What hadn\'t you considered?',
+    'What if you trusted this movement?',
   ],
   'emotions': [
-    'Où ressens-tu cette émotion ?',
-    'Que cherche-t-elle à te dire ?',
+    'Where do you feel this emotion?',
+    'What is it trying to tell you?',
   ],
 };
 
@@ -402,7 +402,7 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
             const _PulsingOrb(),
             const SizedBox(height: 24),
             const Text(
-              'Préparation de l\'espace...',
+              'Preparing the space...',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 18,
@@ -414,7 +414,7 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
             if (widget.onClose != null)
               TextButton(
                 onPressed: widget.onClose,
-                child: const Text('Retour', style: TextStyle(color: Colors.white54)),
+                child: const Text('Back', style: TextStyle(color: Colors.white54)),
               ),
           ],
         ),
@@ -547,7 +547,7 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
         ? const Color(0xFF10B981) // Emerald
         : const Color(0xFFEF4444); // Red
     final icon = isSave ? Icons.bookmark_added : Icons.close_rounded;
-    final label = isSave ? 'Sauvegardé' : 'Écarté';
+    final label = isSave ? 'Saved' : 'Dismissed';
 
     return AnimatedBuilder(
       animation: _feedbackController,
@@ -637,7 +637,7 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
                         // Rejeter (swipe gauche)
                         _ActionButton(
                           icon: Icons.close_rounded,
-                          label: 'Écarter',
+                          label: 'Dismiss',
                           color: isRejected
                               ? const Color(0xFFEF4444)
                               : Colors.white.withValues(alpha: 0.6),
@@ -649,7 +649,7 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
                         _ActionButton(
                           icon: Icons.bookmark_outline,
                           activeIcon: Icons.bookmark,
-                          label: 'Garder',
+                          label: 'Keep',
                           color: isSaved
                               ? const Color(0xFF10B981)
                               : Colors.white.withValues(alpha: 0.6),
@@ -1071,7 +1071,7 @@ class _ImmersivePerspectivePageState extends State<_ImmersivePerspectivePage>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Approfondir',
+                    'Go Deeper',
                     style: TextStyle(
                       color: accentColor.withValues(alpha: 0.7),
                       fontSize: 14,
@@ -1592,7 +1592,7 @@ class _DeepeningSheetState extends State<_DeepeningSheet>
         children: [
           // Titre
           Text(
-            'Approfondissement',
+            'Deepening',
             style: TextStyle(
               fontFamily: widget.profile.fontFamilyTitle,
               fontSize: 20,
@@ -1648,7 +1648,7 @@ class _DeepeningSheetState extends State<_DeepeningSheet>
           _PulsingOrb(color: accentColor),
           const SizedBox(height: 24),
           Text(
-            'Approfondissement en préparation',
+            'Deepening in progress',
             style: TextStyle(
               color: textColor.withValues(alpha: 0.7),
               fontSize: 16,
@@ -1657,7 +1657,7 @@ class _DeepeningSheetState extends State<_DeepeningSheet>
           ),
           const SizedBox(height: 8),
           Text(
-            'Vous pouvez fermer à tout moment',
+            'You can close at any time',
             style: TextStyle(
               color: textColor.withValues(alpha: 0.4),
               fontSize: 13,
@@ -1778,7 +1778,7 @@ class _DeepeningSheetState extends State<_DeepeningSheet>
 
             // ── Champ commentaire libre ──
             Text(
-              'Ton ressenti',
+              'Your feelings',
               style: TextStyle(
                 fontFamily: widget.profile.fontFamilyTitle,
                 fontSize: 13,
@@ -1806,7 +1806,7 @@ class _DeepeningSheetState extends State<_DeepeningSheet>
                   color: textColor,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Note ce que cette perspective éveille en toi...',
+                  hintText: 'Note what this perspective awakens in you...',
                   hintStyle: TextStyle(
                     color: textColor.withValues(alpha: 0.3),
                     fontStyle: FontStyle.italic,
@@ -1834,7 +1834,7 @@ class _DeepeningSheetState extends State<_DeepeningSheet>
           ),
           const SizedBox(height: 16),
           Text(
-            'Impossible de charger l\'approfondissement',
+            'Unable to load the deepening',
             style: TextStyle(
               color: textColor.withValues(alpha: 0.7),
               fontSize: 16,
@@ -1846,7 +1846,7 @@ class _DeepeningSheetState extends State<_DeepeningSheet>
               // Retry logic
             },
             child: Text(
-              'Réessayer',
+              'Retry',
               style: TextStyle(color: accentColor),
             ),
           ),
@@ -1958,7 +1958,7 @@ class _FinalShiftPageState extends State<_FinalShiftPage>
 
                     // Question
                     Text(
-                      'Ton regard a-t-il bougé ?',
+                      'Has your perspective shifted?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Inter',
@@ -1972,11 +1972,11 @@ class _FinalShiftPageState extends State<_FinalShiftPage>
                     const SizedBox(height: 40),
 
                     // Options
-                    _buildOption('Oui', Icons.check_circle_outline),
+                    _buildOption('Yes', Icons.check_circle_outline),
                     const SizedBox(height: 12),
-                    _buildOption('Un peu', Icons.change_history_outlined),
+                    _buildOption('A little', Icons.change_history_outlined),
                     const SizedBox(height: 12),
-                    _buildOption('Pas du tout', Icons.radio_button_unchecked),
+                    _buildOption('Not at all', Icons.radio_button_unchecked),
 
                     const SizedBox(height: 40),
 
@@ -1994,7 +1994,7 @@ class _FinalShiftPageState extends State<_FinalShiftPage>
                             ),
                           ),
                           child: const Text(
-                            'Terminer',
+                            'Finish',
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 16,

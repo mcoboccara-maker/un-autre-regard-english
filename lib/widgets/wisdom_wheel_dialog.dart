@@ -26,7 +26,7 @@ class WisdomWheelDialog extends StatefulWidget {
     return showGeneralDialog<List<String>>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Fermer',
+      barrierLabel: 'Close',
       barrierColor: Colors.black.withOpacity(0.85),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (_, __, ___) => const WisdomWheelDialog(),
@@ -60,7 +60,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
   // NOUVEAU: Limite de sagesses (1 a 4)
   static const int _maxSagesses = 4;
   
-  static const _categoryNames = ['Litterature', 'Psychologie', 'Philosophes', 'Ecoles Philo.'];
+  static const _categoryNames = ['Literature', 'Psychology', 'Philosophers', 'Phil. Schools'];
   static const _categoryEmojis = ['📚', '🧠', '👤', '🏛️'];
   
   // ═══════════════════════════════════════════════════════════════════════════
@@ -70,25 +70,25 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
   final List<List<WheelSource>> _allSources = [
     // ROUE 0 - COURANTS LITTERAIRES
     [
-      WheelSource(id: 'humanisme', name: 'Humanisme', iconPath: 'assets/univers_visuel/humanisme.png'),
-      WheelSource(id: 'romantisme', name: 'Romantisme', iconPath: 'assets/univers_visuel/romantisme.png'),
-      WheelSource(id: 'realisme', name: 'Realisme', iconPath: 'assets/univers_visuel/realisme.png'),
-      WheelSource(id: 'existentialisme', name: 'Existentialisme', iconPath: 'assets/univers_visuel/existentialisme.png'),
-      WheelSource(id: 'absurdisme', name: 'Absurdisme', iconPath: 'assets/univers_visuel/absurdisme.png'),
-      WheelSource(id: 'poetique', name: 'Poetique', iconPath: 'assets/univers_visuel/poesie.png'),
-      WheelSource(id: 'mystique', name: 'Mystique', iconPath: 'assets/univers_visuel/mystique.png'),
-      WheelSource(id: 'symboliste_moderne', name: 'Symbolisme', iconPath: 'assets/univers_visuel/symbolisme.png'),
+      WheelSource(id: 'humanisme', name: 'Humanism', iconPath: 'assets/univers_visuel/humanisme.png'),
+      WheelSource(id: 'romantisme', name: 'Romanticism', iconPath: 'assets/univers_visuel/romantisme.png'),
+      WheelSource(id: 'realisme', name: 'Realism', iconPath: 'assets/univers_visuel/realisme.png'),
+      WheelSource(id: 'existentialisme', name: 'Existentialism', iconPath: 'assets/univers_visuel/existentialisme.png'),
+      WheelSource(id: 'absurdisme', name: 'Absurdism', iconPath: 'assets/univers_visuel/absurdisme.png'),
+      WheelSource(id: 'poetique', name: 'Poetics', iconPath: 'assets/univers_visuel/poesie.png'),
+      WheelSource(id: 'mystique', name: 'Mysticism', iconPath: 'assets/univers_visuel/mystique.png'),
+      WheelSource(id: 'symboliste_moderne', name: 'Symbolism', iconPath: 'assets/univers_visuel/symbolisme.png'),
     ],
     
     // ROUE 1 - APPROCHES PSYCHOLOGIQUES
     [
-      WheelSource(id: 'jungienne', name: 'Jungienne', iconPath: 'assets/univers_visuel/jungienne.png'),
-      WheelSource(id: 'tcc', name: 'TCC', iconPath: 'assets/univers_visuel/TCC.png'),
-      WheelSource(id: 'logotherapie', name: 'Logotherapie', iconPath: 'assets/univers_visuel/logotherapie_frankl.png'),
+      WheelSource(id: 'jungienne', name: 'Jungian', iconPath: 'assets/univers_visuel/jungienne.png'),
+      WheelSource(id: 'tcc', name: 'CBT', iconPath: 'assets/univers_visuel/TCC.png'),
+      WheelSource(id: 'logotherapie', name: 'Logotherapy', iconPath: 'assets/univers_visuel/logotherapie_frankl.png'),
       WheelSource(id: 'act', name: 'ACT', iconPath: 'assets/univers_visuel/pleine_conscience.png'),
       WheelSource(id: 'the_work', name: 'The Work', iconPath: 'assets/univers_visuel/theworkkb.png'),
       WheelSource(id: 'schemas_young', name: 'Schemas', iconPath: 'assets/univers_visuel/schemas_young.png'),
-      WheelSource(id: 'humaniste_rogers', name: 'Humaniste', iconPath: 'assets/univers_visuel/humanisme_philo.png'),
+      WheelSource(id: 'humaniste_rogers', name: 'Humanistic', iconPath: 'assets/univers_visuel/humanisme_philo.png'),
     ],
     
     // ROUE 2 - PHILOSOPHES
@@ -96,8 +96,8 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
       WheelSource(id: 'socrate', name: 'Socrate', iconPath: 'assets/univers_visuel/socrate.png'),
       WheelSource(id: 'platon', name: 'Platon', iconPath: 'assets/univers_visuel/platon.png'),
       WheelSource(id: 'aristote', name: 'Aristote', iconPath: 'assets/univers_visuel/aristote.png'),
-      WheelSource(id: 'epictete', name: 'Epictete', iconPath: 'assets/univers_visuel/epictete.png'),
-      WheelSource(id: 'marc_aurele', name: 'Marc Aurele', iconPath: 'assets/univers_visuel/marc_aurele.png'),
+      WheelSource(id: 'epictete', name: 'Epictetus', iconPath: 'assets/univers_visuel/epictete.png'),
+      WheelSource(id: 'marc_aurele', name: 'Marcus Aurelius', iconPath: 'assets/univers_visuel/marc_aurele.png'),
       WheelSource(id: 'spinoza', name: 'Spinoza', iconPath: 'assets/univers_visuel/spinoza.png'),
       WheelSource(id: 'kant', name: 'Kant', iconPath: 'assets/univers_visuel/kant.png'),
       WheelSource(id: 'nietzsche', name: 'Nietzsche', iconPath: 'assets/univers_visuel/nietzsche.png'),
@@ -108,20 +108,20 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
     
     // ROUE 3 - ECOLES PHILOSOPHIQUES
     [
-      WheelSource(id: 'stoicisme_philo', name: 'Stoicisme', iconPath: 'assets/univers_visuel/stoicisme.png'),
-      WheelSource(id: 'epicurisme', name: 'Epicurisme', iconPath: 'assets/univers_visuel/epicurisme.png'),
-      WheelSource(id: 'existentialisme_philo', name: 'Existentialisme', iconPath: 'assets/univers_visuel/existentialisme.png'),
-      WheelSource(id: 'humanisme_philo', name: 'Humanisme', iconPath: 'assets/univers_visuel/humanisme.png'),
-      WheelSource(id: 'vitalisme', name: 'Vitalisme', iconPath: 'assets/univers_visuel/vitalisme.png'),
-      WheelSource(id: 'absurdisme_philo', name: 'Absurdisme', iconPath: 'assets/univers_visuel/absurdisme.png'),
-      WheelSource(id: 'rationalisme', name: 'Rationalisme', iconPath: 'assets/univers_visuel/rationalisme.png'),
-      WheelSource(id: 'empirisme', name: 'Empirisme', iconPath: 'assets/univers_visuel/empirisme.png'),
-      WheelSource(id: 'pragmatisme', name: 'Pragmatisme', iconPath: 'assets/univers_visuel/pragmatisme.png'),
-      WheelSource(id: 'phenomenologie', name: 'Phenomenologie', iconPath: 'assets/univers_visuel/phenomenologie.png'),
-      WheelSource(id: 'idealisme', name: 'Idealisme', iconPath: 'assets/univers_visuel/idealisme.png'),
-      WheelSource(id: 'utilitarisme', name: 'Utilitarisme', iconPath: 'assets/univers_visuel/utilitarisme.png'),
-      WheelSource(id: 'structuralisme', name: 'Structuralisme', iconPath: 'assets/univers_visuel/structuralisme.png'),
-      WheelSource(id: 'philosophies_orientales', name: 'Orient', iconPath: 'assets/univers_visuel/zen.png'),
+      WheelSource(id: 'stoicisme_philo', name: 'Stoicism', iconPath: 'assets/univers_visuel/stoicisme.png'),
+      WheelSource(id: 'epicurisme', name: 'Epicureanism', iconPath: 'assets/univers_visuel/epicurisme.png'),
+      WheelSource(id: 'existentialisme_philo', name: 'Existentialism', iconPath: 'assets/univers_visuel/existentialisme.png'),
+      WheelSource(id: 'humanisme_philo', name: 'Humanism', iconPath: 'assets/univers_visuel/humanisme.png'),
+      WheelSource(id: 'vitalisme', name: 'Vitalism', iconPath: 'assets/univers_visuel/vitalisme.png'),
+      WheelSource(id: 'absurdisme_philo', name: 'Absurdism', iconPath: 'assets/univers_visuel/absurdisme.png'),
+      WheelSource(id: 'rationalisme', name: 'Rationalism', iconPath: 'assets/univers_visuel/rationalisme.png'),
+      WheelSource(id: 'empirisme', name: 'Empiricism', iconPath: 'assets/univers_visuel/empirisme.png'),
+      WheelSource(id: 'pragmatisme', name: 'Pragmatism', iconPath: 'assets/univers_visuel/pragmatisme.png'),
+      WheelSource(id: 'phenomenologie', name: 'Phenomenology', iconPath: 'assets/univers_visuel/phenomenologie.png'),
+      WheelSource(id: 'idealisme', name: 'Idealism', iconPath: 'assets/univers_visuel/idealisme.png'),
+      WheelSource(id: 'utilitarisme', name: 'Utilitarianism', iconPath: 'assets/univers_visuel/utilitarisme.png'),
+      WheelSource(id: 'structuralisme', name: 'Structuralism', iconPath: 'assets/univers_visuel/structuralisme.png'),
+      WheelSource(id: 'philosophies_orientales', name: 'Eastern', iconPath: 'assets/univers_visuel/zen.png'),
     ],
   ];
 
@@ -220,7 +220,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Maximum $_maxSagesses sagesses. Decochez-en une pour en choisir une autre.',
+          'Maximum $_maxSagesses wisdoms. Uncheck one to choose another.',
           style: GoogleFonts.inter(fontSize: 13),
         ),
         backgroundColor: const Color(0xFF2E8B7B),
@@ -299,7 +299,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Roues des Sagesses',
+                  'Wheels of Wisdom',
                   style: GoogleFonts.cormorantGaramond(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -308,7 +308,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
                 ),
                 // NOUVEAU: Indicateur de selection
                 Text(
-                  'Selectionnez 1 a $_maxSagesses sagesses',
+                  'Select 1 to $_maxSagesses wisdoms',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: const Color(0xFF5A8A8A),
@@ -576,7 +576,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
                   )
                 : Center(
                     child: Text(
-                      _canSelectMore ? 'Tourne la roue' : 'Max atteint',
+                      _canSelectMore ? 'Spin the wheel' : 'Max reached',
                       style: GoogleFonts.inter(
                         fontSize: 8, 
                         color: _canSelectMore 
@@ -736,7 +736,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text(
-                  'Utiliser ${selectedIds.length} sagesse${selectedIds.length > 1 ? 's' : ''}',
+                  'Use ${selectedIds.length} wisdom${selectedIds.length > 1 ? 's' : ''}',
                   style: GoogleFonts.inter(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600),
                 ),
               ),

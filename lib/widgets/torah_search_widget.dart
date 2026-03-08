@@ -37,7 +37,7 @@ class TorahSearchWidget extends StatefulWidget {
   const TorahSearchWidget({
     super.key,
     this.onResultTap,
-    this.hintText = 'Rechercher dans Torah Guide...',
+    this.hintText = 'Search in Torah Guide...',
     this.maxResults = 5,
     this.historyOnly = false,
     this.encyclopediaOnly = false,
@@ -171,7 +171,7 @@ class _TorahSearchWidgetState extends State<TorahSearchWidget> {
     if (results.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
-        child: Text('Aucun résultat trouvé'),
+        child: Text('No results found'),
       );
     }
 
@@ -182,7 +182,7 @@ class _TorahSearchWidgetState extends State<TorahSearchWidget> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            '${_response!.count} résultat(s) en ${_response!.timeFormatted}',
+            '${_response!.count} result(s) in ${_response!.timeFormatted}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -275,7 +275,7 @@ class TorahSearchResultCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Pertinence: ${result.similarityPercent}',
+                    'Relevance: ${result.similarityPercent}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.secondary,
                         ),
@@ -362,7 +362,7 @@ class _TorahEntryDetailPageState extends State<TorahEntryDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialTitle ?? 'Détail'),
+        title: Text(widget.initialTitle ?? 'Detail'),
       ),
       body: _buildBody(),
     );
@@ -384,7 +384,7 @@ class _TorahEntryDetailPageState extends State<TorahEntryDetailPage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadEntry,
-              child: const Text('Réessayer'),
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -392,7 +392,7 @@ class _TorahEntryDetailPageState extends State<TorahEntryDetailPage> {
     }
 
     if (_entry == null) {
-      return const Center(child: Text('Entrée non trouvée'));
+      return const Center(child: Text('Entry not found'));
     }
 
     return SingleChildScrollView(

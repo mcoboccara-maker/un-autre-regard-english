@@ -1,6 +1,7 @@
 // lib/widgets/app_scaffold.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'nav_cartouche.dart';
 
 /// Composant réutilisable pour tous les écrans de l'application
 /// Applique automatiquement :
@@ -125,64 +126,28 @@ class AppScaffold extends StatelessWidget {
       actions: [
         // Actions supplémentaires personnalisées
         if (additionalActions != null) ...additionalActions!,
-        
-        // Bouton Pensée Positive (pensee_positive.png) - CORRIGÉ
+
+        // Bouton Pensée Positive — NavCartouche uniforme
         if (showPositiveButton)
           Padding(
             padding: const EdgeInsets.only(right: 4),
-            child: IconButton(
-              onPressed: () => _showPositiveThought(context),
-              tooltip: 'Pensée positive',
-              icon: Image.asset(
-                'assets/univers_visuel/pensee_positive.png',  // CORRIGÉ: pensee_positive au lieu de pensee
-                width: 32,
-                height: 32,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFBBF24).withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.lightbulb_outline,
-                      color: Color(0xFFFBBF24),
-                      size: 20,
-                    ),
-                  );
-                },
-              ),
+            child: NavCartouche(
+              assetPath: 'assets/univers_visuel/pensee_positive.png',
+              fallbackIcon: Icons.lightbulb_outline,
+              tooltip: 'Positive Thought',
+              onTap: () => _showPositiveThought(context),
             ),
           ),
-        
-        // Bouton Menu Principal (menu_principal.png)
+
+        // Bouton Menu Principal — NavCartouche uniforme
         if (showMenuButton)
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              onPressed: () => _goToHome(context),
-              tooltip: 'Menu principal',
-              icon: Image.asset(
-                'assets/univers_visuel/menu_principal.png',
-                width: 32,
-                height: 32,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.home_outlined,
-                      color: Color(0xFF10B981),
-                      size: 20,
-                    ),
-                  );
-                },
-              ),
+            child: NavCartouche(
+              assetPath: 'assets/univers_visuel/menu_principal.png',
+              fallbackIcon: Icons.home_outlined,
+              tooltip: 'Main Menu',
+              onTap: () => _goToHome(context),
             ),
           ),
       ],
@@ -257,7 +222,7 @@ class AppScaffold extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Retour',
+                  'Back',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -283,16 +248,16 @@ class AppScaffold extends StatelessWidget {
   void _showPositiveThought(BuildContext context) {
     // Liste de pensées positives
     final thoughts = [
-      "Chaque jour est une nouvelle opportunite de grandir. 🌱",
-      "Tu as deja surmonte tant d'obstacles. Tu es plus fort(e) que tu ne le penses. 💪",
-      "Prends le temps de respirer. Ce moment difficile passera. 🌬️",
-      "Tu merites d'etre heureux(se) et en paix. 🕊️",
-      "Tes emotions sont valides. Accueille-les avec bienveillance. 💚",
-      "Un petit pas aujourd'hui peut mener a un grand changement demain. 👣",
-      "Tu n'as pas besoin d'etre parfait(e), juste authentique. ✨",
-      "La tempete finit toujours par se calmer. Tiens bon. 🌈",
-      "Tu es exactement la ou tu dois etre en ce moment. 🎯",
-      "Chaque emotion est un message. Ecoute ce qu'elle a a te dire. 💭",
+      "Every day is a new opportunity to grow. 🌱",
+      "You have already overcome so many obstacles. You are stronger than you think. 💪",
+      "Take a moment to breathe. This difficult time will pass. 🌬️",
+      "You deserve to be happy and at peace. 🕊️",
+      "Your emotions are valid. Welcome them with kindness. 💚",
+      "A small step today can lead to a great change tomorrow. 👣",
+      "You don't need to be perfect, just authentic. ✨",
+      "The storm always ends up calming down. Hold on. 🌈",
+      "You are exactly where you need to be right now. 🎯",
+      "Every emotion is a message. Listen to what it has to tell you. 💭",
     ];
     
     // Sélectionner une pensée aléatoire
@@ -347,7 +312,7 @@ class AppScaffold extends StatelessWidget {
               
               // Titre
               Text(
-                '💫 Pensee du moment',
+                '💫 Thought of the moment',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -382,7 +347,7 @@ class AppScaffold extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Merci ! 🙏',
+                  'Thank you! 🙏',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                   ),

@@ -26,7 +26,7 @@ class _OrientationResultScreenState extends State<OrientationResultScreen> {
   late List<SourceInfo> _topCourantsPhilo;
   late List<SourceInfo> _topLitteraires;
   late List<SourceInfo> _topPsychologiques;
-  
+
   bool _isSaving = false;
   bool _saved = false;
 
@@ -88,7 +88,7 @@ class _OrientationResultScreenState extends State<OrientationResultScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '✓ Sources d\'inspiration enregistrées !',
+              '✓ Sources of inspiration saved!',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: const Color(0xFF10B981),
@@ -100,7 +100,7 @@ class _OrientationResultScreenState extends State<OrientationResultScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -109,18 +109,18 @@ class _OrientationResultScreenState extends State<OrientationResultScreen> {
   }
 
   void _shareResults() {
-    final philosophe = _topPhilosophes.isNotEmpty ? _topPhilosophes.first.name : 'Inconnu';
-    final courant = _topCourantsPhilo.isNotEmpty ? _topCourantsPhilo.first.name : 'Inconnu';
-    
+    final philosophe = _topPhilosophes.isNotEmpty ? _topPhilosophes.first.name : 'Unknown';
+    final courant = _topCourantsPhilo.isNotEmpty ? _topCourantsPhilo.first.name : 'Unknown';
+
     final text = '''
-🎭 Mon profil philosophique - Un Autre Regard
+🎭 My philosophical profile - Another Perspective
 
-👤 Philosophe dominant : $philosophe
-🏛️ Courant : $courant
-📚 Style littéraire : ${_topLitteraires.isNotEmpty ? _topLitteraires.first.name : '-'}
-🧠 Approche psy : ${_topPsychologiques.isNotEmpty ? _topPsychologiques.first.name : '-'}
+👤 Dominant philosopher: $philosophe
+🏛️ School of thought: $courant
+📚 Literary style: ${_topLitteraires.isNotEmpty ? _topLitteraires.first.name : '-'}
+🧠 Psychological approach: ${_topPsychologiques.isNotEmpty ? _topPsychologiques.first.name : '-'}
 
-Découvre ton profil sur l'app Un Autre Regard ✨
+Discover your profile on the Another Perspective app ✨
 ''';
 
     Share.share(text);
@@ -130,7 +130,7 @@ Découvre ton profil sur l'app Un Autre Regard ✨
   Widget build(BuildContext context) {
     // ✅ UTILISATION DE APPSCAFFOLD
     return AppScaffold(
-      title: 'Résultats',
+      title: 'Results',
       headerIconPath: 'assets/univers_visuel/orientation.png',
       showTitle: false,
       showBackButton: false, // On utilise bottomAction à la place
@@ -168,28 +168,28 @@ Découvre ton profil sur l'app Un Autre Regard ✨
               // Détails par catégorie
               _buildCategorySection(
                 icon: '👤',
-                title: 'Tes philosophes',
+                title: 'Your philosophers',
                 sources: _topPhilosophes,
                 color: const Color(0xFF6366F1),
               ),
 
               _buildCategorySection(
                 icon: '🏛️',
-                title: 'Tes courants philosophiques',
+                title: 'Your philosophical schools',
                 sources: _topCourantsPhilo,
                 color: const Color(0xFF8B5CF6),
               ),
 
               _buildCategorySection(
                 icon: '📚',
-                title: 'Tes courants littéraires',
+                title: 'Your literary movements',
                 sources: _topLitteraires,
                 color: const Color(0xFFEC4899),
               ),
 
               _buildCategorySection(
                 icon: '🧠',
-                title: 'Tes approches psychologiques',
+                title: 'Your psychological approaches',
                 sources: _topPsychologiques,
                 color: const Color(0xFF10B981),
               ),
@@ -208,7 +208,7 @@ Découvre ton profil sur l'app Un Autre Regard ✨
       child: Column(
         children: [
           Text(
-            '✨ Ton univers philosophique',
+            '✨ Your philosophical universe',
             style: GoogleFonts.poppins(
               color: const Color(0xFF1E293B),
               fontSize: 24,
@@ -263,9 +263,9 @@ Découvre ton profil sur l'app Un Autre Regard ✨
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           if (mainPhilosophe != null) ...[
             Text(
               mainPhilosophe.name,
@@ -277,16 +277,16 @@ Découvre ton profil sur l'app Un Autre Regard ✨
             ),
             const SizedBox(height: 4),
             Text(
-              'Ton philosophe dominant',
+              'Your dominant philosopher',
               style: GoogleFonts.poppins(
                 color: Colors.white70,
                 fontSize: 14,
               ),
             ),
           ],
-          
+
           const SizedBox(height: 16),
-          
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -294,7 +294,7 @@ Découvre ton profil sur l'app Un Autre Regard ✨
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              mainCourant?.name ?? 'Éclectique',
+              mainCourant?.name ?? 'Eclectic',
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontSize: 14,
@@ -403,7 +403,7 @@ Découvre ton profil sur l'app Un Autre Regard ✨
           },
           icon: const Icon(Icons.tune),
           label: Text(
-            'Valider et personnaliser',
+            'Confirm and customize',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           style: ElevatedButton.styleFrom(
@@ -429,7 +429,7 @@ Découvre ton profil sur l'app Un Autre Regard ✨
           },
           icon: const Icon(Icons.home),
           label: Text(
-            'Retour au menu',
+            'Back to menu',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
           ),
           style: OutlinedButton.styleFrom(
@@ -452,7 +452,7 @@ Découvre ton profil sur l'app Un Autre Regard ✨
           },
           icon: const Icon(Icons.refresh, size: 18),
           label: Text(
-            'Recommencer le quiz',
+            'Retake the quiz',
             style: GoogleFonts.poppins(fontSize: 13),
           ),
           style: TextButton.styleFrom(

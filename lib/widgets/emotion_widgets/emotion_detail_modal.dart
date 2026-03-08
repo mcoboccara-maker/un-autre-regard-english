@@ -195,7 +195,7 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Intensité',
+                'Intensity',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -303,14 +303,14 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Faible',
+                'Low',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: const Color(0xFF94A3B8),
                 ),
               ),
               Text(
-                'Fort',
+                'Strong',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: const Color(0xFF94A3B8),
@@ -330,7 +330,7 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Nuances (${_selectedNuances.length} sélectionnées)',
+            'Nuances (${_selectedNuances.length} selected)',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -341,7 +341,7 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
           const SizedBox(height: 8),
           
           Text(
-            'Précise ton ressenti en sélectionnant les nuances qui te correspondent',
+            'Refine your feeling by selecting the nuances that match you',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF64748B),
@@ -447,7 +447,7 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                'Annuler',
+                'Cancel',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w500,
                   fontSize: 16,
@@ -465,7 +465,7 @@ class _EmotionDetailModalState extends State<EmotionDetailModal>
               onPressed: _saveAndClose,
               icon: const Icon(Icons.check),
               label: Text(
-                'Valider',
+                'Confirm',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,

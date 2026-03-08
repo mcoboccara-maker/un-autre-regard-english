@@ -16,89 +16,89 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   UserProfile? _userProfile;
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final _prenomController = TextEditingController();
   final _valeursLibresController = TextEditingController();
-  
+
   // Date de naissance
   DateTime? _dateNaissance;
-  
+
   // Valeurs sélectionnées
   Set<String> _valeursSelectionnees = {};
-  
+
   String? _currentUser;
   bool _isLoading = false;
 
   // Liste des catégories avec icône et valeurs
   static const List<Map<String, dynamic>> _categories = [
     {
-      'name': 'Relations et famille',
+      'name': 'Relationships and Family',
       'icon': 'assets/univers_visuel/relationetfamille.png',
       'valeurs': [
-        {'key': 'famille_loyaute', 'label': 'Famille / Loyauté familiale', 'desc': 'Accorder de l\'importance aux liens familiaux et au soutien mutuel'},
-        {'key': 'amour_affection', 'label': 'Amour / Affection', 'desc': 'Chérir et prendre soin des personnes proches'},
-        {'key': 'respect_parents', 'label': 'Respect des parents / aînés', 'desc': 'Honorer et respecter ceux qui m\'ont précédé'},
-        {'key': 'responsabilite_parentale', 'label': 'Responsabilité parentale', 'desc': 'Guider et accompagner ses enfants avec soin'},
-        {'key': 'amitie_solidarite', 'label': 'Amitié / Solidarité', 'desc': 'Soutenir et partager avec ses amis et proches'},
+        {'key': 'famille_loyaute', 'label': 'Family / Loyalty', 'desc': 'Valuing family bonds and mutual support'},
+        {'key': 'amour_affection', 'label': 'Love / Affection', 'desc': 'Cherishing and caring for loved ones'},
+        {'key': 'respect_parents', 'label': 'Respect for Parents / Elders', 'desc': 'Honoring and respecting those who came before me'},
+        {'key': 'responsabilite_parentale', 'label': 'Parental Responsibility', 'desc': 'Guiding and supporting your children with care'},
+        {'key': 'amitie_solidarite', 'label': 'Friendship / Solidarity', 'desc': 'Supporting and sharing with friends and loved ones'},
       ],
     },
     {
-      'name': 'Développement personnel',
+      'name': 'Personal Growth',
       'icon': 'assets/univers_visuel/developpementpersonnel.png',
       'valeurs': [
-        {'key': 'curiosite', 'label': 'Curiosité', 'desc': 'Désir d\'apprendre et de découvrir'},
-        {'key': 'creativite', 'label': 'Créativité', 'desc': 'Capacité à imaginer et exprimer des idées nouvelles'},
-        {'key': 'sagesse_reflexion', 'label': 'Sagesse / Réflexion', 'desc': 'Chercher à comprendre et à agir avec discernement'},
-        {'key': 'courage_resilience', 'label': 'Courage / Résilience', 'desc': 'Persévérer face aux difficultés'},
-        {'key': 'discipline_perseverance', 'label': 'Discipline / Persévérance', 'desc': 'Capacité à se structurer pour atteindre ses objectifs'},
-        {'key': 'autonomie_independance', 'label': 'Autonomie / Indépendance', 'desc': 'Prendre des décisions et agir par soi-même'},
+        {'key': 'curiosite', 'label': 'Curiosity', 'desc': 'Desire to learn and discover'},
+        {'key': 'creativite', 'label': 'Creativity', 'desc': 'Ability to imagine and express new ideas'},
+        {'key': 'sagesse_reflexion', 'label': 'Wisdom / Reflection', 'desc': 'Seeking to understand and act with discernment'},
+        {'key': 'courage_resilience', 'label': 'Courage / Resilience', 'desc': 'Persevering through difficulties'},
+        {'key': 'discipline_perseverance', 'label': 'Discipline / Perseverance', 'desc': 'Ability to structure yourself to achieve your goals'},
+        {'key': 'autonomie_independance', 'label': 'Autonomy / Independence', 'desc': 'Making decisions and acting on your own'},
       ],
     },
     {
-      'name': 'Santé et bien-être',
+      'name': 'Health and Well-being',
       'icon': 'assets/univers_visuel/santeetbienetre.png',
       'valeurs': [
-        {'key': 'sante_vitalite', 'label': 'Santé / Vitalité', 'desc': 'Prendre soin de son corps et de son énergie'},
-        {'key': 'equilibre_harmonie', 'label': 'Équilibre / Harmonie', 'desc': 'Maintenir un équilibre entre différents aspects de sa vie'},
-        {'key': 'bienetre_emotionnel', 'label': 'Bien-être émotionnel', 'desc': 'Cultiver la sérénité et la paix intérieure'},
+        {'key': 'sante_vitalite', 'label': 'Health / Vitality', 'desc': 'Taking care of your body and energy'},
+        {'key': 'equilibre_harmonie', 'label': 'Balance / Harmony', 'desc': 'Maintaining balance between different aspects of your life'},
+        {'key': 'bienetre_emotionnel', 'label': 'Emotional Well-being', 'desc': 'Cultivating serenity and inner peace'},
       ],
     },
     {
-      'name': 'Spiritualité et sens',
+      'name': 'Spirituality and Meaning',
       'icon': 'assets/univers_visuel/spiritualiteetsens.png',
       'valeurs': [
-        {'key': 'spiritualite_foi', 'label': 'Spiritualité / Foi', 'desc': 'Se relier à quelque chose de plus grand que soi'},
-        {'key': 'gratitude_appreciation', 'label': 'Gratitude / Appréciation', 'desc': 'Reconnaître et valoriser ce qui est positif'},
-        {'key': 'paix_interieure', 'label': 'Paix intérieure / Sérénité', 'desc': 'Rechercher le calme et la stabilité émotionnelle'},
-        {'key': 'contemplation_reflexion', 'label': 'Contemplation / Réflexion', 'desc': 'Prendre le temps d\'observer et de méditer'},
+        {'key': 'spiritualite_foi', 'label': 'Spirituality / Faith', 'desc': 'Connecting to something greater than yourself'},
+        {'key': 'gratitude_appreciation', 'label': 'Gratitude / Appreciation', 'desc': 'Recognizing and valuing what is positive'},
+        {'key': 'paix_interieure', 'label': 'Inner Peace / Serenity', 'desc': 'Seeking calm and emotional stability'},
+        {'key': 'contemplation_reflexion', 'label': 'Contemplation / Reflection', 'desc': 'Taking time to observe and meditate'},
       ],
     },
     {
-      'name': 'Liberté et authenticité',
+      'name': 'Freedom and Authenticity',
       'icon': 'assets/univers_visuel/liberteetauthenticite.png',
       'valeurs': [
-        {'key': 'liberte', 'label': 'Liberté / Indépendance', 'desc': 'Pouvoir choisir sa voie et agir selon ses convictions'},
-        {'key': 'authenticite_honnetete', 'label': 'Authenticité / Honnêteté', 'desc': 'Être vrai avec soi-même et les autres'},
-        {'key': 'responsabilite_integrite', 'label': 'Responsabilité / Intégrité', 'desc': 'Assumer ses choix et agir selon ses valeurs'},
+        {'key': 'liberte', 'label': 'Freedom / Independence', 'desc': 'Being able to choose your path and act according to your convictions'},
+        {'key': 'authenticite_honnetete', 'label': 'Authenticity / Honesty', 'desc': 'Being true to yourself and others'},
+        {'key': 'responsabilite_integrite', 'label': 'Responsibility / Integrity', 'desc': 'Owning your choices and acting according to your values'},
       ],
     },
     {
-      'name': 'Contribution et engagement',
+      'name': 'Contribution and Commitment',
       'icon': 'assets/univers_visuel/contributionetengagement.png',
       'valeurs': [
-        {'key': 'generosite_partage', 'label': 'Générosité / Partage', 'desc': 'Donner aux autres sans attendre en retour'},
-        {'key': 'engagement_social', 'label': 'Engagement social / Écologie', 'desc': 'Agir pour le bien commun et l\'environnement'},
-        {'key': 'justice_equite', 'label': 'Justice / Équité', 'desc': 'Défendre ce qui est juste et équilibré pour tous'},
+        {'key': 'generosite_partage', 'label': 'Generosity / Sharing', 'desc': 'Giving to others without expecting anything in return'},
+        {'key': 'engagement_social', 'label': 'Social Commitment / Ecology', 'desc': 'Acting for the common good and the environment'},
+        {'key': 'justice_equite', 'label': 'Justice / Fairness', 'desc': 'Defending what is fair and balanced for all'},
       ],
     },
     {
-      'name': 'Esthétique et expression',
+      'name': 'Aesthetics and Expression',
       'icon': 'assets/univers_visuel/esthetiqueetexpression.png',
       'valeurs': [
-        {'key': 'beaute_esthetique', 'label': 'Beauté / Esthétique', 'desc': 'Rechercher ou créer l\'harmonie et la beauté'},
-        {'key': 'art_expression', 'label': 'Art / Expression', 'desc': 'Exprimer ses émotions ou idées de façon créative'},
-        {'key': 'creativite_pratique', 'label': 'Créativité pratique', 'desc': 'Résoudre des problèmes avec imagination'},
+        {'key': 'beaute_esthetique', 'label': 'Beauty / Aesthetics', 'desc': 'Seeking or creating harmony and beauty'},
+        {'key': 'art_expression', 'label': 'Art / Expression', 'desc': 'Expressing your emotions or ideas creatively'},
+        {'key': 'creativite_pratique', 'label': 'Practical Creativity', 'desc': 'Solving problems with imagination'},
       ],
     },
   ];
@@ -111,24 +111,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     setState(() => _isLoading = true);
-    
+
     try {
       _currentUser = await CompleteAuthService.instance.getCurrentUser();
       final profileData = await CompleteAuthService.instance.getProfile();
-      
+
       if (profileData != null) {
         final profile = UserProfile.fromJson(profileData);
-        
+
         setState(() {
           _userProfile = profile;
           _prenomController.text = profile.prenom ?? '';
           _dateNaissance = profile.dateNaissance;
-          
+
           // Charger les valeurs sélectionnées
           if (profile.valeursSelectionnees != null) {
             _valeursSelectionnees = Set<String>.from(profile.valeursSelectionnees!);
           }
-          
+
           // Charger les valeurs libres
           _valeursLibresController.text = profile.valeursLibres ?? '';
         });
@@ -143,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Mon Profil',
+      title: 'My Profile',
       showMenuButton: true,
       showPositiveButton: true,
       showBackButton: true,
@@ -156,18 +156,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 32),
-                  
+
                   // Champ Prénom
                   _buildPrenomField(),
                   const SizedBox(height: 24),
-                  
+
                   // Champ Date de naissance
                   _buildDateNaissanceField(),
                   const SizedBox(height: 32),
-                  
+
                   // Section Valeurs
                   _buildValeursSection(),
-                  
+
                   const SizedBox(height: 32),
                   _buildSaveButton(),
                   const SizedBox(height: 24),
@@ -211,9 +211,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            _prenomController.text.isNotEmpty 
-                ? _prenomController.text 
-                : (_userProfile?.email ?? _currentUser ?? 'Mon Profil'),
+            _prenomController.text.isNotEmpty
+                ? _prenomController.text
+                : (_userProfile?.email ?? _currentUser ?? 'My Profile'),
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -228,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${_calculateCompletionPercentage()}% complété',
+              '${_calculateCompletionPercentage()}% completed',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -244,11 +244,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _calculateCompletionPercentage() {
     int completed = 0;
     int total = 3; // prénom, date naissance, valeurs
-    
+
     if (_prenomController.text.isNotEmpty) completed++;
     if (_dateNaissance != null) completed++;
     if (_valeursSelectionnees.isNotEmpty || _valeursLibresController.text.isNotEmpty) completed++;
-    
+
     return ((completed / total) * 100).round();
   }
 
@@ -278,14 +278,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        
+
         // Champ
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Comment veux-tu que je t\'appelle ?',
+                'What would you like me to call you?',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: const Color(0xFF64748B),
@@ -300,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: const Color(0xFF0F172A),
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Ton prénom',
+                  hintText: 'Your first name',
                   hintStyle: GoogleFonts.inter(
                     color: const Color(0xFF94A3B8),
                     fontSize: 14,
@@ -355,14 +355,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        
+
         // Champ
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Ta date de naissance nous permet d\'ajuster les perspectives à ton étape de vie.',
+                'Your date of birth helps us adjust perspectives to your stage of life.',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: const Color(0xFF64748B),
@@ -384,11 +384,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Expanded(
                         child: Text(
                           _dateNaissance != null
-                              ? '${_dateNaissance!.day.toString().padLeft(2, '0')}/${_dateNaissance!.month.toString().padLeft(2, '0')}/${_dateNaissance!.year}'
-                              : 'Sélectionner ta date de naissance',
+                              ? '${_dateNaissance!.month.toString().padLeft(2, '0')}/${_dateNaissance!.day.toString().padLeft(2, '0')}/${_dateNaissance!.year}'
+                              : 'Select your date of birth',
                           style: GoogleFonts.inter(
                             fontSize: 15,
-                            color: _dateNaissance != null 
+                            color: _dateNaissance != null
                                 ? const Color(0xFF0F172A)
                                 : const Color(0xFF94A3B8),
                           ),
@@ -419,7 +419,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       builder: (context) {
         DateTime tempDate = _dateNaissance ?? DateTime(1990, 1, 1);
-        
+
         return Container(
           height: 300,
           padding: const EdgeInsets.all(16),
@@ -431,12 +431,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      'Annuler',
+                      'Cancel',
                       style: GoogleFonts.inter(color: const Color(0xFF64748B)),
                     ),
                   ),
                   Text(
-                    'Date de naissance',
+                    'Date of Birth',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -449,7 +449,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.pop(context);
                     },
                     child: Text(
-                      'Valider',
+                      'Confirm',
                       style: GoogleFonts.inter(
                         color: const Color(0xFF6366F1),
                         fontWeight: FontWeight.w600,
@@ -502,7 +502,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(width: 12),
             Text(
-              'Mes valeurs',
+              'My Values',
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -512,7 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        
+
         // Texte explicatif
         Container(
           padding: const EdgeInsets.all(16),
@@ -525,7 +525,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '💡 Les valeurs sont ce qui compte le plus pour toi dans ta vie, ce qui te guide, te donne du sens ou te fait te sentir aligné·e avec toi-même.',
+                '💡 Values are what matters most to you in your life, what guides you, gives you meaning, or makes you feel aligned with yourself.',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: const Color(0xFF0F172A),
@@ -534,7 +534,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                '✨ Par exemple : liberté, honnêteté, curiosité, créativité, bienveillance, courage, spiritualité, famille...',
+                '✨ For example: freedom, honesty, curiosity, creativity, kindness, courage, spirituality, family...',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: const Color(0xFF64748B),
@@ -544,7 +544,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                '🎯 Pense à ce que tu défends ou choisis même quand c\'est difficile ; ce qui fait que tu te sens toi-même.',
+                '🎯 Think about what you stand for or choose even when it\'s hard; what makes you feel like yourself.',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: const Color(0xFF64748B),
@@ -555,12 +555,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        
+
         // Liste des catégories
         ..._categories.map((category) => _buildCategorySection(category)),
-        
+
         const SizedBox(height: 24),
-        
+
         // Saisie libre
         _buildValeursLibresField(),
       ],
@@ -571,7 +571,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final String categoryName = category['name'];
     final String iconPath = category['icon'];
     final List<dynamic> valeurs = category['valeurs'];
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -622,7 +622,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Liste des valeurs avec checkboxes
           ...valeurs.map((valeur) => _buildValeurCheckbox(valeur as Map<String, dynamic>)),
         ],
@@ -635,7 +635,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final String label = valeur['label'];
     final String desc = valeur['desc'];
     final bool isSelected = _valeursSelectionnees.contains(key);
-    
+
     return InkWell(
       onTap: () {
         setState(() {
@@ -669,7 +669,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   : null,
             ),
             const SizedBox(width: 12),
-            
+
             // Texte
             Expanded(
               child: Column(
@@ -706,7 +706,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Autres valeurs importantes pour toi',
+          'Other values important to you',
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -722,7 +722,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: const Color(0xFF0F172A),
           ),
           decoration: InputDecoration(
-            hintText: 'Ex: Humour, Aventure, Tradition...',
+            hintText: 'E.g.: Humor, Adventure, Tradition...',
             hintStyle: GoogleFonts.inter(
               color: const Color(0xFF94A3B8),
               fontSize: 14,
@@ -763,7 +763,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Sauvegarder mon profil',
+          'Save my profile',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -785,10 +785,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           age--;
         }
       }
-      
+
       // Construire la chaîne des valeurs pour compatibilité
       final valeursTexte = _buildValeursTexte();
-      
+
       final updatedProfile = (_userProfile ?? UserProfile.empty()).copyWith(
         prenom: _prenomController.text.isEmpty ? null : _prenomController.text,
         dateNaissance: _dateNaissance,
@@ -800,7 +800,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       final success = await CompleteAuthService.instance.saveProfile(updatedProfile.toJson());
-      
+
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -808,7 +808,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 12),
-                Text('Profil sauvegardé avec succès !', style: GoogleFonts.inter()),
+                Text('Profile saved successfully!', style: GoogleFonts.inter()),
               ],
             ),
             backgroundColor: const Color(0xFF10B981),
@@ -824,7 +824,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 12),
-                Text('Erreur lors de la sauvegarde', style: GoogleFonts.inter()),
+                Text('Error while saving', style: GoogleFonts.inter()),
               ],
             ),
             backgroundColor: const Color(0xFFEF4444),
@@ -838,7 +838,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _buildValeursTexte() {
     final valeurs = <String>[];
-    
+
     // Ajouter les valeurs sélectionnées (avec leurs labels)
     for (final category in _categories) {
       final categoryValeurs = category['valeurs'] as List<dynamic>;
@@ -849,12 +849,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     }
-    
+
     // Ajouter les valeurs libres
     if (_valeursLibresController.text.isNotEmpty) {
       valeurs.add(_valeursLibresController.text);
     }
-    
+
     return valeurs.join(', ');
   }
 

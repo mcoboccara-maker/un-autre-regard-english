@@ -1,0 +1,9 @@
+{
+  "blesse": {
+    "description": "1. **FORME GÉNÉRALE** :\n   - Type : cercle.\n   - Proportions : parfaitement rond.\n   - Taille : occupe environ 60% de la hauteur de l'image.\n\n2. **EXPRESSION / ÉLÉMENTS PRINCIPAUX** :\n   - Bouche : courbure convexe vers le haut en forme de demi-cercle inversé, centrée horizontalement et située approximativement au tiers inférieur du cercle. Épaisseur moyenne.\n   - Yeux : deux cercles pleins, de taille petite à moyenne, placés symétriquement à égale distance du centre. Ils sont légèrement au-dessus de la ligne horizontale centrale du cercle.\n   - Sourcils : absents.\n\n3. **ÉLÉMENTS ADDITIONNELS** :\n   - Aucun accessoire ou symbole intégré.\n\n4. **COULEURS EXACTES** :\n   - Couleur du contour et des traits : vert (#4CAF50).\n   - Couleur de remplissage : même vert (#4CAF50) mais plus clair.\n   - Dégradé du fond : halo vert clair autour de l'icône, sur un fond blanc.\n\n5. **STYLE** :\n   - Épaisseur des lignes : moyenne, uniforme.\n   - Style : vectoriel, flat.\n   - Niveau de minimalisme : élevé, design simple et épuré.\n\n6. **TEXTE/LÉGENDE** :\n   - Texte : \"BLESSÉ(E)\"\n   - Position : sous l'icône, centré.\n   - Couleur : même vert que le contour de l'icône.",
+    "levels": [
+      1,
+      2
+    ]
+  }
+}

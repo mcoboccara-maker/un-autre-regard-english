@@ -225,7 +225,7 @@ class SemanticSearchConfig {
     }
 
     if (missing.isEmpty) return '';
-    return 'Configuration manquante: ${missing.join(', ')}';
+    return 'Missing configuration: ${missing.join(', ')}';
   }
 }
 

@@ -28,7 +28,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
 
   Future<void> _loadTodayEntry() async {
     final todayEntry = await EmotionalTrackingService.instance.getTodayEntry();
-    
+
     if (todayEntry != null) {
       setState(() {
         for (final entry in todayEntry.emotions.entries) {
@@ -40,7 +40,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
         _noteController.text = todayEntry.note ?? '';
       });
     }
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -48,12 +48,12 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
     // Filtrer les émotions avec intensité > 0 uniquement
     final validEmotions = Map<String, Map<String, dynamic>>.from(_selectedEmotions)
       ..removeWhere((key, value) => (value['intensity'] as int) == 0);
-    
+
     if (validEmotions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Sélectionne au moins une émotion avec une intensité',
+            'Select at least one emotion with an intensity',
             style: GoogleFonts.poppins(),
           ),
         ),
@@ -114,7 +114,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Émotions enregistrées !',
+                          'Emotions saved!',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -126,16 +126,16 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Roue émotionnelle RADAR
                 EmotionWheelWidget(
                   emotions: entry.emotions,
                   date: entry.date,
                   showShareButton: true,
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Bouton fermer
                 ElevatedButton(
                   onPressed: () {
@@ -150,7 +150,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                     ),
                   ),
                   child: Text(
-                    'Fermer',
+                    'Close',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -201,7 +201,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
   Widget _buildDateHeader() {
     final now = DateTime.now();
     final dateStr = '${_getDayName(now.weekday)} ${now.day} ${_getMonthName(now.month)}';
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -232,7 +232,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                 ),
               ),
               Text(
-                'Ton humeur du jour',
+                'Your mood today',
                 style: GoogleFonts.poppins(
                   color: Colors.white70,
                   fontSize: 14,
@@ -250,7 +250,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Sélectionne tes émotions',
+          'Select your emotions',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -258,36 +258,36 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Choisis plusieurs émotions, ajuste leur intensité et précise les nuances',
+          'Choose several emotions, adjust their intensity and specify the nuances',
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: Colors.grey[600],
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Liste des émotions négatives
         ...EmotionCategories.negativeEmotions.map((emotion) {
           final isSelected = _selectedEmotions.containsKey(emotion.key);
           final data = _selectedEmotions[emotion.key];
           final intensity = data?['intensity'] ?? 50;
           final nuances = List<String>.from(data?['nuances'] ?? []);
-          
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _buildEmotionCard(emotion, isSelected, intensity, nuances),
           );
         }),
-        
+
         const SizedBox(height: 24),
-        
+
         // Liste des émotions positives
         ...EmotionCategories.positiveEmotions.map((emotion) {
           final isSelected = _selectedEmotions.containsKey(emotion.key);
           final data = _selectedEmotions[emotion.key];
           final intensity = data?['intensity'] ?? 50;
           final nuances = List<String>.from(data?['nuances'] ?? []);
-          
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _buildEmotionCard(emotion, isSelected, intensity, nuances),
@@ -305,7 +305,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
   ) {
     // Convertir l'intensité (0-100) en valeur 1-10
     final displayLevel = (intensity / 10).round().clamp(0, 10);
-    
+
     return Column(
       children: [
         // Carte principale
@@ -374,7 +374,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
             ),
           ),
         ),
-        
+
         // Section intensité avec boutons 1-10 (si sélectionné)
         if (isSelected) ...[
           const SizedBox(height: 8),
@@ -392,7 +392,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Intensité:',
+                      'Intensity:',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -408,24 +408,24 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // ═══════════════════════════════════════════════════════════
                 // MODIFIÉ: Boutons 1-10 au lieu du slider
                 // ═══════════════════════════════════════════════════════════
                 _buildIntensityButtons(emotion, intensity),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Bouton pour sélectionner les nuances
                 OutlinedButton.icon(
                   onPressed: () => _showNuancesDialog(emotion, selectedNuances),
                   icon: Icon(Icons.tune, size: 16, color: emotion.color),
                   label: Text(
                     selectedNuances.isEmpty
-                        ? 'Préciser les nuances'
-                        : '${selectedNuances.length} nuance(s) sélectionnée(s)',
+                        ? 'Specify nuances'
+                        : '${selectedNuances.length} nuance(s) selected',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       color: emotion.color,
@@ -435,7 +435,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
                     side: BorderSide(color: emotion.color),
                   ),
                 ),
-                
+
                 // Afficher les nuances sélectionnées
                 if (selectedNuances.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -473,11 +473,11 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
   Widget _buildIntensityButtons(EmotionConfig emotion, int intensity) {
     // Convertir l'intensité (0-100) en niveau (0-10)
     final currentLevel = (intensity / 10).round().clamp(0, 10);
-    
+
     // Couleurs des icônes
     const vertMenthe = Color(0xFF9FD5A1);  // Vert des icônes emotion
     const bleuPetrole = Color(0xFF2E7D8A); // Bleu des icônes evaluation
-    
+
     return Column(
       children: [
         // Icône emotion qui change selon la valeur sélectionnée
@@ -504,9 +504,9 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // SLIDER avec couleurs VERT (actif) / BLEU (inactif)
         Row(
           children: [
@@ -557,7 +557,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
             ),
           ],
         ),
-        
+
         // Raccourcis rapides 0, 5, 10
         const SizedBox(height: 6),
         Row(
@@ -608,7 +608,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
         initialSelected: selectedNuances,
       ),
     );
-    
+
     if (result != null) {
       setState(() {
         _selectedEmotions[emotion.key]!['nuances'] = result;
@@ -621,7 +621,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Note optionnelle',
+          'Optional note',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -632,7 +632,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
           controller: _noteController,
           maxLines: 4,
           decoration: InputDecoration(
-            hintText: 'Quelque chose de particulier aujourd\'hui ?',
+            hintText: 'Anything special today?',
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -659,7 +659,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
           padding: const EdgeInsets.only(bottom: 4),  // Remonter le texte
         ),
         child: Text(
-          'Enregistrer et voir ma roue émotionnelle',
+          'Save and see my emotional wheel',
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -671,13 +671,13 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
   }
 
   String _getDayName(int weekday) {
-    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     return days[weekday - 1];
   }
 
   String _getMonthName(int month) {
-    const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
     return months[month - 1];
   }
 }
@@ -686,7 +686,7 @@ class _DailyMoodEntryScreenState extends State<DailyMoodEntryScreen> {
 class _NuancesDialog extends StatefulWidget {
   final EmotionConfig emotion;
   final List<String> initialSelected;
-  
+
   const _NuancesDialog({
     required this.emotion,
     required this.initialSelected,
@@ -721,7 +721,7 @@ class _NuancesDialogState extends State<_NuancesDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Nuances de ${widget.emotion.name}',
+                    'Nuances of ${widget.emotion.name}',
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -733,7 +733,7 @@ class _NuancesDialogState extends State<_NuancesDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Sélectionne les nuances qui correspondent le mieux',
+              'Select the nuances that best match',
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 color: Colors.grey[600],
@@ -772,7 +772,7 @@ class _NuancesDialogState extends State<_NuancesDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Annuler'),
+                  child: Text('Cancel'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
@@ -780,7 +780,7 @@ class _NuancesDialogState extends State<_NuancesDialog> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.emotion.color,
                   ),
-                  child: Text('Valider (${_selected.length})'),
+                  child: Text('Confirm (${_selected.length})'),
                 ),
               ],
             ),

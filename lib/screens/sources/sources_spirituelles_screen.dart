@@ -20,76 +20,76 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
   final List<SpiritualSource> _sources = [
     SpiritualSource(
       id: 'judaisme_rabbinique',
-      name: 'Judaïsme rabbinique',
+      name: 'Rabbinic Judaism',
       iconPath: 'assets/univers_visuel/judaisme rabbinique akiva.png',
-      description: 'Tradition issue de la Torah et du Talmud, structurée autour de l\'étude, de la loi (Halakha) et de l\'interprétation rabbinique.',
-      modeOfThought: 'Centralité du texte, dialogue entre la loi et l\'expérience humaine ; importance de la responsabilité individuelle et collective.',
-      worldView: 'Le monde est un lieu où l\'être humain participe à réparer l\'imperfection (Tikkoun Olam) ; Dieu agit à travers l\'histoire.',
+      description: 'Tradition rooted in the Torah and Talmud, structured around study, law (Halakha) and rabbinic interpretation.',
+      modeOfThought: 'Centrality of the text, dialogue between law and human experience; importance of individual and collective responsibility.',
+      worldView: 'The world is a place where human beings participate in repairing imperfection (Tikkun Olam); God acts through history.',
     ),
     SpiritualSource(
       id: 'moussar',
-      name: 'Moussar (éthique juive)',
+      name: 'Mussar (Jewish Ethics)',
       iconPath: 'assets/univers_visuel/moussar.png',
-      description: 'Courant éthique du judaïsme né au XIXe siècle, centré sur le raffinement moral et émotionnel.',
-      modeOfThought: 'Travail intérieur, observation de soi, transformation progressive par la conscience et la pratique.',
-      worldView: 'Le monde est un terrain d\'entraînement pour l\'âme ; chaque émotion ou situation révèle une opportunité de croissance.',
+      description: 'Ethical movement within Judaism born in the 19th century, focused on moral and emotional refinement.',
+      modeOfThought: 'Inner work, self-observation, gradual transformation through awareness and practice.',
+      worldView: 'The world is a training ground for the soul; every emotion or situation reveals an opportunity for growth.',
     ),
     SpiritualSource(
       id: 'kabbale',
-      name: 'Kabbale (mystique juive)',
+      name: 'Kabbalah (Jewish Mysticism)',
       iconPath: 'assets/univers_visuel/kabale.png',
-      description: 'Tradition mystique qui explore les dimensions cachées du divin, l\'arbre des Sephirot, et les énergies qui structurent la réalité.',
-      modeOfThought: 'Vision symbolique, recherche des causes invisibles, lecture métaphorique et profonde des expériences.',
-      worldView: 'Le monde est une émanation fragmentée du divin ; l\'être humain participe à l\'unification spirituelle.',
+      description: 'Mystical tradition that explores the hidden dimensions of the divine, the Tree of Sefirot, and the energies that structure reality.',
+      modeOfThought: 'Symbolic vision, search for invisible causes, metaphorical and deep reading of experiences.',
+      worldView: 'The world is a fragmented emanation of the divine; human beings participate in spiritual unification.',
     ),
     SpiritualSource(
       id: 'christianisme',
-      name: 'Christianisme',
+      name: 'Christianity',
       iconPath: 'assets/univers_visuel/christianisme.png',
-      description: 'Tradition fondée sur la vie et l\'enseignement de Jésus, centrée sur l\'amour, le pardon et la relation personnelle avec Dieu.',
-      modeOfThought: 'Perspective morale et relationnelle : transformation par l\'amour, la grâce, la compassion.',
-      worldView: 'Le monde est un chemin vers la réconciliation spirituelle ; la souffrance peut devenir lieu de sens.',
+      description: 'Tradition founded on the life and teachings of Jesus, centered on love, forgiveness and a personal relationship with God.',
+      modeOfThought: 'Moral and relational perspective: transformation through love, grace, compassion.',
+      worldView: 'The world is a path toward spiritual reconciliation; suffering can become a place of meaning.',
     ),
     SpiritualSource(
       id: 'islam',
       name: 'Islam',
       iconPath: 'assets/univers_visuel/islam.png',
-      description: 'Tradition fondée sur le Coran et les enseignements du Prophète, structurée par une relation harmonieuse entre foi, pratique et communauté (Ummah).',
-      modeOfThought: 'Soumission confiante à Dieu (Allah), discipline intérieure et extérieure, recherche de justice et de paix.',
-      worldView: 'Le monde est signe (ayat), chaque événement porte un enseignement ; l\'équilibre spirituel et moral mène à la paix intérieure.',
+      description: 'Tradition founded on the Quran and the teachings of the Prophet, structured by a harmonious relationship between faith, practice and community (Ummah).',
+      modeOfThought: 'Trusting submission to God (Allah), inner and outer discipline, pursuit of justice and peace.',
+      worldView: 'The world is a sign (ayat), each event carries a teaching; spiritual and moral balance leads to inner peace.',
     ),
     SpiritualSource(
       id: 'soufisme',
-      name: 'Soufisme (mystique musulmane)',
+      name: 'Sufism (Islamic Mysticism)',
       iconPath: 'assets/univers_visuel/soufisme.png',
-      description: 'Courant intérieur de l\'Islam visant la proximité intime avec Dieu par l\'amour, l\'humilité et la purification du cœur.',
-      modeOfThought: 'Vision poétique, symbolique, basée sur la quête intérieure, l\'union au divin et le dépouillement de l\'ego.',
-      worldView: 'Le monde est un miroir ; ce que l\'on vit révèle le chemin vers le cœur. Le divin se trouve dans l\'expérience intime.',
+      description: 'Inner current of Islam seeking intimate closeness with God through love, humility and purification of the heart.',
+      modeOfThought: 'Poetic, symbolic vision, based on the inner quest, union with the divine and shedding of the ego.',
+      worldView: 'The world is a mirror; what one experiences reveals the path to the heart. The divine is found in intimate experience.',
     ),
     SpiritualSource(
       id: 'bouddhisme',
-      name: 'Bouddhisme',
+      name: 'Buddhism',
       iconPath: 'assets/univers_visuel/boudhisme.png',
-      description: 'Tradition fondée sur l\'enseignement du Bouddha visant à réduire la souffrance en comprenant la nature de l\'esprit et de l\'attachement.',
-      modeOfThought: 'Observation, non-attachement, pleine conscience, transformation progressive par l\'expérience directe.',
-      worldView: 'Le monde est impermanent ; la souffrance vient de l\'attente, non de l\'événement. La liberté est intérieure.',
+      description: 'Tradition founded on the teachings of the Buddha, aimed at reducing suffering by understanding the nature of the mind and attachment.',
+      modeOfThought: 'Observation, non-attachment, mindfulness, gradual transformation through direct experience.',
+      worldView: 'The world is impermanent; suffering comes from expectation, not from events. Freedom is within.',
     ),
     SpiritualSource(
       id: 'hindouisme',
-      name: 'Hindouisme',
+      name: 'Hinduism',
       iconPath: 'assets/univers_visuel/hindouisme.png',
-      description: 'Ensemble de traditions spirituelles originaires de l\'Inde, centrées sur le dharma, le karma et la quête de libération (moksha).',
-      modeOfThought: 'Acceptation des cycles de vie, recherche de l\'unité entre l\'âme individuelle (Atman) et l\'absolu (Brahman).',
-      worldView: 'Le monde est une manifestation divine (maya) ; chaque être est en chemin vers la réalisation de sa vraie nature.',
+      description: 'Collection of spiritual traditions originating from India, centered on dharma, karma and the quest for liberation (moksha).',
+      modeOfThought: 'Acceptance of life cycles, search for unity between the individual soul (Atman) and the absolute (Brahman).',
+      worldView: 'The world is a divine manifestation (maya); every being is on a path toward realizing their true nature.',
     ),
     // Stoïcisme retiré - déplacé vers courants philosophiques
     SpiritualSource(
       id: 'spiritualite_contemporaine',
-      name: 'Spiritualité contemporaine / laïque',
+      name: 'Contemporary / Secular Spirituality',
       iconPath: 'assets/univers_visuel/contemporaine_et_laique.png',
-      description: 'Ensemble de pratiques modernes non dogmatiques inspirées de psychologie, méditation, développement personnel, symbolisme ou traditions diverses.',
-      modeOfThought: 'Approche expérimentale, introspective, souvent émotionnelle ; priorité donnée au bien-être, à la sensibilité et à la conscience de soi.',
-      worldView: 'Le monde est un espace d\'expérience et d\'évolution personnelle ; l\'important est l\'authenticité et la présence.',
+      description: 'Collection of modern non-dogmatic practices inspired by psychology, meditation, personal development, symbolism or various traditions.',
+      modeOfThought: 'Experimental, introspective approach, often emotional; priority given to well-being, sensitivity and self-awareness.',
+      worldView: 'The world is a space of experience and personal evolution; what matters is authenticity and presence.',
     ),
   ];
 
@@ -126,7 +126,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
         );
         await CompleteAuthService.instance.saveProfile(updatedProfile.toJson());
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -135,9 +135,9 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 12),
                 Text(
-                  _selectedSources.isEmpty 
-                    ? 'Aucune source spirituelle sélectionnée'
-                    : '${_selectedSources.length} source(s) spirituelle(s) enregistrée(s)',
+                  _selectedSources.isEmpty
+                    ? 'No spiritual source selected'
+                    : '${_selectedSources.length} spiritual source(s) saved',
                   style: GoogleFonts.inter(),
                 ),
               ],
@@ -153,7 +153,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: $e', style: GoogleFonts.inter()),
+            content: Text('Error: $e', style: GoogleFonts.inter()),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );
@@ -164,7 +164,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Sources Spirituelles',
+      title: 'Spiritual Sources',
       showMenuButton: true,
       showPositiveButton: true,
       showBackButton: true, // ✅ Bouton retour EN HAUT du bouton Valider
@@ -187,7 +187,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '${_selectedSources.length} sélectionnée(s)',
+                            '${_selectedSources.length} selected',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -198,7 +198,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                       ],
                     ),
                   ),
-                
+
                 // Liste scrollable
                 Expanded(
                   child: ListView.builder(
@@ -246,7 +246,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_selectedSources.length} sélectionnée(s)',
+                    '${_selectedSources.length} selected',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -256,9 +256,9 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Icône centrale spiritualités - GRANDE
           Image.asset(
             'assets/univers_visuel/spiritualites.png',
@@ -267,7 +267,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
             errorBuilder: (context, error, stackTrace) {
               // Essayer avec l'accent si sans accent échoue
               return Image.asset(
-                'assets/univers_visuel/spiritualités.png',
+                'assets/univers_visuel/spiritualites.png',
                 width: 120,
                 height: 120,
                 errorBuilder: (context, error, stackTrace) {
@@ -284,22 +284,22 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
               );
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Text(
-            'Sources Spirituelles',
+            'Spiritual Sources',
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0F172A),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
-            'Choisissez les traditions qui vous inspirent',
+            'Choose the traditions that inspire you',
             style: GoogleFonts.inter(
               fontSize: 15,
               color: const Color(0xFF64748B),
@@ -313,7 +313,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
 
   Widget _buildSourceCard(SpiritualSource source) {
     final isSelected = _selectedSources.contains(source.id);
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -394,7 +394,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected 
+                          color: isSelected
                               ? const Color(0xFF10B981)
                               : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(20),
@@ -407,7 +407,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                             if (isSelected)
                               const SizedBox(width: 4),
                             Text(
-                              isSelected ? 'Choisi' : 'Choisir',
+                              isSelected ? 'Selected' : 'Select',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -422,7 +422,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                 ),
               ),
             ),
-            
+
             // Contenu à droite - aligné à gauche
             Expanded(
               child: Padding(
@@ -440,7 +440,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Description - alignée sur le titre
                     Text(
                       source.description,
@@ -451,10 +451,10 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     // Mode de pensée - titre en dégradé vert
                     Text(
-                      'Mode de pensée',
+                      'Way of Thinking',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -471,10 +471,10 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    
+
                     // Vision du monde - titre en dégradé vert plus foncé
                     Text(
-                      'Vision du monde',
+                      'Worldview',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -515,7 +515,7 @@ class _SourcesSpirituellesScreenState extends State<SourcesSpirituellesScreen> {
           elevation: 0,
         ),
         child: Text(
-          'Valider mes choix',
+          'Confirm my choices',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

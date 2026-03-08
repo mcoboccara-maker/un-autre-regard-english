@@ -80,7 +80,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Mode d\'emploi',
+          'User Guide',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -106,7 +106,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Chargement du tutoriel...',
+            'Loading tutorial...',
             style: GoogleFonts.inter(
               color: Colors.white70,
               fontSize: 16,
@@ -131,7 +131,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Erreur de chargement',
+              'Loading Error',
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontSize: 20,
@@ -157,7 +157,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
                 _initializeVideo();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Réessayer'),
+              label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6366F1),
               ),

@@ -144,7 +144,7 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
     return Column(
       children: [
         Text(
-          'MON ÉTAT',
+          'MY EMOTIONAL',
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -153,7 +153,7 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
           ),
         ),
         Text(
-          'ÉMOTIONNEL',
+          'STATE',
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -317,14 +317,14 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Partagé depuis ',
+          'Shared from ',
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: Colors.white60,
           ),
         ),
         Text(
-          'UN AUTRE REGARD',
+          'ANOTHER PERSPECTIVE',
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -350,7 +350,7 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
             )
           : const Icon(Icons.share),
       label: Text(
-        _isSharing ? 'Préparation...' : 'Partager mon état émotionnel',
+        _isSharing ? 'Preparing...' : 'Share my emotional state',
         style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
       ),
       style: ElevatedButton.styleFrom(
@@ -423,7 +423,7 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Image partagée !', style: GoogleFonts.poppins()),
+            content: Text('Image shared!', style: GoogleFonts.poppins()),
             backgroundColor: Colors.green,
           ),
         );
@@ -441,12 +441,12 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
               children: [
                 const Icon(Icons.error, color: Colors.red),
                 const SizedBox(width: 8),
-                const Text('Erreur de partage'),
+                const Text('Sharing error'),
               ],
             ),
             content: SingleChildScrollView(
               child: SelectableText(
-                'Détails:\n$e',
+                'Details:\n$e',
                 style: GoogleFonts.poppins(fontSize: 14),
               ),
             ),
@@ -471,35 +471,35 @@ class _EmotionShareCardState extends State<EmotionShareCard> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
-      'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   String _getEmotionName(String key) {
     const names = {
-      'blesse': 'Blessé',
-      'confus': 'Confus',
-      'critique': 'Critique',
-      'deprime': 'Déprimé',
-      'effraye': 'Effrayé',
-      'encolere': 'En Colère',
-      'impuissant': 'Impuissant',
-      'triste': 'Triste',
-      'aimant': 'Aimant',
-      'detendu': 'Détendu',
-      'paisible': 'Paisible',
-      'ouvert': 'Ouvert',
-      'tourmente': 'Tourmenté',
-      'inquiet': 'Inquiet',
-      'isole': 'Isolé',
-      'positif': 'Positif',
-      'interesse': 'Intéressé',
-      'heureux': 'Heureux',
-      'vivant': 'Vivant',
-      'fort': 'Fort',
-      'indifferent': 'Indifférent',
+      'blesse': 'Hurt',
+      'confus': 'Confused',
+      'critique': 'Critical',
+      'deprime': 'Depressed',
+      'effraye': 'Frightened',
+      'encolere': 'Angry',
+      'impuissant': 'Helpless',
+      'triste': 'Sad',
+      'aimant': 'Loving',
+      'detendu': 'Relaxed',
+      'paisible': 'Peaceful',
+      'ouvert': 'Open',
+      'tourmente': 'Tormented',
+      'inquiet': 'Worried',
+      'isole': 'Isolated',
+      'positif': 'Positive',
+      'interesse': 'Interested',
+      'heureux': 'Happy',
+      'vivant': 'Alive',
+      'fort': 'Strong',
+      'indifferent': 'Indifferent',
     };
     return names[key] ?? key;
   }
@@ -706,27 +706,27 @@ class _RadarPainter extends CustomPainter {
 
   String _getEmotionName(String key) {
     const names = {
-      'blesse': 'Blessé',
-      'confus': 'Confus',
-      'critique': 'Critique',
-      'deprime': 'Déprimé',
-      'effraye': 'Effrayé',
-      'encolere': 'EnColère',
-      'impuissant': 'Impuissant',
-      'triste': 'Triste',
-      'aimant': 'Aimant',
-      'detendu': 'Détendu',
-      'paisible': 'Paisible',
-      'ouvert': 'Ouvert',
-      'tourmente': 'Tourmenté',
-      'inquiet': 'Inquiet',
-      'isole': 'Isolé',
-      'positif': 'Positif',
-      'interesse': 'Intéressé',
-      'heureux': 'Heureux',
-      'vivant': 'Vivant',
-      'fort': 'Fort',
-      'indifferent': 'Indifférent',
+      'blesse': 'Hurt',
+      'confus': 'Confused',
+      'critique': 'Critical',
+      'deprime': 'Depressed',
+      'effraye': 'Frightened',
+      'encolere': 'Angry',
+      'impuissant': 'Helpless',
+      'triste': 'Sad',
+      'aimant': 'Loving',
+      'detendu': 'Relaxed',
+      'paisible': 'Peaceful',
+      'ouvert': 'Open',
+      'tourmente': 'Tormented',
+      'inquiet': 'Worried',
+      'isole': 'Isolated',
+      'positif': 'Positive',
+      'interesse': 'Interested',
+      'heureux': 'Happy',
+      'vivant': 'Alive',
+      'fort': 'Strong',
+      'indifferent': 'Indifferent',
     };
     return names[key] ?? key;
   }

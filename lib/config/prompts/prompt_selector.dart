@@ -335,7 +335,7 @@ class PromptSelector {
   
   /// Retourne le nom de la langue actuellement en cache
   static String get currentLanguageName {
-    if (_cachedLanguage == null) return 'Non détectée';
+    if (_cachedLanguage == null) return 'Not detected';
     return LanguageDetector.getLanguageName(_cachedLanguage!);
   }
   

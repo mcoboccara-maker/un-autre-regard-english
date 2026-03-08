@@ -9,6 +9,7 @@ import '../config/approach_config.dart';
 import '../models/reflection.dart';
 import '../models/emotional_state.dart';
 import '../services/ai_service.dart';
+import '../services/background_music_service.dart';
 import '../widgets/carousel_3d/card_carousel_3d.dart';
 import '../widgets/brain_gestation_widget.dart';
 import 'eclairages_carousel_screen.dart';
@@ -106,6 +107,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
   @override
   void initState() {
     super.initState();
+    BackgroundMusicService.instance.play('sounds/the_journey_before_dawn.mp3');
     _sources = _buildLimitedSources()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     _cards = _buildCards();
@@ -230,7 +232,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
     final text = _thoughtController.text.trim();
     if (text.isEmpty) {
       setState(() {
-        _errorMessage = 'Saisis ta pensee avant de generer.';
+        _errorMessage = 'Enter your thought before generating.';
       });
       return;
     }
@@ -282,7 +284,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Erreur lors de la generation. Reessaie.';
+          _errorMessage = 'Error during generation. Please try again.';
           _isGenerating = false;
         });
       }
@@ -388,7 +390,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Tous les regards existent, tu n\'en convoques qu\'un.',
+                'Every perspective exists, you only summon one.',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: Colors.white.withValues(alpha: 0.85),
@@ -414,7 +416,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
                   size: 26,
                 ),
               ),
-              tooltip: 'Connexion',
+              tooltip: 'Sign In',
             ),
           ),
         ],
@@ -440,7 +442,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
             Center(
               child: _ArcadeButton(
                 imagePath: 'assets/univers_visuel/boutons_vert.webp',
-                legend: 'Fais tourner',
+                legend: 'Spin the wheel',
                 onPressed: _spinRandom,
                 size: 56,
               ),
@@ -463,7 +465,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Text(
-                'Saisis une pensée et soumets-la à cette source',
+                'Enter a thought and submit it to this source',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.6),
@@ -486,7 +488,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
                 maxLines: 2,
                 style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Qu\'est-ce qui te traverse l\'esprit ?',
+                  hintText: 'What\'s on your mind?',
                   hintStyle: GoogleFonts.inter(
                     color: Colors.white.withValues(alpha: 0.35),
                     fontSize: 14,
@@ -512,7 +514,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
                       selectedSource != null ? _generateResponse : null,
                   icon: const Icon(Icons.auto_awesome, size: 20),
                   label: Text(
-                    'Générer un éclairage',
+                    'Generate an insight',
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,

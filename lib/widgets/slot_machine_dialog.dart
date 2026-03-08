@@ -39,28 +39,28 @@ class _SlotMachineDialogState extends State<SlotMachineDialog>
   final Random _random = Random();
 
   static const List<SlotItem> wheel1Items = [
-    SlotItem('Judaïsme', 'judaisme.png'),
-    SlotItem('Moussar', 'moussar.png'),
-    SlotItem('Bouddhisme', 'bouddhisme.png'),
-    SlotItem('Hindouisme', 'hindouisme.png'),
-    SlotItem('Soufisme', 'soufisme.png'),
+    SlotItem('Judaism', 'judaisme.png'),
+    SlotItem('Mussar', 'moussar.png'),
+    SlotItem('Buddhism', 'bouddhisme.png'),
+    SlotItem('Hinduism', 'hindouisme.png'),
+    SlotItem('Sufism', 'soufisme.png'),
   ];
 
   static const List<SlotItem> wheel2Items = [
-    SlotItem('Philo antique', 'philo_antique.png'),
-    SlotItem('Philo moderne', 'philo_moderne.png'),
-    SlotItem('Psychologie', 'psychologie.png'),
-    SlotItem('Jungienne', 'jungienne.png'),
-    SlotItem('Pleine conscience', 'pleine_conscience.png'),
+    SlotItem('Ancient Phil.', 'philo_antique.png'),
+    SlotItem('Modern Phil.', 'philo_moderne.png'),
+    SlotItem('Psychology', 'psychologie.png'),
+    SlotItem('Jungian', 'jungienne.png'),
+    SlotItem('Mindfulness', 'pleine_conscience.png'),
     SlotItem('The Work', 'theworkkb.png'),
   ];
 
   static const List<SlotItem> wheel3Items = [
-    SlotItem('Poésie', 'poesie.png'),
-    SlotItem('Romantisme', 'romantisme.png'),
-    SlotItem('Réalisme', 'realisme.png'),
-    SlotItem('Symbolisme', 'symbolisme.png'),
-    SlotItem('Textes sacrés', 'textes_sacres.png'),
+    SlotItem('Poetry', 'poesie.png'),
+    SlotItem('Romanticism', 'romantisme.png'),
+    SlotItem('Realism', 'realisme.png'),
+    SlotItem('Symbolism', 'symbolisme.png'),
+    SlotItem('Sacred Texts', 'textes_sacres.png'),
   ];
 
   @override
@@ -183,7 +183,7 @@ class _SlotMachineDialogState extends State<SlotMachineDialog>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Machine à inspirations',
+              'Inspiration Machine',
               style: GoogleFonts.playfairDisplay(
                 color: Colors.white,
                 fontSize: 18,
@@ -191,7 +191,7 @@ class _SlotMachineDialogState extends State<SlotMachineDialog>
             ),
             const SizedBox(height: 6),
             Text(
-              'Laissez une combinaison venir à vous.',
+              'Let a combination come to you.',
               style: GoogleFonts.nunito(
                 color: Colors.white70,
                 fontSize: 11,
@@ -318,7 +318,7 @@ class _SlotMachineDialogState extends State<SlotMachineDialog>
               padding: const EdgeInsets.symmetric(vertical: 10),
             ),
             child: Text(
-              _isSpinning ? 'En cours…' : 'Lancer le tirage',
+              _isSpinning ? 'Spinning…' : 'Pull the lever',
               style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w700,
                 fontSize: 13,

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../services/complete_auth_service.dart';
+import '../widgets/nav_cartouche.dart';
 import '../services/ai_service.dart'; // AJOUT: Pour clearUserData lors du logout
 import '../widgets/wisdom_wheel_dialog.dart';
 
@@ -57,10 +58,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   
   // Types d'entrée avec leurs icônes existantes et labels
   static const List<Map<String, dynamic>> _entryTypes = [
-    {'id': 'pensee', 'label': 'Pensée', 'icon': 'pensee.png', 'placeholder': 'Qu\'est-ce qui te traverse l\'esprit ?'},
-    {'id': 'situation', 'label': 'Situation', 'icon': 'situation.png', 'placeholder': 'Décris la situation que tu traverses...'},
-    {'id': 'question', 'label': 'Question', 'icon': 'question_existentielle.png', 'placeholder': 'Quelle question te préoccupe ?'},
-    {'id': 'dilemme', 'label': 'Dilemme', 'icon': 'dilemme.png', 'placeholder': 'Quel choix difficile dois-tu faire ?'},
+    {'id': 'pensee', 'label': 'Thought', 'icon': 'pensee.png', 'placeholder': 'What\'s on your mind?'},
+    {'id': 'situation', 'label': 'Situation', 'icon': 'situation.png', 'placeholder': 'Describe the situation you\'re going through...'},
+    {'id': 'question', 'label': 'Question', 'icon': 'question_existentielle.png', 'placeholder': 'What question concerns you?'},
+    {'id': 'dilemme', 'label': 'Dilemma', 'icon': 'dilemme.png', 'placeholder': 'What difficult choice do you have to make?'},
   ];
   
   // Icônes des spiritualités principales (décoratives)
@@ -505,38 +506,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildTopRightActions() {
     return Row(
       children: [
-        // Bouton Pensée Positive
-        GestureDetector(
+        // Bouton Pensée Positive — NavCartouche uniforme
+        NavCartouche(
+          assetPath: 'assets/univers_visuel/pensee_positive.png',
+          fallbackIcon: Icons.lightbulb_outline,
+          tooltip: 'Positive thought',
           onTap: _showPositiveThought,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4DB6AC).withOpacity(0.2),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/univers_visuel/pensee_positive.png',
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.lightbulb_outline,
-                  color: Color(0xFF4DB6AC),
-                  size: 20,
-                ),
-              ),
-            ),
-          ),
         ),
         
         const SizedBox(width: 8),
@@ -698,8 +673,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Expanded(
                     child: Text(
                       _isUsingDefaultSources
-                          ? '$_totalSourcesCount sagesse(s) par défaut'
-                          : '$_totalSourcesCount sagesse(s) sélectionnée(s)',
+                          ? '$_totalSourcesCount default wisdom(s)'
+                          : '$_totalSourcesCount selected wisdom(s)',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -737,7 +712,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   : _navigateToReflection,
               icon: const Icon(Icons.auto_awesome, size: 18),
               label: Text(
-                'Voir autrement',
+                'See Differently',
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -775,7 +750,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 errorBuilder: (_, __, ___) => const Icon(Icons.favorite_outline, size: 18),
               ),
               label: Text(
-                'Enregistre les émotions liées à ta pensée si tu le souhaites , puis regarde autrement',
+                'Record emotions linked to your thought if you wish, then see differently',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -948,7 +923,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Partage ce que tu ressens',
+                      'Share how you feel',
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -957,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Comment tu te sens là, maintenant ?',
+                      'How are you feeling right now?',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: const Color(0xFF5BA3A8),
@@ -1167,7 +1142,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sources humanistes',
+                          'Humanist Sources',
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -1175,7 +1150,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         Text(
-                          'Choisis tes sources d\'inspiration',
+                          'Choose your sources of inspiration',
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             color: const Color(0xFF5BA3A8),
@@ -1217,7 +1192,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   // Littérature
                   _buildHumanistIconButton(
                     iconPath: 'litterature.png',
-                    label: 'LITTÉRATURE',
+                    label: 'LITERATURE',
                     color: const Color(0xFF66BB6A),
                     onTap: () => Navigator.pushNamed(context, '/sources-litteraires').then((_) => _loadProfileSources()),
                   ),
@@ -1466,7 +1441,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
-              'Historique et profil',
+              'History and Profile',
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -1483,7 +1458,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: _buildCompactAccessCard(
                   icon: 'historique_des_pensees.png',
                   fallbackIcon: Icons.history,
-                  title: 'Mes pensées',
+                  title: 'My Thoughts',
                   color: const Color(0xFF42A5F5),
                   onTap: () => Navigator.pushNamed(context, '/history'),
                 ),
@@ -1496,7 +1471,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: _buildCompactAccessCard(
                   icon: 'suivi_emotions.png',
                   fallbackIcon: Icons.timeline,
-                  title: 'Mes émotions',
+                  title: 'My Emotions',
                   color: const Color(0xFFFF7043),
                   onTap: () => Navigator.pushNamed(context, '/emotion-timeline'),
                 ),
@@ -1509,7 +1484,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: _buildCompactAccessCard(
                   icon: 'profil.png',
                   fallbackIcon: Icons.person_outline,
-                  title: 'Mon profil',
+                  title: 'My Profile',
                   color: const Color(0xFF5C6BC0),
                   onTap: () => Navigator.pushNamed(context, '/profile').then((_) => _loadProfileSources()),
                 ),
@@ -1602,7 +1577,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const Icon(Icons.auto_awesome, color: Color(0xFF2E8B7B), size: 24),
             const SizedBox(width: 10),
             Text(
-              'Sources par défaut',
+              'Default Sources',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -1615,24 +1590,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Ces 4 sources d\'inspiration sont utilisées par défaut. Tu peux les personnaliser via le quiz ou les roues.',
+              'These 4 sources of inspiration are used by default. You can customize them via the quiz or wheels.',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: const Color(0xFF64748B),
               ),
             ),
             const SizedBox(height: 16),
-            _buildDefaultSourceTile('aristote', 'Aristote', 'Philosophe'),
-            _buildDefaultSourceTile('existentialisme', 'Existentialisme', 'Courant philosophique'),
-            _buildDefaultSourceTile('realisme', 'Réalisme', 'Courant littéraire'),
-            _buildDefaultSourceTile('schemas_young', 'Schémas de Young', 'Approche psychologique'),
+            _buildDefaultSourceTile('aristote', 'Aristotle', 'Philosopher'),
+            _buildDefaultSourceTile('existentialisme', 'Existentialism', 'Philosophical School'),
+            _buildDefaultSourceTile('realisme', 'Realism', 'Literary Movement'),
+            _buildDefaultSourceTile('schemas_young', 'Young\'s Schemas', 'Psychological Approach'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Compris',
+              'Got it',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF2E8B7B),
@@ -1708,7 +1683,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Tes sources sélectionnées',
+                'Your Selected Sources',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -1724,7 +1699,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Ces sagesses te guideront dans tes réflexions.',
+                'These wisdoms will guide your reflections.',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: const Color(0xFF64748B),
@@ -1739,7 +1714,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Compris',
+              'Got it',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF2E8B7B),
@@ -1810,59 +1785,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Mapping des clés de sources vers leurs noms et catégories
     const sourceMapping = {
       // Philosophes
-      'aristote': {'name': 'Aristote', 'category': 'Philosophe'},
-      'socrate': {'name': 'Socrate', 'category': 'Philosophe'},
-      'platon': {'name': 'Platon', 'category': 'Philosophe'},
-      'epictete': {'name': 'Épictète', 'category': 'Philosophe'},
-      'marc_aurele': {'name': 'Marc Aurèle', 'category': 'Philosophe'},
-      'spinoza': {'name': 'Spinoza', 'category': 'Philosophe'},
-      'kant': {'name': 'Kant', 'category': 'Philosophe'},
-      'nietzsche': {'name': 'Nietzsche', 'category': 'Philosophe'},
-      'camus': {'name': 'Albert Camus', 'category': 'Philosophe'},
-      'sartre': {'name': 'Jean-Paul Sartre', 'category': 'Philosophe'},
-      'confucius': {'name': 'Confucius', 'category': 'Philosophe'},
+      'aristote': {'name': 'Aristotle', 'category': 'Philosopher'},
+      'socrate': {'name': 'Socrates', 'category': 'Philosopher'},
+      'platon': {'name': 'Plato', 'category': 'Philosopher'},
+      'epictete': {'name': 'Epictetus', 'category': 'Philosopher'},
+      'marc_aurele': {'name': 'Marcus Aurelius', 'category': 'Philosopher'},
+      'spinoza': {'name': 'Spinoza', 'category': 'Philosopher'},
+      'kant': {'name': 'Kant', 'category': 'Philosopher'},
+      'nietzsche': {'name': 'Nietzsche', 'category': 'Philosopher'},
+      'camus': {'name': 'Albert Camus', 'category': 'Philosopher'},
+      'sartre': {'name': 'Jean-Paul Sartre', 'category': 'Philosopher'},
+      'confucius': {'name': 'Confucius', 'category': 'Philosopher'},
 
       // Courants philosophiques
-      'existentialisme': {'name': 'Existentialisme', 'category': 'Courant philosophique'},
-      'stoicisme_philo': {'name': 'Stoïcisme', 'category': 'Courant philosophique'},
-      'epicurisme': {'name': 'Épicurisme', 'category': 'Courant philosophique'},
-      'humanisme_philo': {'name': 'Humanisme', 'category': 'Courant philosophique'},
-      'vitalisme': {'name': 'Vitalisme', 'category': 'Courant philosophique'},
-      'absurdisme_philo': {'name': 'Absurdisme', 'category': 'Courant philosophique'},
-      'rationalisme': {'name': 'Rationalisme', 'category': 'Courant philosophique'},
-      'empirisme': {'name': 'Empirisme', 'category': 'Courant philosophique'},
-      'pragmatisme': {'name': 'Pragmatisme', 'category': 'Courant philosophique'},
-      'phenomenologie': {'name': 'Phénoménologie', 'category': 'Courant philosophique'},
-      'idealisme': {'name': 'Idéalisme', 'category': 'Courant philosophique'},
-      'utilitarisme': {'name': 'Utilitarisme', 'category': 'Courant philosophique'},
-      'structuralisme': {'name': 'Structuralisme', 'category': 'Courant philosophique'},
-      'philosophies_orientales': {'name': 'Philosophies orientales', 'category': 'Courant philosophique'},
+      'existentialisme': {'name': 'Existentialism', 'category': 'Philosophical School'},
+      'stoicisme_philo': {'name': 'Stoicism', 'category': 'Philosophical School'},
+      'epicurisme': {'name': 'Epicureanism', 'category': 'Philosophical School'},
+      'humanisme_philo': {'name': 'Humanism', 'category': 'Philosophical School'},
+      'vitalisme': {'name': 'Vitalism', 'category': 'Philosophical School'},
+      'absurdisme_philo': {'name': 'Absurdism', 'category': 'Philosophical School'},
+      'rationalisme': {'name': 'Rationalism', 'category': 'Philosophical School'},
+      'empirisme': {'name': 'Empiricism', 'category': 'Philosophical School'},
+      'pragmatisme': {'name': 'Pragmatism', 'category': 'Philosophical School'},
+      'phenomenologie': {'name': 'Phenomenology', 'category': 'Philosophical School'},
+      'idealisme': {'name': 'Idealism', 'category': 'Philosophical School'},
+      'utilitarisme': {'name': 'Utilitarianism', 'category': 'Philosophical School'},
+      'structuralisme': {'name': 'Structuralism', 'category': 'Philosophical School'},
+      'philosophies_orientales': {'name': 'Eastern Philosophies', 'category': 'Philosophical School'},
 
       // Courants littéraires
-      'realisme': {'name': 'Réalisme', 'category': 'Courant littéraire'},
-      'humanisme': {'name': 'Humanisme', 'category': 'Courant littéraire'},
-      'romantisme': {'name': 'Romantisme', 'category': 'Courant littéraire'},
-      'existentialisme_litt': {'name': 'Existentialisme', 'category': 'Courant littéraire'},
-      'absurdisme': {'name': 'Absurdisme', 'category': 'Courant littéraire'},
-      'poetique': {'name': 'Poétique', 'category': 'Courant littéraire'},
-      'mystique': {'name': 'Mystique', 'category': 'Courant littéraire'},
-      'symboliste_moderne': {'name': 'Symbolisme moderne', 'category': 'Courant littéraire'},
+      'realisme': {'name': 'Realism', 'category': 'Literary Movement'},
+      'humanisme': {'name': 'Humanism', 'category': 'Literary Movement'},
+      'romantisme': {'name': 'Romanticism', 'category': 'Literary Movement'},
+      'existentialisme_litt': {'name': 'Existentialism', 'category': 'Literary Movement'},
+      'absurdisme': {'name': 'Absurdism', 'category': 'Literary Movement'},
+      'poetique': {'name': 'Poetic', 'category': 'Literary Movement'},
+      'mystique': {'name': 'Mysticism', 'category': 'Literary Movement'},
+      'symboliste_moderne': {'name': 'Modern Symbolism', 'category': 'Literary Movement'},
 
-      // Approches psychologiques
-      'schemas_young': {'name': 'Schémas de Young', 'category': 'Approche psychologique'},
-      'jungienne': {'name': 'Psychologie jungienne', 'category': 'Approche psychologique'},
-      'tcc': {'name': 'TCC', 'category': 'Approche psychologique'},
-      'logotherapie': {'name': 'Logothérapie', 'category': 'Approche psychologique'},
-      'act': {'name': 'ACT', 'category': 'Approche psychologique'},
-      'the_work': {'name': 'The Work', 'category': 'Approche psychologique'},
-      'humaniste_rogers': {'name': 'Humaniste Rogers', 'category': 'Approche psychologique'},
+      // Psychological approaches
+      'schemas_young': {'name': 'Young\'s Schemas', 'category': 'Psychological Approach'},
+      'jungienne': {'name': 'Jungian Psychology', 'category': 'Psychological Approach'},
+      'tcc': {'name': 'CBT', 'category': 'Psychological Approach'},
+      'logotherapie': {'name': 'Logotherapy', 'category': 'Psychological Approach'},
+      'act': {'name': 'ACT', 'category': 'Psychological Approach'},
+      'the_work': {'name': 'The Work', 'category': 'Psychological Approach'},
+      'humaniste_rogers': {'name': 'Rogerian Humanism', 'category': 'Psychological Approach'},
 
-      // Religions/Spiritualités
-      'judaisme': {'name': 'Judaïsme', 'category': 'Spiritualité'},
-      'christianisme': {'name': 'Christianisme', 'category': 'Spiritualité'},
-      'islam': {'name': 'Islam', 'category': 'Spiritualité'},
-      'bouddhisme': {'name': 'Bouddhisme', 'category': 'Spiritualité'},
-      'hindouisme': {'name': 'Hindouisme', 'category': 'Spiritualité'},
+      // Religions/Spiritualities
+      'judaisme': {'name': 'Judaism', 'category': 'Spirituality'},
+      'christianisme': {'name': 'Christianity', 'category': 'Spirituality'},
+      'islam': {'name': 'Islam', 'category': 'Spirituality'},
+      'bouddhisme': {'name': 'Buddhism', 'category': 'Spirituality'},
+      'hindouisme': {'name': 'Hinduism', 'category': 'Spirituality'},
     };
 
     return sourceMapping[sourceKey] ?? {
@@ -1901,7 +1876,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Mode invité - Ton historique ne sera pas sauvegardé',
+              'Guest mode - Your history will not be saved',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 color: const Color(0xFF8B7355),
@@ -1996,7 +1971,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Afficher confirmation
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${sources.length} sagesse(s) enregistrée(s)'),
+          content: Text('${sources.length} wisdom(s) saved'),
           backgroundColor: const Color(0xFF2E8B7B),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -2072,7 +2047,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Se déconnecter',
+          'Log Out',
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -2080,7 +2055,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         content: Text(
-          'Voulez-vous vraiment vous déconnecter ?',
+          'Do you really want to log out?',
           style: GoogleFonts.inter(
             fontSize: 15,
             color: const Color(0xFF5A8A8A),
@@ -2090,7 +2065,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Annuler',
+              'Cancel',
               style: GoogleFonts.inter(
                 color: const Color(0xFF5BA3A8),
                 fontWeight: FontWeight.w500,
@@ -2114,7 +2089,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: Text(
-              'Déconnecter',
+              'Log Out',
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -2135,20 +2110,20 @@ class _PositiveThoughtSheet extends StatelessWidget {
   // Pensées positives temporaires (sera remplacé par génération IA)
   static const List<Map<String, String>> _thoughts = [
     {
-      'text': 'Ce qui te semble insurmontable aujourd\'hui peut devenir une simple étape demain.',
-      'source': 'Sagesse stoïcienne',
+      'text': 'What seems insurmountable today may become a simple step tomorrow.',
+      'source': 'Stoic Wisdom',
     },
     {
-      'text': 'Tu n\'as pas à tout comprendre maintenant. Parfois, il suffit d\'être là.',
-      'source': 'Pleine conscience',
+      'text': 'You don\'t have to understand everything right now. Sometimes, just being there is enough.',
+      'source': 'Mindfulness',
     },
     {
-      'text': 'La confusion est souvent le signe que quelque chose cherche à émerger.',
-      'source': 'Psychologie humaniste',
+      'text': 'Confusion is often a sign that something is trying to emerge.',
+      'source': 'Humanistic Psychology',
     },
     {
-      'text': 'Même les questions sans réponse ont leur place en toi.',
-      'source': 'Existentialisme',
+      'text': 'Even unanswered questions have their place within you.',
+      'source': 'Existentialism',
     },
   ];
 
@@ -2201,7 +2176,7 @@ class _PositiveThoughtSheet extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Pensée du moment',
+                  'Thought of the Moment',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -2324,7 +2299,7 @@ class _SourcesSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              'Explorer par catégorie',
+              'Explore by Category',
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -2345,7 +2320,7 @@ class _SourcesSheet extends StatelessWidget {
                   iconPath: 'psychologie.png',
                   fallbackIcon: Icons.psychology_outlined,
                   title: 'Psychologie',
-                  subtitle: 'Approches thérapeutiques',
+                  subtitle: 'Therapeutic Approaches',
                   color: const Color(0xFF42A5F5),
                   onTap: () {
                     Navigator.pop(context);
@@ -2360,8 +2335,8 @@ class _SourcesSheet extends StatelessWidget {
                   context,
                   iconPath: 'litterature.png',
                   fallbackIcon: Icons.menu_book_outlined,
-                  title: 'Littérature',
-                  subtitle: 'Courants littéraires',
+                  title: 'Literature',
+                  subtitle: 'Literary Movements',
                   color: const Color(0xFF66BB6A),
                   onTap: () {
                     Navigator.pop(context);
@@ -2377,7 +2352,7 @@ class _SourcesSheet extends StatelessWidget {
                   iconPath: 'philosophie.png',
                   fallbackIcon: Icons.account_balance_outlined,
                   title: 'Philosophie',
-                  subtitle: 'Écoles de pensée',
+                  subtitle: 'Schools of Thought',
                   color: const Color(0xFFFFB74D),
                   onTap: () {
                     Navigator.pop(context);
@@ -2392,8 +2367,8 @@ class _SourcesSheet extends StatelessWidget {
                   context,
                   iconPath: 'philosophes.png',
                   fallbackIcon: Icons.person_outline,
-                  title: 'Philosophes',
-                  subtitle: 'Grands penseurs',
+                  title: 'Philosophers',
+                  subtitle: 'Great Thinkers',
                   color: const Color(0xFF5C6BC0),
                   onTap: () {
                     Navigator.pop(context);

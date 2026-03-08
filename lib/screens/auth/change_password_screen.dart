@@ -28,7 +28,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
-          'Changer le mot de passe',
+          'Change Password',
           style: GoogleFonts.inter(fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.white,
@@ -66,7 +66,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 const SizedBox(height: 24),
                 
                 Text(
-                  'Sécurité de votre compte',
+                  'Account Security',
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -77,7 +77,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 const SizedBox(height: 8),
                 
                 Text(
-                  'Modifiez votre mot de passe pour sécuriser votre compte',
+                  'Change your password to secure your account',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     color: const Color(0xFF64748B),
@@ -88,13 +88,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 
                 // Mot de passe actuel
                 _buildPasswordField(
-                  label: 'Mot de passe actuel',
+                  label: 'Current Password',
                   controller: _currentPasswordController,
                   obscureText: _obscureCurrentPassword,
                   onToggleVisibility: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Veuillez saisir votre mot de passe actuel';
+                      return 'Please enter your current password';
                     }
                     return null;
                   },
@@ -104,16 +104,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 
                 // Nouveau mot de passe
                 _buildPasswordField(
-                  label: 'Nouveau mot de passe',
+                  label: 'New Password',
                   controller: _newPasswordController,
                   obscureText: _obscureNewPassword,
                   onToggleVisibility: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Veuillez saisir un nouveau mot de passe';
+                      return 'Please enter a new password';
                     }
                     if (value.length < 6) {
-                      return 'Le mot de passe doit contenir au moins 6 caractères';
+                      return 'Password must be at least 6 characters';
                     }
                     return null;
                   },
@@ -123,16 +123,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 
                 // Confirmer le nouveau mot de passe
                 _buildPasswordField(
-                  label: 'Confirmer le nouveau mot de passe',
+                  label: 'Confirm New Password',
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
                   onToggleVisibility: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Veuillez confirmer votre nouveau mot de passe';
+                      return 'Please confirm your new password';
                     }
                     if (value != _newPasswordController.text) {
-                      return 'Les mots de passe ne correspondent pas';
+                      return 'Passwords do not match';
                     }
                     return null;
                   },
@@ -164,7 +164,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             ),
                           )
                         : Text(
-                            'Modifier le mot de passe',
+                            'Change Password',
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
@@ -195,7 +195,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Conseils de sécurité',
+                            'Security Tips',
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF0F172A),
@@ -206,10 +206,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '• Utilisez au moins 6 caractères\n'
-                        '• Mélangez lettres, chiffres et symboles\n'
-                        '• Évitez les mots de passe trop simples\n'
-                        '• Ne partagez jamais votre mot de passe',
+                        '• Use at least 6 characters\n'
+                        '• Mix letters, numbers and symbols\n'
+                        '• Avoid passwords that are too simple\n'
+                        '• Never share your password',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: const Color(0xFF64748B),
@@ -294,7 +294,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (userProfile?.password != currentPassword) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Mot de passe actuel incorrect'),
+            content: Text('Current password is incorrect'),
             backgroundColor: Colors.red,
           ),
         );
@@ -312,7 +312,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Mot de passe modifié avec succès !'),
+            content: Text('Password changed successfully!'),
             backgroundColor: Colors.green,
           ),
         );

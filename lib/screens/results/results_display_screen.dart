@@ -82,7 +82,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
     print('   Approches sélectionnées: ${widget.selectedApproaches.length}');
     
     return AppScaffold(
-      title: 'Tes perspectives',
+      title: 'Your perspectives',
       headerIconPath: 'assets/univers_visuel/perspectives.png',
       showTitle: false,
       showBackButton: false,
@@ -149,7 +149,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
               const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
               const SizedBox(width: 8),
               Text(
-                '${widget.selectedApproaches.length} perspectives générées',
+                '${widget.selectedApproaches.length} perspectives generated',
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 13,
@@ -163,7 +163,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
         const SizedBox(height: 16),
         
         Text(
-          'Voici différents regards sur ta pensée',
+          'Here are different perspectives on your thought',
           style: GoogleFonts.cormorantGaramond(
             fontSize: 22,
             fontWeight: FontWeight.w600,
@@ -294,7 +294,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
                         ),
                       ),
                       Text(
-                        'Éclairage IA',
+                        'AI Insight',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: const Color(0xFF64748B),
@@ -379,7 +379,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
                       Icon(Icons.auto_awesome, size: 16, color: approach.color),
                       const SizedBox(width: 8),
                       Text(
-                        'Approfondissement',
+                        'Deepening',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -425,7 +425,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
                 if (!hasDeepened)
                   _buildActionButton(
                     icon: isDeepening ? Icons.hourglass_top : Icons.auto_awesome,
-                    label: isDeepening ? 'En cours...' : 'Approfondir',
+                    label: isDeepening ? 'In progress...' : 'Deepen',
                     color: approach.color,
                     onPressed: isDeepening ? null : () => _deepen(approach!),
                   ),
@@ -433,7 +433,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
                 // Bouton TTS
                 _buildActionButton(
                   icon: isSpeaking ? Icons.stop : Icons.volume_up,
-                  label: isSpeaking ? 'Stop' : 'Écouter',
+                  label: isSpeaking ? 'Stop' : 'Listen',
                   color: const Color(0xFF64748B),
                   onPressed: () => _toggleTts(approach!, response),
                 ),
@@ -443,7 +443,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
                 // Bouton Évaluer
                 _buildActionButton(
                   icon: evaluation != null ? Icons.star : Icons.star_border,
-                  label: 'Évaluer',
+                  label: 'Rate',
                   color: evaluation != null ? const Color(0xFFD4AF37) : const Color(0xFF64748B),
                   onPressed: () {
                     setState(() {
@@ -497,7 +497,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ton avis sur cette perspective',
+            'Your opinion on this perspective',
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -510,7 +510,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
           Row(
             children: [
               Text(
-                'Note :',
+                'Rating:',
                 style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF78350F)),
               ),
               Expanded(
@@ -557,7 +557,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
           TextField(
             maxLines: 2,
             decoration: InputDecoration(
-              hintText: 'Un commentaire ? (optionnel)',
+              hintText: 'A comment? (optional)',
               hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF)),
               filled: true,
               fillColor: Colors.white,
@@ -694,7 +694,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
             onPressed: widget.onNewReflection,
             icon: const Icon(Icons.refresh, size: 20),
             label: Text(
-              'Nouvelle réflexion',
+              'New reflection',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -725,7 +725,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
               errorBuilder: (_, __, ___) => const Icon(Icons.home, size: 18),
             ),
             label: Text(
-              'Retour au menu',
+              'Back to menu',
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w500,
                 fontSize: 14,

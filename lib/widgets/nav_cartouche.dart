@@ -18,7 +18,7 @@ class NavCartouche extends StatelessWidget {
   static const double defaultSize = 40.0;
 
   /// Taille par défaut du PNG à l'intérieur
-  static const double defaultIconSize = 22.0;
+  static const double defaultIconSize = 30.0;
 
   /// Couleur de fond du cartouche
   static const Color cartoucheColor = Color(0xFF00E5FF);
@@ -27,7 +27,7 @@ class NavCartouche extends StatelessWidget {
   static const double bgOpacity = 0.12;
 
   /// Rayon des coins
-  static const double borderRadius = 12.0;
+  static const double borderRadius = 6.0;
 
   const NavCartouche({
     super.key,
@@ -48,23 +48,28 @@ class NavCartouche extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: cartoucheColor.withValues(alpha: bgOpacity),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: cartoucheColor.withValues(alpha: 0.2),
-              width: 1,
+              color: cartoucheColor.withValues(alpha: 0.35),
+              width: 1.5,
             ),
           ),
-          child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(borderRadius - 1),
             child: Image.asset(
               assetPath,
-              width: defaultIconSize,
-              height: defaultIconSize,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Icon(
-                fallbackIcon,
-                color: cartoucheColor.withValues(alpha: 0.7),
-                size: defaultIconSize,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: cartoucheColor.withValues(alpha: bgOpacity),
+                child: Center(
+                  child: Icon(
+                    fallbackIcon,
+                    color: cartoucheColor.withValues(alpha: 0.7),
+                    size: defaultIconSize,
+                  ),
+                ),
               ),
             ),
           ),
@@ -82,7 +87,7 @@ class NavCartoucheRetour extends StatelessWidget {
   const NavCartoucheRetour({
     super.key,
     required this.onTap,
-    this.label = 'Retour',
+    this.label = 'Back',
   });
 
   @override

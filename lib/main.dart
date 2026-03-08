@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'services/storage_service.dart';
-import 'screens/welcome/welcome_screen.dart';
 import 'screens/introduction_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/main_app/main_screen.dart';
@@ -28,17 +27,28 @@ import 'screens/tutorial/tutorial_screen.dart'; // ✅ TUTORIEL VIDEO
 // ═══════════════════════════════════════════════════════════════════════════════
 import 'screens/home_carousel_screen.dart';
 import 'screens/menu_carousel_screen.dart';
-import 'screens/emotion_carousel_screen.dart';
 import 'screens/emotion_wheel_screen.dart';
 import 'screens/thought_input_screen.dart';
 import 'screens/eclairages_carousel_screen.dart';
-import 'screens/emotion_selection_screen.dart';
 import 'screens/demo/carousel_demo_screen.dart';
 import 'screens/sources_explorer_screen.dart';
+import 'services/background_music_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // ✅ Initialisation Facebook SDK pour le web
+  if (kIsWeb) {
+    await FacebookAuth.i.webAndDesktopInitialize(
+      appId: '4226291104278353',
+      cookie: true,
+      xfbml: true,
+      version: 'v19.0',
+    );
+  }
+
   // ✅ INITIALISATION UNIFIÉE - Un seul service
   await PersistentStorageService.instance.initialize();
   
@@ -57,12 +67,13 @@ class UnAutreRegardApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Un Autre Regard',
+      title: 'Another Perspective',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
       // ═══════════════════════════════════════════════════════════════════════
       // Écran d'introduction — premier écran au lancement
       // ═══════════════════════════════════════════════════════════════════════
+      navigatorObservers: [BackgroundMusicService.instance],
       home: const IntroductionScreen(),
       routes: {
         '/welcome': (context) => const IntroductionScreen(),
@@ -281,7 +292,7 @@ class _AppInitializerState extends State<AppInitializer> {
               
               // Titre
               Text(
-                'Un Autre Regard',
+                'Another Perspective',
                 style: GoogleFonts.inter(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -293,7 +304,7 @@ class _AppInitializerState extends State<AppInitializer> {
               
               // Sous-titre
               Text(
-                'Parce qu\'une autre vie est possible',
+                'Because another life is possible',
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   color: Colors.white.withOpacity(0.9),

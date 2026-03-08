@@ -131,7 +131,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildStatRow('📊 Moyenne', '${avgIntensity.toStringAsFixed(0)}%'),
+                      _buildStatRow('📊 Average', '${avgIntensity.toStringAsFixed(0)}%'),
                       _buildStatRow('⬆️ Maximum', '$maxIntensity%'),
                       _buildStatRow('⬇️ Minimum', '$minIntensity%'),
                       _buildStatRow('📅 Occurrences', '${dataPoints.length}'),
@@ -143,7 +143,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
 
                 // Liste des dates
                 Text(
-                  '📅 Dates enregistrées :',
+                  '📅 Recorded dates:',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -156,7 +156,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
                   final dateStr = '${point.date.day}/${point.date.month}/${point.date.year}';
                   String timeStr = '';
                   if (point.timestamp != null) {
-                    timeStr = ' à ${point.timestamp!.hour.toString().padLeft(2, '0')}:${point.timestamp!.minute.toString().padLeft(2, '0')}';
+                    timeStr = ' at ${point.timestamp!.hour.toString().padLeft(2, '0')}:${point.timestamp!.minute.toString().padLeft(2, '0')}';
                   }
 
                   return Container(
@@ -229,7 +229,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      '... et ${dataPoints.length - 20} autres entrées',
+                      '... and ${dataPoints.length - 20} more entries',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.grey[500],
@@ -245,7 +245,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Fermer',
+              'Close',
               style: GoogleFonts.poppins(color: emotion.color),
             ),
           ),
@@ -279,7 +279,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-	  title: 'Suivi émotionnel',
+	  title: 'Emotional Tracking',
 	  headerIconPath: 'assets/univers_visuel/suivi_emotions.png',  // Calendrier à gauche
 	  showMenuButton: true,
 	  showPositiveButton: true,
@@ -299,10 +299,10 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
 			_loadData();
 		  },
 		  itemBuilder: (context) => [
-			const PopupMenuItem(value: 7, child: Text('7 jours')),
-			const PopupMenuItem(value: 14, child: Text('14 jours')),
-			const PopupMenuItem(value: 30, child: Text('30 jours')),
-			const PopupMenuItem(value: 90, child: Text('90 jours')),
+			const PopupMenuItem(value: 7, child: Text('7 days')),
+			const PopupMenuItem(value: 14, child: Text('14 days')),
+			const PopupMenuItem(value: 30, child: Text('30 days')),
+			const PopupMenuItem(value: 90, child: Text('90 days')),
 		  ],
         ),
       ],
@@ -334,7 +334,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
           Icon(Icons.trending_up, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
-            'Aucune donnée émotionnelle',
+            'No emotional data',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -343,7 +343,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Commence par saisir tes émotions quotidiennes',
+            'Start by recording your daily emotions',
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.grey[500],
@@ -364,7 +364,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
           Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
           const SizedBox(width: 8),
           Text(
-            'Affichage des $_selectedDays derniers jours',
+            'Showing last $_selectedDays days',
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.grey[600],
@@ -383,7 +383,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '🎨 Émotions (tap = afficher/masquer, appui long = détails)',
+            '🎨 Emotions (tap = show/hide, long press = details)',
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -456,7 +456,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                '⚠️ Sélectionnez au moins une émotion',
+                '⚠️ Select at least one emotion',
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   color: Colors.orange[700],
@@ -478,7 +478,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
             Icon(Icons.show_chart, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
-              'Sélectionnez au moins une émotion',
+              'Select at least one emotion',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -705,7 +705,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
           Row(
             children: [
               Text(
-                '📊 Statistiques',
+                '📊 Statistics',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -713,7 +713,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
               ),
               const Spacer(),
               Text(
-                'sur $_selectedDays jours',
+                'over $_selectedDays days',
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   color: Colors.grey[500],
@@ -770,7 +770,7 @@ class _EmotionTimelineScreenState extends State<EmotionTimelineScreen> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            _buildStatChip('Moy', avgIntensity.toStringAsFixed(0), emotion.color),
+                            _buildStatChip('Avg', avgIntensity.toStringAsFixed(0), emotion.color),
                             const SizedBox(width: 8),
                             _buildStatChip('Max', maxIntensity.toString(), emotion.color),
                             const SizedBox(width: 8),

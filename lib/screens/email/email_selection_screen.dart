@@ -105,7 +105,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
         
         // Titre
         Text(
-          'Votre espace personnel',
+          'Your Personal Space',
           style: GoogleFonts.inter(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -117,7 +117,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
         
         // Sous-titre
         Text(
-          'Saisissez votre email pour sauvegarder vos données',
+          'Enter your email to save your data',
           style: GoogleFonts.inter(
             fontSize: 16,
             color: const Color(0xFF64748B),
@@ -133,7 +133,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Adresse email',
+          'Email Address',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -147,7 +147,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
-            hintText: 'votre.email@exemple.com',
+            hintText: 'your.email@example.com',
             hintStyle: GoogleFonts.inter(
               color: const Color(0xFF94A3B8),
             ),
@@ -180,10 +180,10 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Veuillez saisir votre email';
+              return 'Please enter your email';
             }
             if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-              return 'Veuillez saisir un email valide';
+              return 'Please enter a valid email';
             }
             return null;
           },
@@ -216,7 +216,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
                 ),
               )
             : Text(
-                'Continuer',
+                'Continue',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -231,7 +231,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Données existantes',
+          'Existing Data',
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -242,7 +242,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
         const SizedBox(height: 12),
         
         Text(
-          'Vous pouvez aussi restaurer des données précédemment sauvegardées :',
+          'You can also restore previously saved data:',
           style: GoogleFonts.inter(
             fontSize: 14,
             color: const Color(0xFF64748B),
@@ -274,14 +274,14 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
             color: Color(0xFF6366F1),
           ),
           title: Text(
-            email.isNotEmpty ? email : 'Utilisateur par défaut',
+            email.isNotEmpty ? email : 'Default User',
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
           ),
           subtitle: Text(
-            'Modifié le ${date.day}/${date.month}/${date.year}',
+            'Modified on ${date.month}/${date.day}/${date.year}',
             style: GoogleFonts.inter(
               fontSize: 12,
               color: const Color(0xFF64748B),
@@ -320,7 +320,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Confidentialité',
+                'Privacy',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF0F172A),
@@ -331,10 +331,10 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '• Vos données sont stockées uniquement sur votre appareil\n'
-            '• L\'email sert uniquement à organiser vos sauvegardes locales\n'
-            '• Aucune donnée n\'est envoyée sur internet\n'
-            '• Vous pouvez utiliser l\'application sans email',
+            '• Your data is stored only on your device\n'
+            '• The email is only used to organize your local backups\n'
+            '• No data is sent over the internet\n'
+            '• You can use the app without an email',
             style: GoogleFonts.inter(
               fontSize: 12,
               color: const Color(0xFF64748B),
@@ -428,7 +428,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Données restaurées avec succès !'),
+            content: Text('Data restored successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -440,7 +440,7 @@ class _EmailSelectionScreenState extends State<EmailSelectionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de la restauration: $e'),
+            content: Text('Error during restoration: $e'),
             backgroundColor: Colors.red,
           ),
         );

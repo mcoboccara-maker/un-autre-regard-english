@@ -64,7 +64,7 @@ class EclairageQuickCard extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Éclairage',
+              'Insight',
               style: GoogleFonts.inter(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -73,7 +73,7 @@ class EclairageQuickCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Posez une question, partagez une réflexion.\nRecevez un éclairage juif vivant.',
+              'Ask a question, share a reflection.\nReceive a living perspective.',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.85),
@@ -93,7 +93,7 @@ class EclairageQuickCard extends StatelessWidget {
                   const Icon(Icons.search, color: Colors.white70, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Poser une question...',
+                    'Ask a question...',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: Colors.white70,
@@ -141,7 +141,7 @@ class EclairageMiniButton extends StatelessWidget {
               const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Éclairage',
+                'Insight',
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -172,7 +172,7 @@ class EclairageFab extends StatelessWidget {
       foregroundColor: Colors.white,
       icon: const Icon(Icons.auto_awesome),
       label: Text(
-        'Éclairage',
+        'Insight',
         style: GoogleFonts.inter(fontWeight: FontWeight.w600),
       ),
     );
@@ -222,7 +222,7 @@ class EclairageSearchBar extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(
               child: Text(
-                hintText ?? 'Posez votre question...',
+                hintText ?? 'Ask your question...',
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   color: Colors.grey.shade500,
@@ -321,7 +321,7 @@ class EclairageQuickResponse extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    'Voir plus',
+                    'See more',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: const Color(0xFF6366F1),

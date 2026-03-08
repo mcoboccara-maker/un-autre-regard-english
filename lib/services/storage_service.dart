@@ -286,7 +286,7 @@ class StorageService {
         }
       }
     } catch (e) {
-      throw Exception('Erreur lors de l\'importation des données: $e');
+      throw Exception('Error during data import: $e');
     }
   }
 

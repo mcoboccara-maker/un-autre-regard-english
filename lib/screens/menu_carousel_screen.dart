@@ -4,8 +4,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/approach_config.dart';
+import '../services/background_music_service.dart';
 import '../services/complete_auth_service.dart';
 import '../services/ai_service.dart';
+import '../services/persistent_storage_service.dart';
+import '../services/emotional_tracking_service.dart';
 import '../widgets/animated_menu_cards.dart';
 import '../widgets/nav_cartouche.dart';
 import 'emotion_wheel_screen.dart';
@@ -24,6 +27,8 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
   @override
   void initState() {
     super.initState();
+    // Musique gérée par BackgroundMusicService (NavigatorObserver)
+    BackgroundMusicService.instance.play('sounds/the_journey_before_dawn.mp3');
 
     if (widget.preselectedSource != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -42,6 +47,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
   void _navigateToRessens() {
     Navigator.of(context).push(
       MaterialPageRoute(
+        settings: const RouteSettings(name: '/emotions'),
         builder: (_) => EmotionWheelScreen(
           preselectedSource: widget.preselectedSource,
         ),
@@ -96,7 +102,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
             ),
             const SizedBox(height: 14),
             Text(
-              'Exprime ce qui te traverse',
+              'Express What Moves You',
               style: GoogleFonts.playfairDisplay(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -106,7 +112,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Pensée, situation, question ou dilemme',
+              'A thought, situation, question or dilemma',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: Colors.white.withValues(alpha: 0.6),
@@ -123,7 +129,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
                 },
                 icon: const Icon(Icons.auto_awesome, size: 20),
                 label: Text(
-                  'Regarde autrement',
+                  'See it differently',
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -147,9 +153,13 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
                   Navigator.pop(ctx);
                   _navigateToEmotionsThenThought();
                 },
-                icon: const Icon(Icons.favorite_rounded, size: 20),
+                icon: Image.asset(
+                  'assets/univers_visuel/coeur.png',
+                  width: 22, height: 22,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.favorite_rounded, size: 20),
+                ),
                 label: Text(
-                  'Saisis tes émotions liées\net regarde autrement',
+                  'Enter your related emotions\nand see it differently',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -188,6 +198,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
   void _navigateToEmotionsThenThought() {
     Navigator.of(context).push(
       MaterialPageRoute(
+        settings: const RouteSettings(name: '/emotions'),
         builder: (_) => EmotionWheelScreen(
           preselectedSource: widget.preselectedSource,
         ),
@@ -256,7 +267,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
                   ),
                 ),
                 child: Text(
-                  'Partager une pensée',
+                  'Share a thought',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -280,84 +291,10 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
   }
 
   void _showPositiveThought() {
-    final thoughts = [
-      "Chaque jour est une nouvelle opportunité de grandir.",
-      "Tu as déjà surmonté tant d'obstacles. Tu es plus fort(e) que tu ne le penses.",
-      "Prends le temps de respirer. Ce moment difficile passera.",
-      "Tu mérites d'être heureux(se) et en paix.",
-      "Tes émotions sont valides. Accueille-les avec bienveillance.",
-      "Un petit pas aujourd'hui peut mener à un grand changement demain.",
-      "Tu n'as pas besoin d'être parfait(e), juste authentique.",
-      "La tempête finit toujours par se calmer. Tiens bon.",
-      "Tu es exactement là où tu dois être en ce moment.",
-      "Chaque émotion est un message. Écoute ce qu'elle a à te dire.",
-    ];
-    final random = DateTime.now().millisecondsSinceEpoch % thoughts.length;
-
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/univers_visuel/pensee_positive.png',
-                width: 64,
-                height: 64,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.lightbulb,
-                  color: Color(0xFFFBBF24),
-                  size: 48,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Pensée du moment',
-                style: GoogleFonts.cormorantGaramond(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF92400E),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                thoughts[random],
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: const Color(0xFF78350F),
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFBBF24),
-                  foregroundColor: const Color(0xFF78350F),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 32, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text('Merci !',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
-        ),
-      ),
+      barrierDismissible: false,
+      builder: (ctx) => _PositiveThoughtDialog(),
     );
   }
 
@@ -377,18 +314,18 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
                   color: Color(0xFFE57373), size: 28),
             ),
             const SizedBox(width: 12),
-            Text('Déconnexion',
+            Text('Log out',
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ],
         ),
         content: Text(
-          'Es-tu sûr(e) de vouloir te déconnecter ?',
+          'Are you sure you want to log out?',
           style: GoogleFonts.inter(fontSize: 14, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Annuler',
+            child: Text('Cancel',
                 style: GoogleFonts.inter(color: Colors.grey)),
           ),
           ElevatedButton(
@@ -406,7 +343,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text('Déconnecter',
+            child: Text('Log out',
                 style: GoogleFonts.inter(color: Colors.white)),
           ),
         ],
@@ -450,7 +387,7 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Un Autre Regard',
+                      'Another Look',
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -461,22 +398,34 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
                     NavCartouche(
                       assetPath: 'assets/univers_visuel/profil.png',
                       fallbackIcon: Icons.person_rounded,
-                      tooltip: 'Mon profil',
+                      tooltip: 'My profile',
                       onTap: _goToProfile,
                     ),
                     const SizedBox(width: 8),
                     NavCartouche(
                       assetPath: 'assets/univers_visuel/pensee_positive.png',
                       fallbackIcon: Icons.lightbulb_outline,
-                      tooltip: 'Pensée positive',
+                      tooltip: 'Positive thought',
                       onTap: _showPositiveThought,
                     ),
                     const SizedBox(width: 8),
                     NavCartouche(
                       assetPath: 'assets/univers_visuel/deconnexion.png',
                       fallbackIcon: Icons.logout,
-                      tooltip: 'Déconnexion',
+                      tooltip: 'Log out',
                       onTap: _showLogoutConfirmation,
+                    ),
+                    const SizedBox(width: 8),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: BackgroundMusicService.instance.isMutedNotifier,
+                      builder: (context, isMuted, _) => NavCartouche(
+                        assetPath: isMuted
+                            ? 'assets/univers_visuel/sonoff.png'
+                            : 'assets/univers_visuel/sonon.png',
+                        fallbackIcon: isMuted ? Icons.volume_off : Icons.volume_up,
+                        tooltip: isMuted ? 'Enable music' : 'Mute music',
+                        onTap: () => BackgroundMusicService.instance.toggleMute(),
+                      ),
                     ),
                   ],
                 ),
@@ -541,5 +490,140 @@ class _MenuCarouselScreenState extends State<MenuCarouselScreen> {
       ),
     );
   }
+}
 
+// ============================================================================
+// DIALOG PENSEE POSITIVE (générée par l'IA)
+// ============================================================================
+
+class _PositiveThoughtDialog extends StatefulWidget {
+  @override
+  State<_PositiveThoughtDialog> createState() => _PositiveThoughtDialogState();
+}
+
+class _PositiveThoughtDialogState extends State<_PositiveThoughtDialog> {
+  String? _thought;
+  bool _isLoading = true;
+  bool _isError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _generate();
+  }
+
+  Future<void> _generate() async {
+    try {
+      final userProfile = PersistentStorageService.instance.getUserProfile();
+
+      String? historique7Jours;
+      try {
+        final entries = await EmotionalTrackingService.instance.getEntriesForLastDays(7);
+        if (entries.isNotEmpty) {
+          final buffer = StringBuffer();
+          for (final entry in entries) {
+            final dateStr = '${entry.date.day}/${entry.date.month}/${entry.date.year}';
+            final emotionsStr = entry.emotions.entries
+                .map((e) => '${e.key} ${e.value.intensity}/100')
+                .join(', ');
+            buffer.writeln('$dateStr : $emotionsStr');
+          }
+          historique7Jours = buffer.toString().trim();
+        }
+      } catch (_) {}
+
+      final result = await AIService.instance.generatePositiveThought(
+        userProfile: userProfile,
+        historique7Jours: historique7Jours,
+      );
+
+      if (mounted) {
+        final isErr = result.startsWith('❌');
+        setState(() {
+          _thought = isErr ? null : result;
+          _isLoading = false;
+          _isError = isErr;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isError = true;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/univers_visuel/pensee_positive.png',
+              width: 64, height: 64,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.lightbulb, color: Color(0xFFFBBF24), size: 48),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Thought of the moment',
+              style: GoogleFonts.cormorantGaramond(
+                fontSize: 20, fontWeight: FontWeight.bold,
+                color: const Color(0xFF92400E),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: SizedBox(
+                  width: 32, height: 32,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFBBF24)),
+                  ),
+                ),
+              )
+            else if (_isError)
+              Text(
+                'Unable to generate a thought at this time.',
+                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF78350F), height: 1.5),
+                textAlign: TextAlign.center,
+              )
+            else
+              Text(
+                _thought ?? '',
+                style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF78350F), height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFBBF24),
+                foregroundColor: const Color(0xFF78350F),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Thank you!', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

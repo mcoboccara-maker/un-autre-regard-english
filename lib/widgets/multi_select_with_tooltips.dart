@@ -4,111 +4,111 @@ import 'package:flutter/material.dart';
 class ProfileChoicesWithTooltips {
   static const List<Map<String, String>> religions = [
     {
-      "label": "Judaïsme rabbinique",
-      "tooltip": "Tradition fondée sur la Torah et le Talmud : une voie de responsabilité, de foi et d'éthique dans la vie quotidienne."
+      "label": "Rabbinic Judaism",
+      "tooltip": "Tradition founded on the Torah and Talmud: a path of responsibility, faith, and ethics in daily life."
     },
     {
-      "label": "Moussar (éthique juive)",
-      "tooltip": "Démarche introspective du judaïsme axée sur la maîtrise de soi et le perfectionnement moral à travers l'observation des émotions et comportements."
+      "label": "Mussar (Jewish ethics)",
+      "tooltip": "An introspective Jewish approach focused on self-mastery and moral refinement through observing emotions and behaviors."
     },
     {
-      "label": "Kabbale",
-      "tooltip": "Mystique juive qui explore les lois spirituelles cachées du monde et la réparation intérieure (tikkoun) comme chemin de lumière."
+      "label": "Kabbalah",
+      "tooltip": "Jewish mysticism exploring the hidden spiritual laws of the world and inner repair (tikkun) as a path of light."
     },
     {
-      "label": "Christianisme",
-      "tooltip": "Voie centrée sur l'amour du prochain, la grâce et la transformation du cœur à l'image du Christ."
+      "label": "Christianity",
+      "tooltip": "A path centered on love of neighbor, grace, and the transformation of the heart in the image of Christ."
     },
     {
       "label": "Islam",
-      "tooltip": "Foi dans l'unicité de Dieu et soumission consciente à Sa volonté, prônant équilibre, gratitude et patience."
+      "tooltip": "Faith in the oneness of God and conscious submission to His will, promoting balance, gratitude, and patience."
     },
     {
-      "label": "Soufisme",
-      "tooltip": "Mystique de l'islam axée sur l'amour divin, la purification du cœur et l'union avec le Réel à travers la beauté et la compassion."
+      "label": "Sufism",
+      "tooltip": "Islamic mysticism focused on divine love, purification of the heart, and union with the Real through beauty and compassion."
     },
     {
-      "label": "Bouddhisme",
-      "tooltip": "Voie de la libération de la souffrance par la pleine conscience, la sagesse et la compassion envers tous les êtres."
+      "label": "Buddhism",
+      "tooltip": "A path of liberation from suffering through mindfulness, wisdom, and compassion toward all beings."
     },
     {
-      "label": "Hindouisme",
-      "tooltip": "Tradition spirituelle plurielle visant l'union avec le divin intérieur (ātman) par la connaissance, la dévotion ou l'action désintéressée."
+      "label": "Hinduism",
+      "tooltip": "A pluralistic spiritual tradition aiming for union with the inner divine (atman) through knowledge, devotion, or selfless action."
     },
     {
-      "label": "Stoïcisme",
-      "tooltip": "Philosophie antique de la maîtrise de soi, de la lucidité et de l'acceptation sereine de ce qui ne dépend pas de nous."
+      "label": "Stoicism",
+      "tooltip": "Ancient philosophy of self-mastery, lucidity, and serene acceptance of what is beyond our control."
     },
     {
-      "label": "Spiritualité contemporaine / laïque",
-      "tooltip": "Recherche de sens et de présence au-delà des dogmes, intégrant psychologie, art et conscience du vivant."
+      "label": "Contemporary / secular spirituality",
+      "tooltip": "Search for meaning and presence beyond dogma, integrating psychology, art, and awareness of the living."
     }
   ];
 
   static const List<Map<String, String>> courantsLitteraires = [
     {
-      "label": "Humaniste",
-      "tooltip": "Courant valorisant la dignité humaine, la raison, la liberté et la quête de sens à travers l'expérience."
+      "label": "Humanist",
+      "tooltip": "A movement valuing human dignity, reason, freedom, and the search for meaning through experience."
     },
     {
-      "label": "Poétique",
-      "tooltip": "Sensibilité à la beauté du langage et aux émotions profondes, révélant le monde intérieur et le sacré du quotidien."
+      "label": "Poetic",
+      "tooltip": "Sensitivity to the beauty of language and deep emotions, revealing the inner world and the sacred in everyday life."
     },
     {
-      "label": "Réaliste",
-      "tooltip": "Observation lucide de la vie telle qu'elle est, sans idéalisation, pour comprendre la vérité humaine."
+      "label": "Realist",
+      "tooltip": "Clear-eyed observation of life as it is, without idealization, to understand human truth."
     },
     {
-      "label": "Mystique",
-      "tooltip": "Littérature de la fusion avec le divin ou l'invisible, cherchant la communion entre l'âme et l'absolu."
+      "label": "Mystical",
+      "tooltip": "Literature of fusion with the divine or invisible, seeking communion between the soul and the absolute."
     },
     {
-      "label": "Existentialiste",
-      "tooltip": "Exploration du sens de la vie, de la liberté et de la responsabilité de l'individu face à l'absurde."
+      "label": "Existentialist",
+      "tooltip": "Exploration of the meaning of life, freedom, and individual responsibility in the face of the absurd."
     },
     {
-      "label": "Romantique",
-      "tooltip": "Exaltation de la passion, de la nature et de la subjectivité comme expression de l'âme."
+      "label": "Romantic",
+      "tooltip": "Exaltation of passion, nature, and subjectivity as an expression of the soul."
     },
     {
-      "label": "Symboliste / Moderne",
-      "tooltip": "Recherche du sens caché derrière les apparences, langage suggestif et spirituel de l'invisible."
+      "label": "Symbolist / Modern",
+      "tooltip": "Search for hidden meaning behind appearances, suggestive and spiritual language of the invisible."
     }
   ];
 
   static const List<Map<String, String>> approchesPsychologiques = [
     {
-      "label": "Logothérapie (Frankl)",
-      "tooltip": "Approche centrée sur la quête de sens : chaque épreuve devient l'occasion d'une réponse libre et signifiante."
+      "label": "Logotherapy (Frankl)",
+      "tooltip": "An approach centered on the search for meaning: every challenge becomes an opportunity for a free and meaningful response."
     },
     {
-      "label": "Thérapie des Schémas (Young)",
-      "tooltip": "Démarche pour identifier et transformer les schémas émotionnels précoces qui conditionnent nos réactions."
+      "label": "Schema Therapy (Young)",
+      "tooltip": "A process to identify and transform early emotional schemas that condition our reactions."
     },
     {
-      "label": "Humaniste (Rogers)",
-      "tooltip": "Vision bienveillante de l'être humain axée sur l'acceptation inconditionnelle et le développement du potentiel intérieur."
+      "label": "Humanistic (Rogers)",
+      "tooltip": "A compassionate view of the human being focused on unconditional acceptance and the development of inner potential."
     },
     {
       "label": "The Work (Byron Katie)",
-      "tooltip": "Méthode de questionnement des pensées stressantes pour revenir à la réalité et retrouver la paix intérieure."
+      "tooltip": "A method of questioning stressful thoughts to return to reality and find inner peace."
     },
     {
-      "label": "TCC (Cognitivo-Comportementale)",
-      "tooltip": "Thérapie pratique fondée sur la modification des pensées et comportements limitants à travers des exercices concrets."
+      "label": "CBT (Cognitive-Behavioral)",
+      "tooltip": "A practical therapy based on modifying limiting thoughts and behaviors through concrete exercises."
     },
     {
-      "label": "Jungienne (symbolique, archétypes)",
-      "tooltip": "Approche basée sur l'inconscient et les symboles universels (archétypes) comme chemins d'intégration et de transformation."
+      "label": "Jungian (symbolism, archetypes)",
+      "tooltip": "An approach based on the unconscious and universal symbols (archetypes) as paths of integration and transformation."
     }
   ];
 
   static const List<String> tonalites = [
-    'Apaisant et sécurisant',
-    'Réflexif et équilibré',
-    'Orienté action douce',
-    'Introspectif et inspirant',
-    'Bienveillant et profond',
+    'Soothing and reassuring',
+    'Reflective and balanced',
+    'Gently action-oriented',
+    'Introspective and inspiring',
+    'Compassionate and deep',
   ];
 }
 

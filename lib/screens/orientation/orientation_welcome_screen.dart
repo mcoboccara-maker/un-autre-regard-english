@@ -95,7 +95,7 @@ class OrientationWelcomeScreen extends StatelessWidget {
 
                     // Titre
                     Text(
-                      'Découvre ton\nunivers intérieur',
+                      'Discover your\ninner universe',
                       style: GoogleFonts.poppins(
                         color: const Color(0xFF1E293B),
                         fontSize: 32,
@@ -111,7 +111,7 @@ class OrientationWelcomeScreen extends StatelessWidget {
 
                     // Sous-titre
                     Text(
-                      '14 images • 45 secondes\nSwipe instinctivement',
+                      '14 images • 45 seconds\nSwipe instinctively',
                       style: GoogleFonts.poppins(
                         color: const Color(0xFF64748B),
                         fontSize: 16,
@@ -157,7 +157,7 @@ class OrientationWelcomeScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Commencer',
+                        'Get Started',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -194,7 +194,7 @@ class OrientationWelcomeScreen extends StatelessWidget {
           _buildInstructionItem(
             icon: Icons.swipe,
             label: 'Swipe',
-            subLabel: 'pour explorer',
+            subLabel: 'to explore',
           ),
           Container(
             width: 1,
@@ -204,7 +204,7 @@ class OrientationWelcomeScreen extends StatelessWidget {
           _buildInstructionItem(
             icon: Icons.touch_app,
             label: 'Tap',
-            subLabel: 'pour choisir',
+            subLabel: 'to choose',
           ),
         ],
       ),

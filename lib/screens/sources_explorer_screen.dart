@@ -9,6 +9,7 @@ import '../services/complete_auth_service.dart';
 import '../services/ai_service.dart';
 import '../services/persistent_storage_service.dart';
 import 'orientation/orientation_welcome_screen.dart';
+import '../widgets/nav_cartouche.dart';
 
 class SourcesExplorerScreen extends StatefulWidget {
   const SourcesExplorerScreen({super.key});
@@ -57,6 +58,9 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
     'schemas_young': 'schemas_young',
     'the_work': 'theworkkb',
     'humaniste_rogers': 'humanisme',
+    'psychanalyse': 'psychanalyse',
+    'analyse_transactionnelle': 'analyse_transactionnelle',
+    'systemique': 'approche_systemique',
     'stoicisme_philo': 'stoicisme',
     'epicurisme': 'epicurisme',
     'existentialisme_philo': 'existentialisme',
@@ -67,6 +71,18 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
     'empirisme': 'empirisme',
     'idealisme': 'idealisme',
     'utilitarisme': 'utilitarisme',
+    'vitalisme': 'vitalisme',
+    'structuralisme': 'structuralisme',
+    'philosophies_orientales': 'philosophies_orientales',
+    'modernisme': 'modernisme',
+    'postmodernisme': 'postmodernisme',
+    'roman_psychologique': 'roman_psychologique',
+    'surrealisme': 'surrealisme',
+    'mythologie': 'mythologie',
+    'science_fiction': 'science_fiction',
+    'fantasy': 'fantasy',
+    'tragedie_classique': 'tragedie_classique',
+    'naturalisme': 'naturalisme',
     'socrate': 'socrate',
     'platon': 'platon',
     'aristote': 'aristote',
@@ -101,7 +117,7 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
   static const List<_SourceSection> _sections = [
     _SourceSection(
       type: ApproachType.spiritual,
-      title: 'Sources spirituelles',
+      title: 'Spiritual Sources',
       imagePath: 'assets/univers_visuel/spiritualites.png',
       fallbackIcon: Icons.self_improvement,
       color: Color(0xFF6366F1),
@@ -109,28 +125,28 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
     // Quiz + Roue insérés entre spirituelles et littéraires (via build)
     _SourceSection(
       type: ApproachType.literary,
-      title: 'Sources littéraires',
+      title: 'Literary Sources',
       imagePath: 'assets/univers_visuel/litteraire.png',
       fallbackIcon: Icons.auto_stories,
       color: Color(0xFFEC4899),
     ),
     _SourceSection(
       type: ApproachType.psychological,
-      title: 'Sources psychologiques',
+      title: 'Psychological Sources',
       imagePath: 'assets/univers_visuel/psychologie.png',
       fallbackIcon: Icons.psychology,
       color: Color(0xFF0EA5E9),
     ),
     _SourceSection(
       type: ApproachType.philosophical,
-      title: 'Courants philosophiques',
+      title: 'Philosophical Schools',
       imagePath: 'assets/univers_visuel/philosophie.png',
       fallbackIcon: Icons.account_balance,
       color: Color(0xFF10B981),
     ),
     _SourceSection(
       type: ApproachType.philosopher,
-      title: 'Philosophes',
+      title: 'Philosophers',
       imagePath: 'assets/univers_visuel/philosophes.png',
       fallbackIcon: Icons.person,
       color: Color(0xFFF59E0B),
@@ -179,7 +195,7 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${_selectedSources.length} source${_selectedSources.length > 1 ? 's' : ''} sauvegardée${_selectedSources.length > 1 ? 's' : ''}',
+              '${_selectedSources.length} source${_selectedSources.length > 1 ? 's' : ''} saved',
               style: GoogleFonts.inter(fontSize: 13),
             ),
             backgroundColor: const Color(0xFF2E8B7B),
@@ -194,7 +210,7 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Erreur lors de la sauvegarde. Réessaie.',
+              'Error while saving. Please try again.',
               style: GoogleFonts.inter(fontSize: 13),
             ),
             backgroundColor: Colors.red.shade700,
@@ -255,8 +271,8 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
                           : const Icon(Icons.check_circle_outline, size: 20),
                       label: Text(
                         _isSaving
-                            ? 'Sauvegarde...'
-                            : 'Sauvegarder mes ${_selectedSources.length} source${_selectedSources.length > 1 ? 's' : ''}',
+                            ? 'Saving...'
+                            : 'Save my ${_selectedSources.length} source${_selectedSources.length > 1 ? 's' : ''}',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -282,7 +298,7 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
                     ),
                     icon: const Icon(Icons.arrow_back_rounded, size: 18),
                     label: Text(
-                      'Retour au menu',
+                      'Back to menu',
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -305,56 +321,46 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
   // ── AppBar ───────────────────────────────────────────────────────────────
   Widget _buildAppBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
         children: [
-          const SizedBox(width: 8),
+          // Icône du menu correspondant
+          Image.asset(
+            'assets/univers_visuel/connecte_toi_aux_sources.png',
+            width: 36,
+            height: 36,
+            errorBuilder: (_, __, ___) => const Icon(
+              Icons.explore,
+              color: _textPrimary,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Explore des sources',
+              'Connect to Sources',
               style: GoogleFonts.cormorantGaramond(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: _textPrimary,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
-          // Cartouche droite : pensée positive + menu
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: _showPositiveThought,
-                icon: Image.asset(
-                  'assets/univers_visuel/pensee_positive.png',
-                  width: 26,
-                  height: 26,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.lightbulb_outline,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                tooltip: 'Pensée positive',
-              ),
-              IconButton(
-                onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                  context, '/menu', (route) => false,
-                ),
-                icon: Image.asset(
-                  'assets/univers_visuel/profil.png',
-                  width: 26,
-                  height: 26,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.menu_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                tooltip: 'Menu principal',
-              ),
-            ],
+          // Cartouches navigation uniformes
+          NavCartouche(
+            assetPath: 'assets/univers_visuel/pensee_positive.png',
+            fallbackIcon: Icons.lightbulb_outline,
+            tooltip: 'Positive thought',
+            onTap: _showPositiveThought,
+          ),
+          const SizedBox(width: 6),
+          NavCartouche(
+            assetPath: 'assets/univers_visuel/menu_principal.png',
+            fallbackIcon: Icons.home_outlined,
+            tooltip: 'Main menu',
+            onTap: () => Navigator.pushNamedAndRemoveUntil(
+              context, '/menu', (route) => false,
+            ),
           ),
         ],
       ),
@@ -363,11 +369,11 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
 
   void _showPositiveThought() {
     final thoughts = [
-      "Chaque jour est une nouvelle opportunité de grandir.",
-      "Tu as déjà surmonté tant d'obstacles.",
-      "Prends le temps de respirer. Ce moment difficile passera.",
-      "Tu mérites d'être heureux(se) et en paix.",
-      "Tes émotions sont valides. Accueille-les avec bienveillance.",
+      "Every day is a new opportunity to grow.",
+      "You have already overcome so many obstacles.",
+      "Take a moment to breathe. This difficult time will pass.",
+      "You deserve to be happy and at peace.",
+      "Your emotions are valid. Welcome them with kindness.",
     ];
     final random = DateTime.now().millisecondsSinceEpoch % thoughts.length;
     showDialog(
@@ -375,13 +381,13 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: const Color(0xFFFEF3C7),
-        title: Text('Pensée du moment', style: GoogleFonts.cormorantGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF92400E))),
+        title: Text('Thought of the Moment', style: GoogleFonts.cormorantGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF92400E))),
         content: Text(thoughts[random], style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF78350F), height: 1.5)),
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFBBF24), foregroundColor: const Color(0xFF78350F)),
-            child: const Text('Merci !'),
+            child: const Text('Thanks!'),
           ),
         ],
       ),
@@ -557,8 +563,9 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
         // Quiz d'orientation
         Expanded(
           child: _buildActionCard(
-            icon: Icons.quiz_rounded,
-            label: 'Quiz\nd\'orientation',
+            imagePath: 'assets/univers_visuel/quiz.png',
+            fallbackIcon: Icons.quiz_rounded,
+            label: 'Orientation\nQuiz',
             color: const Color(0xFF6366F1),
             onTap: _openQuiz,
           ),
@@ -567,8 +574,9 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
         // Roue du hasard
         Expanded(
           child: _buildActionCard(
-            icon: Icons.casino_rounded,
-            label: 'Roue\ndu hasard',
+            imagePath: 'assets/univers_visuel/rouehasard.png',
+            fallbackIcon: Icons.casino_rounded,
+            label: 'Wheel of\nChance',
             color: const Color(0xFFF59E0B),
             onTap: _openWheel,
           ),
@@ -578,7 +586,8 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
   }
 
   Widget _buildActionCard({
-    required IconData icon,
+    required String imagePath,
+    required IconData fallbackIcon,
     required String label,
     required Color color,
     required VoidCallback onTap,
@@ -601,7 +610,16 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
                 color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: ClipOval(
+                child: Image.asset(
+                  imagePath,
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Icon(fallbackIcon, color: color, size: 28),
+                ),
+              ),
             ),
             const SizedBox(height: 10),
             Text(
@@ -671,7 +689,7 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${selectedIds.length} sagesse${selectedIds.length > 1 ? 's' : ''} ajoutée${selectedIds.length > 1 ? 's' : ''} — ${mergedSources.length} source${mergedSources.length > 1 ? 's' : ''} au total',
+                '${selectedIds.length} wisdom${selectedIds.length > 1 ? 's' : ''} added — ${mergedSources.length} source${mergedSources.length > 1 ? 's' : ''} total',
                 style: GoogleFonts.inter(fontSize: 13),
               ),
               backgroundColor: const Color(0xFF2E8B7B),
