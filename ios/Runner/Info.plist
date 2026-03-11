@@ -49,5 +49,18 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Google Sign-In : URL scheme for OAuth callback -->
+	<!-- REVERSED_CLIENT_ID comes from GoogleService-Info.plist -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.93453145239-q98g4rplbq0hb8d4ud1oi42um80h860a</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -789,17 +789,22 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Column(
           children: [
-            Image.asset(
-              'assets/univers_visuel/inscription.png',
-              width: 44,
-              height: 44,
-              color: isSelected ? Colors.white : null,
-              errorBuilder: (_, __, ___) => Icon(
-                Icons.person_add,
-                size: 40,
-                color: isSelected ? Colors.white : const Color(0xFF5A8A8A),
-              ),
-            ),
+            isSelected
+                ? const Icon(
+                    Icons.person_add,
+                    size: 40,
+                    color: Colors.white,
+                  )
+                : Image.asset(
+                    'assets/univers_visuel/inscription.png',
+                    width: 44,
+                    height: 44,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.person_add,
+                      size: 40,
+                      color: Color(0xFF5A8A8A),
+                    ),
+                  ),
             const SizedBox(height: 10),
             Text(
               'Create an\naccount',
@@ -851,17 +856,22 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Column(
           children: [
-            Image.asset(
-              'assets/univers_visuel/connexion.png',
-              width: 44,
-              height: 44,
-              color: isSelected ? Colors.white : null,
-              errorBuilder: (_, __, ___) => Icon(
-                Icons.login,
-                size: 40,
-                color: isSelected ? Colors.white : const Color(0xFF5A8A8A),
-              ),
-            ),
+            isSelected
+                ? const Icon(
+                    Icons.login,
+                    size: 40,
+                    color: Colors.white,
+                  )
+                : Image.asset(
+                    'assets/univers_visuel/connexion.png',
+                    width: 44,
+                    height: 44,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.login,
+                      size: 40,
+                      color: Color(0xFF5A8A8A),
+                    ),
+                  ),
             const SizedBox(height: 10),
             Text(
               'Sign\nIn',

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -45,6 +46,14 @@ class SocialAuthService {
         return email;
       }
       return null;
+    } on PlatformException catch (e) {
+      // Erreur native (ex: GoogleService-Info.plist manquant sur iOS)
+      debugPrint('❌ Google Sign-In PlatformException: ${e.code} — ${e.message}');
+      throw Exception(
+        !kIsWeb && Platform.isIOS
+            ? 'Google Sign-In configuration missing on iOS. Contact support.'
+            : 'Google Sign-In error: ${e.message}',
+      );
     } catch (e, stackTrace) {
       debugPrint('❌ Google Sign-In erreur: $e');
       debugPrint('❌ Stack: $stackTrace');
@@ -117,10 +126,13 @@ class SocialAuthService {
         return null; // Annulation, pas une erreur
       }
       debugPrint('❌ Apple Sign-In erreur: ${e.code} — ${e.message}');
-      return null;
+      throw Exception('Apple Sign-In failed. Please try again.');
+    } on PlatformException catch (e) {
+      debugPrint('❌ Apple Sign-In PlatformException: ${e.code} — ${e.message}');
+      throw Exception('Apple Sign-In configuration not available.');
     } catch (e) {
       debugPrint('❌ Apple Sign-In erreur: $e');
-      return null;
+      throw Exception('Apple Sign-In error: $e');
     }
   }
 

@@ -1,6 +1,6 @@
 // lib/services/email_service.dart
-// Service d'envoi d'email via Brevo (ex-Sendinblue)
-// Quota gratuit : 300 emails/jour (9000/mois)
+// Service d'envoi d'email via Resend
+// Quota gratuit : 3 000 emails/mois
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -8,22 +8,23 @@ import 'package:http/http.dart' as http;
 class EmailService {
   static EmailService? _instance;
   static EmailService get instance => _instance ??= EmailService._();
-  
+
   EmailService._();
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // CONFIGURATION BREVO
+  // CONFIGURATION RESEND
   // ═══════════════════════════════════════════════════════════════════════════
-  
-  static const String _apiUrl = 'https://api.brevo.com/v3/smtp/email';
-  
-  // ⚠️ REMPLACE PAR TA NOUVELLE CLÉ API BREVO
-  static const String _apiKey = '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';
-  
-  // Expéditeur (vérifié dans Brevo)
-  static const String _senderEmail = 'appunautreregard@gmail.com';
-  static const String _senderName = 'Un Autre Regard';
-  
+
+  static const String _apiUrl = 'https://api.resend.com/emails';
+
+  // Clé API Resend — remplacer par ta clé (re_xxxxxxxx)
+  static const String _apiKey = 're_H4hAZrL8_29xCXFzyBVThnJNiNbZrL1XU';
+
+  // Expéditeur — utiliser onboarding@resend.dev en test,
+  // ou ton domaine vérifié en production (ex: noreply@unautreregard.app)
+  static const String _senderEmail = 'anotherperspective@binaiskit.com';
+  static const String _senderName = 'Another Perspective';
+
   // ═══════════════════════════════════════════════════════════════════════════
   // DESTINATAIRE FIXE (toutes les réflexions arrivent ici)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -63,29 +64,22 @@ class EmailService {
       // ENVOI TOUJOURS À appunautreregard@gmail.com (pas à toEmail!)
       // ═══════════════════════════════════════════════════════════════════════
       final body = jsonEncode({
-        'sender': {
-          'name': _senderName,
-          'email': _senderEmail,
-        },
-        'to': [
-          {'email': _destinataireEmail}  // ✅ Toujours vers appunautreregard@gmail.com
-        ],
+        'from': '$_senderName <$_senderEmail>',
+        'to': [_destinataireEmail],
         'subject': '🌟 Reflection from $toEmail - Another Perspective',
-        'htmlContent': htmlContent,
+        'html': htmlContent,
       });
 
-      // Appeler l'API Brevo
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {
-          'api-key': _apiKey,
+          'Authorization': 'Bearer $_apiKey',
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: body,
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         print('✅ Email envoyé avec succès à $_destinataireEmail (de: $toEmail)');
         return EmailResult(success: true, message: 'Email sent successfully');
       } else {
@@ -410,23 +404,17 @@ class EmailService {
 ''';
 
       final body = jsonEncode({
-        'sender': {
-          'name': _senderName,
-          'email': _senderEmail,
-        },
-        'to': [
-          {'email': toEmail}  // Envoi direct à l'utilisateur
-        ],
+        'from': '$_senderName <$_senderEmail>',
+        'to': [toEmail],
         'subject': '🔐 Your new password - Another Perspective',
-        'htmlContent': htmlContent,
+        'html': htmlContent,
       });
 
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {
-          'api-key': _apiKey,
+          'Authorization': 'Bearer $_apiKey',
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
         },
         body: body,
       );
@@ -435,7 +423,7 @@ class EmailService {
       print('📧 Status code: ${response.statusCode}');
       print('📧 Response body: ${response.body}');
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         print('✅ Email de réinitialisation envoyé à $toEmail');
         return EmailResult(success: true, message: 'Email sent successfully');
       } else {
@@ -466,29 +454,25 @@ class EmailService {
   // TEST DE CONNEXION
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// Teste si la configuration Brevo fonctionne
+  /// Teste si la configuration Resend fonctionne
   Future<bool> testConnection() async {
     try {
       final response = await http.get(
-        Uri.parse('https://api.brevo.com/v3/account'),
+        Uri.parse('https://api.resend.com/domains'),
         headers: {
-          'api-key': _apiKey,
-          'Accept': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
         },
       );
-      
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('✅ Connexion Brevo OK');
-        print('   Compte: ${data['email']}');
-        print('   Plan: ${data['plan']}');
+        print('✅ Connexion Resend OK');
         return true;
       } else {
-        print('❌ Erreur connexion Brevo: ${response.statusCode}');
+        print('❌ Erreur connexion Resend: ${response.statusCode}');
         return false;
       }
     } catch (e) {
-      print('❌ Exception test Brevo: $e');
+      print('❌ Exception test Resend: $e');
       return false;
     }
   }
