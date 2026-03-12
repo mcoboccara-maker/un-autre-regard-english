@@ -139,9 +139,9 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
     motion: MotionProfile(type: 'sway', periodSeconds: 20.0),
     entrance: EntranceProfile(type: 'layer_fade', staggerMs: 120),
   ),
-  'bouddhisme': LightingProfile(
-    id: 'bouddhisme',
-    label: 'Bouddhisme',
+  'theravada': LightingProfile(
+    id: 'theravada',
+    label: 'Theravāda',
     group: 'spiritual',
     backgroundColor: 0xFFF2F2F0,
     animatedGradient: [0xFFF2F2F0, 0xFFE6E6E0],
@@ -152,9 +152,22 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
     motion: MotionProfile(type: 'still', periodSeconds: 60.0),
     entrance: EntranceProfile(type: 'layer_fade', staggerMs: 120),
   ),
-  'hindouisme': LightingProfile(
-    id: 'hindouisme',
-    label: 'Hindouisme',
+  'zen': LightingProfile(
+    id: 'zen',
+    label: 'Zen',
+    group: 'spiritual',
+    backgroundColor: 0xFFEAEDE8,
+    animatedGradient: [0xFFEAEDE8, 0xFFD8DDD2],
+    textColor: 0xFF1A1C18,
+    accentColor: 0xFF4A6741,
+    fontFamilyTitle: 'Literata',
+    fontFamilyBody: 'Literata',
+    motion: MotionProfile(type: 'still', periodSeconds: 90.0),
+    entrance: EntranceProfile(type: 'layer_fade', staggerMs: 150),
+  ),
+  'advaita_vedanta': LightingProfile(
+    id: 'advaita_vedanta',
+    label: 'Advaita Vedānta',
     group: 'spiritual',
     backgroundColor: 0xFFF6E4C9,
     animatedGradient: [0xFFF6E4C9, 0xFFF0C98A],
@@ -164,6 +177,19 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
     fontFamilyBody: 'Literata',
     motion: MotionProfile(type: 'cycle_mandala', periodSeconds: 24.0),
     entrance: EntranceProfile(type: 'layer_fade', staggerMs: 120),
+  ),
+  'bhakti': LightingProfile(
+    id: 'bhakti',
+    label: 'Bhakti',
+    group: 'spiritual',
+    backgroundColor: 0xFFFFF1E6,
+    animatedGradient: [0xFFFFF1E6, 0xFFFFDFC2],
+    textColor: 0xFF2A1B0E,
+    accentColor: 0xFFEA580C,
+    fontFamilyTitle: 'Literata',
+    fontFamilyBody: 'Literata',
+    motion: MotionProfile(type: 'pulse_depth', periodSeconds: 18.0),
+    entrance: EntranceProfile(type: 'layer_fade', staggerMs: 100),
   ),
   'spiritualite_contemporaine': LightingProfile(
     id: 'spiritualite_contemporaine',
@@ -415,6 +441,36 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
     fontFamilyBody: 'Charter',
     motion: MotionProfile(type: 'fade_in_out', periodSeconds: 20.0),
     entrance: EntranceProfile(type: 'layer_slide_fade', staggerMs: 110),
+  ),
+
+  // ========================================
+  // INDIVIDUAL AUTHORS
+  // ========================================
+  'kafka': LightingProfile(
+    id: 'kafka',
+    label: 'Kafka',
+    group: 'literary',
+    backgroundColor: 0xFF1A1A1A,
+    animatedGradient: [0xFF1A1A1A, 0xFF2C2C2C],
+    textColor: 0xFFE5E5E5,
+    accentColor: 0xFF9CA3AF,
+    fontFamilyTitle: 'PlayfairDisplay',
+    fontFamilyBody: 'Charter',
+    motion: MotionProfile(type: 'pulse_depth', periodSeconds: 30.0),
+    entrance: EntranceProfile(type: 'layer_fade', staggerMs: 140),
+  ),
+  'dostoievski': LightingProfile(
+    id: 'dostoievski',
+    label: 'Dostoevsky',
+    group: 'literary',
+    backgroundColor: 0xFF1C1008,
+    animatedGradient: [0xFF1C1008, 0xFF3A2010],
+    textColor: 0xFFF5F0E8,
+    accentColor: 0xFFD4A574,
+    fontFamilyTitle: 'PlayfairDisplay',
+    fontFamilyBody: 'Charter',
+    motion: MotionProfile(type: 'mist', periodSeconds: 26.0),
+    entrance: EntranceProfile(type: 'layer_slide_fade', staggerMs: 120),
   ),
 
   // ========================================

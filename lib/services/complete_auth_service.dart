@@ -450,8 +450,8 @@ class CompleteAuthService {
     // Sources spirituelles
     const spiritual = [
       'judaisme_rabbinique', 'moussar', 'kabbale', 'christianisme',
-      'islam', 'soufisme', 'bouddhisme', 'hindouisme', 'stoicisme',
-      'spiritualite_contemporaine',
+      'islam', 'soufisme', 'theravada', 'zen', 'advaita_vedanta',
+      'bhakti', 'stoicisme', 'spiritualite_contemporaine',
     ];
     // Sources littéraires
     const literary = [

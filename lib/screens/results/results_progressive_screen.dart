@@ -785,8 +785,10 @@ class _ResultsProgressiveScreenState extends State<ResultsProgressiveScreen> {
       'christianisme': 'assets/univers_visuel/christianisme.png',
       'islam': 'assets/univers_visuel/islam.png',
       'soufisme': 'assets/univers_visuel/soufisme.png',
-      'bouddhisme': 'assets/univers_visuel/boudhisme.png',
-      'hindouisme': 'assets/univers_visuel/hindouisme.png',
+      'theravada': 'assets/univers_visuel/theravada.png',
+      'zen': 'assets/univers_visuel/zen.png',
+      'advaita_vedanta': 'assets/univers_visuel/advaita_vedanta.png',
+      'bhakti': 'assets/univers_visuel/bhakti.png',
       'spiritualite_contemporaine': 'assets/univers_visuel/contemporaine et laique.png',
       // Philosophie
       'epicurisme': 'assets/univers_visuel/epicurisme.png',

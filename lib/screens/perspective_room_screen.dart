@@ -67,7 +67,7 @@ SourceFamily _getSourceFamily(String approachKey, String group) {
   const stoicKeys = [
     'stoicisme', 'stoicisme_philo', 'epicurisme', 'epicure',
     'seneque', 'epictete', 'marc_aurele', 'philosophies_orientales',
-    'bouddhisme', 'confucius',
+    'theravada', 'zen', 'advaita_vedanta', 'bhakti', 'confucius',
   ];
   if (stoicKeys.contains(approachKey)) {
     return SourceFamily.stoicismeSagesses;

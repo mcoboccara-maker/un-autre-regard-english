@@ -41,8 +41,10 @@ class _SlotMachineDialogState extends State<SlotMachineDialog>
   static const List<SlotItem> wheel1Items = [
     SlotItem('Judaism', 'judaisme.png'),
     SlotItem('Mussar', 'moussar.png'),
-    SlotItem('Buddhism', 'bouddhisme.png'),
-    SlotItem('Hinduism', 'hindouisme.png'),
+    SlotItem('Theravāda', 'theravada.png'),
+    SlotItem('Zen', 'zen.png'),
+    SlotItem('Advaita Vedānta', 'advaita_vedanta.png'),
+    SlotItem('Bhakti', 'bhakti.png'),
     SlotItem('Sufism', 'soufisme.png'),
   ];
 

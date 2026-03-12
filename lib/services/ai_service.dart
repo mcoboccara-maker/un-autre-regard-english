@@ -61,8 +61,8 @@ class AIService {
   /// Sources nécessitant le modèle de qualité (références textuelles précises)
   static const List<String> _spiritualSources = [
     // Religions/Spiritualités
-    'judaisme', 'christianisme', 'islam', 'bouddhisme', 'hindouisme',
-    'soufisme', 'zen', 'taoisme',
+    'judaisme', 'christianisme', 'islam', 'theravada', 'zen',
+    'advaita_vedanta', 'bhakti', 'soufisme', 'taoisme',
     // Traditions juives spécifiques
     'kabbale', 'hassidisme', 'moussar', 'rabbinique',
     // Mystique

@@ -111,26 +111,50 @@ class ApproachCategories {
     ),
 
     ApproachConfig(
-      key: 'bouddhisme',
-      name: 'Buddhism',
-      description: 'Liberation through understanding impermanence',
-      credo: 'This suffering arises from attachment — how can you let it go?',
-      tonEmotionnel: 'Wise, soothing',
-      exemples: ['Buddha', 'Dalai Lama', 'Thich Nhat Hanh'],
+      key: 'theravada',
+      name: 'Theravāda Buddhism',
+      description: 'Way of the Elders — liberation through personal discipline and Vipassana meditation',
+      credo: 'Observe your suffering with clarity — it dissolves in mindful awareness',
+      tonEmotionnel: 'Methodical, soothing, progressive',
+      exemples: ['Buddha', 'Ajahn Chah', 'Mahasi Sayadaw'],
       icon: Icons.self_improvement,
       color: Color(0xFF10B981),
       type: ApproachType.spiritual,
     ),
 
     ApproachConfig(
-      key: 'hindouisme',
-      name: 'Hinduism',
-      description: 'Understanding karma and transcending illusion (maya)',
-      credo: 'This situation teaches you to see beyond appearances',
-      tonEmotionnel: 'Philosophical, detached',
-      exemples: ['Bhagavad Gita', 'Patanjali', 'Ramana Maharshi'],
-      icon: Icons.temple_hindu,
+      key: 'zen',
+      name: 'Zen Buddhism',
+      description: 'Direct awakening through immediate experience, beyond words and concepts',
+      credo: 'Let go of all thought — the answer is already here, before the mind',
+      tonEmotionnel: 'Stripped, radical, lightning',
+      exemples: ['Dōgen', 'Shunryu Suzuki', 'Thich Nhat Hanh'],
+      icon: Icons.spa,
+      color: Color(0xFF065F46),
+      type: ApproachType.spiritual,
+    ),
+
+    ApproachConfig(
+      key: 'advaita_vedanta',
+      name: 'Advaita Vedānta',
+      description: 'Radical non-duality — you ARE the Absolute, the world is illusion (māyā)',
+      credo: 'You are not this situation — discover who you truly are, beyond appearances',
+      tonEmotionnel: 'Philosophical, liberating, contemplative',
+      exemples: ['Śaṅkara', 'Ramana Maharshi', 'Nisargadatta Maharaj'],
+      icon: Icons.all_inclusive,
       color: Color(0xFFF59E0B),
+      type: ApproachType.spiritual,
+    ),
+
+    ApproachConfig(
+      key: 'bhakti',
+      name: 'Bhakti (Hindu devotion)',
+      description: 'Devotional love as a path to liberation — the heart before knowledge',
+      credo: 'Offer this trial to the divine — love transforms all suffering',
+      tonEmotionnel: 'Ardent, trusting, ecstatic',
+      exemples: ['Rāmānuja', 'Caitanya', 'Mirabai', 'Tulsidas'],
+      icon: Icons.temple_hindu,
+      color: Color(0xFFEA580C),
       type: ApproachType.spiritual,
     ),
 
@@ -381,6 +405,33 @@ class ApproachCategories {
       exemples: ['Tolkien', 'Ursula Le Guin', 'Robin Hobb'],
       icon: Icons.castle,
       color: Color(0xFF059669),
+      type: ApproachType.literary,
+    ),
+
+    // ========================================
+    // 📖 INDIVIDUAL AUTHORS
+    // ========================================
+    ApproachConfig(
+      key: 'kafka',
+      name: 'Franz Kafka',
+      description: 'The absurdity of the system — the individual crushed by incomprehensible forces',
+      credo: 'This situation escapes your logic? Perhaps it is the one revealing you',
+      tonEmotionnel: 'Anguished, lucid, vertiginous',
+      exemples: ['Josef K. (The Trial)', 'Gregor Samsa (The Metamorphosis)', 'K. (The Castle)', 'Karl Rossmann (Amerika)'],
+      icon: Icons.menu_book,
+      color: Color(0xFF1F2937),
+      type: ApproachType.literary,
+    ),
+
+    ApproachConfig(
+      key: 'dostoievski',
+      name: 'Fyodor Dostoevsky',
+      description: 'The abysses of the human soul — inner torment, redemption through suffering',
+      credo: 'Descend into the depths of yourself — that is where the light begins',
+      tonEmotionnel: 'Tormented, profound, redemptive',
+      exemples: ['Raskolnikov (Crime and Punishment)', 'Myshkin (The Idiot)', 'Ivan Karamazov (The Brothers Karamazov)', 'The Underground Man'],
+      icon: Icons.menu_book,
+      color: Color(0xFF7C2D12),
       type: ApproachType.literary,
     ),
   ];

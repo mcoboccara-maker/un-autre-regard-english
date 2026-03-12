@@ -35,7 +35,10 @@ class _CrossroadsDialogState extends State<CrossroadsDialog>
   static const List<SourceItem> spiritualites = [
     SourceItem('Judaism', 'judaisme.png'),
     SourceItem('Mussar', 'moussar.png'),
-    SourceItem('Buddhism', 'bouddhisme.png'),
+    SourceItem('Theravāda', 'theravada.png'),
+    SourceItem('Zen', 'zen.png'),
+    SourceItem('Advaita Vedānta', 'advaita_vedanta.png'),
+    SourceItem('Bhakti', 'bhakti.png'),
     SourceItem('Sufism', 'soufisme.png'),
   ];
 

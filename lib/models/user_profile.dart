@@ -373,7 +373,7 @@ class UserProfile extends HiveObject {
       valeurs: json['valeurs'],
       ressources: json['ressources'],
       contraintesRecurrentes: json['contraintesRecurrentes'],
-      religionsSelectionnees: List<String>.from(json['religionsSelectionnees'] ?? []),
+      religionsSelectionnees: _migrateReligions(List<String>.from(json['religionsSelectionnees'] ?? [])),
       courantsLitteraires: List<String>.from(json['courantsLitteraires'] ?? []),
       approchesPsychologiques: List<String>.from(json['approchesPsychologiques'] ?? []),
       tonalitePrefere: json['tonalitePrefere'],
@@ -452,18 +452,37 @@ class UserProfile extends HiveObject {
   }
 }
 
+/// Smooth migration: replace old bouddhisme/hindouisme keys with new schools
+List<String> _migrateReligions(List<String> religions) {
+  final migrated = <String>[];
+  for (final r in religions) {
+    if (r == 'bouddhisme' || r == 'Buddhism') {
+      if (!migrated.contains('theravada')) migrated.add('theravada');
+      if (!migrated.contains('zen')) migrated.add('zen');
+    } else if (r == 'hindouisme' || r == 'Hinduism') {
+      if (!migrated.contains('advaita_vedanta')) migrated.add('advaita_vedanta');
+      if (!migrated.contains('bhakti')) migrated.add('bhakti');
+    } else {
+      migrated.add(r);
+    }
+  }
+  return migrated;
+}
+
 // === LISTES DE CHOIX CONFORMES AU PROMPT ===
 
 class ProfileChoices {
   static const List<String> religions = [
-    'Judaïsme',
-    'Christianisme',
-    'Islam / Soufisme',
-    'Bouddhisme',
-    'Hindouisme',
-    'Stoïcisme',
-    'Spiritualité contemporaine / laïque',
-    'Autre',
+    'Judaism',
+    'Christianity',
+    'Islam / Sufism',
+    'Theravāda Buddhism',
+    'Zen Buddhism',
+    'Advaita Vedānta',
+    'Bhakti (Hindu devotion)',
+    'Stoicism',
+    'Contemporary / Secular Spirituality',
+    'Other',
   ];
 
   static const List<String> courantsLitteraires = [

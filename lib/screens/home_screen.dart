@@ -69,8 +69,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     'judaisme.png',
     'christianisme.png',
     'islam.png',
-    'boudhisme.png',
-    'hindouisme.png',
+    'theravada.png',
+    'zen.png',
+    'advaita_vedanta.png',
+    'bhakti.png',
   ];
 
   @override
@@ -1836,8 +1838,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       'judaisme': {'name': 'Judaism', 'category': 'Spirituality'},
       'christianisme': {'name': 'Christianity', 'category': 'Spirituality'},
       'islam': {'name': 'Islam', 'category': 'Spirituality'},
-      'bouddhisme': {'name': 'Buddhism', 'category': 'Spirituality'},
-      'hindouisme': {'name': 'Hinduism', 'category': 'Spirituality'},
+      'theravada': {'name': 'Theravāda', 'category': 'Spirituality'},
+      'zen': {'name': 'Zen', 'category': 'Spirituality'},
+      'advaita_vedanta': {'name': 'Advaita Vedānta', 'category': 'Spirituality'},
+      'bhakti': {'name': 'Bhakti', 'category': 'Spirituality'},
     };
 
     return sourceMapping[sourceKey] ?? {

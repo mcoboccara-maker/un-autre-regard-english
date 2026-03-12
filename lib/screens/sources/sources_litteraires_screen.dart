@@ -31,6 +31,26 @@ class SourcesLitterairesScreen extends StatefulWidget {
 class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
   final Set<String> _selectedSources = {};
   bool _isLoading = true;
+  bool _authorsExpanded = false;
+
+  final List<LiterarySource> _authors = [
+    LiterarySource(
+      id: 'kafka',
+      name: 'Franz Kafka',
+      iconPath: 'assets/univers_visuel/kafka.png',
+      description: 'Master of bureaucratic absurdity — the individual confronted with incomprehensible systems that overwhelm and transform him.',
+      modeOfThought: 'Anguish as lucidity; the logic of nightmare reveals the cracks in reality.',
+      worldView: 'The world is a labyrinth with no visible exit — yet the quest for meaning persists despite everything.',
+    ),
+    LiterarySource(
+      id: 'dostoievski',
+      name: 'Fyodor Dostoevsky',
+      iconPath: 'assets/univers_visuel/dostoievsky.png',
+      description: 'Explorer of the soul\'s depths — inner turmoil, guilt, redemption through suffering.',
+      modeOfThought: 'Descent into the depths of consciousness; each character carries an absolute moral struggle.',
+      worldView: 'Man is a battlefield between good and evil — suffering can lead to light.',
+    ),
+  ];
 
   final List<LiterarySource> _sources = [
     LiterarySource(
@@ -249,15 +269,16 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
                     ),
                   ),
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    itemCount: _sources.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
+                    children: [
+                      ..._sources.map((source) => Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildSourceCard(_sources[index]),
-                      );
-                    },
+                        child: _buildSourceCard(source),
+                      )),
+                      const SizedBox(height: 8),
+                      _buildAuthorsSection(),
+                    ],
                   ),
                 ),
               ],
@@ -524,6 +545,64 @@ class _SourcesLitterairesScreenState extends State<SourcesLitterairesScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAuthorsSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: _authorsExpanded,
+          onExpansionChanged: (expanded) {
+            setState(() => _authorsExpanded = expanded);
+          },
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/univers_visuel/authors.png',
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.menu_book,
+                size: 48,
+                color: Color(0xFF7C2D12),
+              ),
+            ),
+          ),
+          title: Text(
+            'Authors',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          subtitle: Text(
+            'Singular perspectives on the human condition',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+          children: _authors.map((author) => Padding(
+            padding: const EdgeInsets.only(left: 8, right: 8, bottom: 16),
+            child: _buildSourceCard(author),
+          )).toList(),
         ),
       ),
     );
