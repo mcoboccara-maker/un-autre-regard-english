@@ -263,10 +263,12 @@ class SefariaCalendar {
   }
 
   /// La paracha de la semaine
-  CalendarItem? get parasha => items.firstWhere(
-        (i) => i.title.en.toLowerCase().contains('parashat'),
-        orElse: () => items.first,
-      );
+  CalendarItem? get parasha => items.isEmpty
+      ? null
+      : items.cast<CalendarItem?>().firstWhere(
+            (i) => i?.title.en.toLowerCase().contains('parashat') ?? false,
+            orElse: () => items.first,
+          );
 
   /// Le daf yomi du jour
   CalendarItem? get dafYomi => items.cast<CalendarItem?>().firstWhere(

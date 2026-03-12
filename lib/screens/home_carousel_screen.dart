@@ -260,10 +260,6 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
       );
 
       if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-
         final meta = AIService.instance.lastFigureMeta;
         final perspective = PerspectiveData(
           approachKey: source.key,
@@ -287,9 +283,10 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
       if (mounted) {
         setState(() {
           _errorMessage = 'Error during generation. Please try again.';
-          _isGenerating = false;
         });
       }
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 

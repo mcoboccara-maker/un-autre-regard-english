@@ -356,7 +356,6 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       if (mounted) {
         setState(() {
           _generatedResponse = response;
-          _isGenerating = false;
         });
 
         // Naviguer vers la PerspectiveRoom (CDC cinématique)
@@ -367,9 +366,10 @@ class _WisdomWheelScreenState extends State<WisdomWheelScreen>
       if (mounted) {
         setState(() {
           _errorMessage = 'Error during generation. Please try again.';
-          _isGenerating = false;
         });
       }
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 

@@ -348,9 +348,6 @@ class _EmotionWheelScreenState extends State<EmotionWheelScreen>
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -360,6 +357,8 @@ class _EmotionWheelScreenState extends State<EmotionWheelScreen>
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 

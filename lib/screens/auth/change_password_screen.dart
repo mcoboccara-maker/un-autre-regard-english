@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:crypto/crypto.dart';
 import '../../services/persistent_storage_service.dart';
 import '../../models/user_profile.dart';
 
@@ -291,7 +293,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       // Vérifier le mot de passe actuel
       final userProfile = PersistentStorageService.instance.getUserProfile();
       
-      if (userProfile?.password != currentPassword) {
+      final currentPasswordHash = sha256.convert(utf8.encode(currentPassword)).toString();
+      if (userProfile?.password != currentPasswordHash) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Current password is incorrect'),
@@ -300,10 +303,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         );
         return;
       }
-      
+
       // Mettre à jour le mot de passe
+      final newPasswordHash = sha256.convert(utf8.encode(newPassword)).toString();
       final updatedProfile = userProfile!.copyWith(
-        password: newPassword,
+        password: newPasswordHash,
         lastUpdated: DateTime.now(),
       );
       

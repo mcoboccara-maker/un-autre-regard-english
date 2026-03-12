@@ -255,9 +255,10 @@ class _ThoughtInputScreenState extends State<ThoughtInputScreen> {
       if (mounted) {
         setState(() {
           _errorMessage = 'Error during generation. Please try again.';
-          _isGenerating = false;
         });
       }
+    } finally {
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 

@@ -77,7 +77,7 @@ class EmailService {
           'Content-Type': 'application/json',
         },
         body: body,
-      );
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         print('✅ Email envoyé avec succès à $_destinataireEmail (de: $toEmail)');
@@ -417,7 +417,7 @@ class EmailService {
           'Content-Type': 'application/json',
         },
         body: body,
-      );
+      ).timeout(const Duration(seconds: 15));
 
       print('📧 Envoi email à: $toEmail');
       print('📧 Status code: ${response.statusCode}');
@@ -462,7 +462,7 @@ class EmailService {
         headers: {
           'Authorization': 'Bearer $_apiKey',
         },
-      );
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         print('✅ Connexion Resend OK');
