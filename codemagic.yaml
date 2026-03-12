@@ -6,7 +6,7 @@ workflows:
     instance_type: mac_mini_m2
 
     integrations:
-      developer_portal: V8DCBT64PJ
+      app_store_connect: 62613a44-8050-4453-95ca-bcb8a0dcd21e
 
     environment:
       ios_signing:
