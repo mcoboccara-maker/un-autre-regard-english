@@ -39,7 +39,7 @@ class AIService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   final String _baseUrl = 'https://api.anthropic.com/v1/messages';
-  String _apiKey = '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';
+  String _apiKey = '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';
   
   // MODÈLES CLAUDE — Sonnet 4.6 partout (qualité max pour toutes les sources)
   final String _model = 'claude-sonnet-4-6';                  // Qualité (toutes sources + approfondissement)
