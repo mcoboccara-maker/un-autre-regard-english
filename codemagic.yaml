@@ -6,7 +6,7 @@ workflows:
     instance_type: mac_mini_m2
 
     integrations:
-      app_store_connect: Un Autre Regard
+      developer_portal: V8DCBT64PJ
 
     environment:
       ios_signing:
