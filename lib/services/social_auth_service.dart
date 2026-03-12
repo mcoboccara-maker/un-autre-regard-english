@@ -24,7 +24,10 @@ class SocialAuthService {
   /// Connexion via Google. Retourne l'email en cas de succès, null sinon.
   Future<String?> signInWithGoogle() async {
     try {
-      final account = await _googleSignIn.signIn();
+      final account = await _googleSignIn.signIn().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Google Sign-In: timeout exceeded.'),
+      );
       if (account == null) {
         debugPrint('ℹ️ Google Sign-In annulé par l\'utilisateur');
         return null; // Annulation
@@ -78,6 +81,9 @@ class SocialAuthService {
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw Exception('Apple Sign-In: timeout exceeded.'),
       );
 
       // Apple ne renvoie l'email qu'à la PREMIÈRE connexion
@@ -195,7 +201,7 @@ class SocialAuthService {
     } catch (e, stackTrace) {
       debugPrint('❌ Facebook Sign-In erreur: $e');
       debugPrint('❌ Stack: $stackTrace');
-      return null;
+      throw Exception('Facebook Sign-In error: $e');
     }
   }
 
