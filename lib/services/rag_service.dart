@@ -567,7 +567,7 @@ class RAGService {
         );
       } else {
         // Recherche sans filtre (mode unifié)
-        results = await _searchService.searchForRAG(
+        results = await _searchService.search(
           reflectionText,
           topK: _topK,
           minScore: _minScore,

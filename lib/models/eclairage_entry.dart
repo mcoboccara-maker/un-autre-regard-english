@@ -44,6 +44,10 @@ class SourceEclairage {
       'isMajeure': isMajeure,
     };
   }
+
+  Map<String, dynamic> toJson() => toMap();
+
+  factory SourceEclairage.fromJson(Map<String, dynamic> json) => SourceEclairage.fromMap(json);
 }
 
 /// Représente un éclairage complet avec synthèse et sources
@@ -94,6 +98,10 @@ class EclairageEntry {
       'createdAt': createdAt.toIso8601String(),
     };
   }
+
+  Map<String, dynamic> toJson() => toMap();
+
+  factory EclairageEntry.fromJson(Map<String, dynamic> json) => EclairageEntry.fromMap(json);
   
   /// Créer depuis une réponse brute (sans parsing)
   factory EclairageEntry.fromRawResponse(String response) {

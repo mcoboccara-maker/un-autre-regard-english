@@ -220,6 +220,8 @@ class SemanticSearchConfig {
         if (supabaseUrl.isEmpty) missing.add('SUPABASE_URL');
         if (supabaseApiKey.isEmpty) missing.add('SUPABASE_API_KEY');
         break;
+      case VectorStoreType.chroma:
+        break;
       case VectorStoreType.inMemory:
         break;
     }

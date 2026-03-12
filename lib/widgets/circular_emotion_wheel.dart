@@ -300,15 +300,14 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
                 ),
                 titlePositionPercentageOffset: 0.2,
                 getTitle: (index, angle) {
-                  if (index >= activeEmotions.length) return '';
+                  if (index >= activeEmotions.length) return RadarChartTitle(text: '', angle: angle);
                   final entry = activeEmotions[index];
                   final config = _getEmotionConfig(entry.key);
                   final name = config?.name ?? entry.key;
                   final emoji = _emotionEmojis[entry.key.toLowerCase()] ?? '';
-                  final isResource = _isResourceEmotion(entry.key);
-                  
+
                   // Retourner nom + emoji avec couleur
-                  return '$name $emoji';
+                  return RadarChartTitle(text: '$name $emoji', angle: angle);
                 },
               ),
             ),
@@ -483,10 +482,10 @@ class _CircularEmotionWheelState extends State<CircularEmotionWheel> {
           ),
           titlePositionPercentageOffset: 0.15,
           getTitle: (index, angle) {
-            if (index >= activeEmotions.length) return '';
+            if (index >= activeEmotions.length) return RadarChartTitle(text: '', angle: angle);
             final entry = activeEmotions[index];
             final config = _getEmotionConfig(entry.key);
-            return config?.name ?? entry.key;
+            return RadarChartTitle(text: config?.name ?? entry.key, angle: angle);
           },
         ),
       ),

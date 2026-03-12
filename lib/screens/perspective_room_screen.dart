@@ -231,6 +231,10 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
   String? _swipeFeedback; // 'save', 'reject', ou null
   late final AnimationController _feedbackController;
 
+  // Active perspectives (removed as user keeps/discards)
+  late List<PerspectiveData> _activePerspectives;
+  final Set<String> _processedKeys = {};
+
   @override
   void initState() {
     super.initState();
@@ -248,6 +252,29 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
     );
 
     _pageController.addListener(_onScroll);
+    _activePerspectives = List.from(widget.perspectives);
+  }
+
+  @override
+  void didUpdateWidget(PerspectiveRoomScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Add new perspectives from parent (streaming in progress)
+    for (final p in widget.perspectives) {
+      if (!_processedKeys.contains(p.approachKey) &&
+          !_activePerspectives.any((a) => a.approachKey == p.approachKey)) {
+        _activePerspectives.add(p);
+      }
+    }
+    // Update existing perspectives (e.g. deepening text loaded)
+    for (int i = 0; i < _activePerspectives.length; i++) {
+      final key = _activePerspectives[i].approachKey;
+      try {
+        final updated = widget.perspectives.firstWhere((p) => p.approachKey == key);
+        _activePerspectives[i] = updated;
+      } catch (_) {
+        // Perspective no longer in parent (should not happen)
+      }
+    }
   }
 
   void _onScroll() {
@@ -267,9 +294,11 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
     super.dispose();
   }
 
-  /// Sauvegarder l'éclairage courant (CDC §3.6 - swipe droite)
+  /// Save current insight (CDC §3.6 - swipe right)
   void _saveCurrent() {
-    final perspective = widget.perspectives[_currentIndex];
+    if (_activePerspectives.isEmpty) return;
+    final idx = _currentIndex.clamp(0, _activePerspectives.length - 1);
+    final perspective = _activePerspectives[idx];
     if (_savedKeys.contains(perspective.approachKey)) return;
 
     setState(() {
@@ -282,13 +311,19 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
     widget.onEvaluate?.call(perspective.approachKey, 1);
 
     _feedbackController.forward(from: 0).then((_) {
-      if (mounted) setState(() => _swipeFeedback = null);
+      if (mounted) {
+        _processedKeys.add(perspective.approachKey);
+        setState(() => _swipeFeedback = null);
+        _removeCurrentAndAdvance();
+      }
     });
   }
 
-  /// Rejeter l'éclairage courant (CDC §3.6 - swipe gauche)
+  /// Reject current insight (CDC §3.6 - swipe left)
   void _rejectCurrent() {
-    final perspective = widget.perspectives[_currentIndex];
+    if (_activePerspectives.isEmpty) return;
+    final idx = _currentIndex.clamp(0, _activePerspectives.length - 1);
+    final perspective = _activePerspectives[idx];
     if (_rejectedKeys.contains(perspective.approachKey)) return;
 
     setState(() {
@@ -300,7 +335,40 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
     widget.onReject?.call(perspective.approachKey);
 
     _feedbackController.forward(from: 0).then((_) {
-      if (mounted) setState(() => _swipeFeedback = null);
+      if (mounted) {
+        _processedKeys.add(perspective.approachKey);
+        setState(() => _swipeFeedback = null);
+        _removeCurrentAndAdvance();
+      }
+    });
+  }
+
+  /// Remove current card and advance to the next one
+  void _removeCurrentAndAdvance() {
+    if (_activePerspectives.isEmpty) return;
+    final idx = _currentIndex.clamp(0, _activePerspectives.length - 1);
+    _activePerspectives.removeAt(idx);
+
+    if (_activePerspectives.isEmpty) {
+      // All processed - show final page
+      setState(() => _currentIndex = 0);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(0);
+        }
+      });
+      return;
+    }
+
+    // Adjust index if needed
+    if (_currentIndex >= _activePerspectives.length) {
+      _currentIndex = _activePerspectives.length - 1;
+    }
+    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(_currentIndex);
+      }
     });
   }
 
@@ -347,10 +415,10 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) => setState(() => _currentIndex = index),
-              itemCount: widget.perspectives.length + 1, // +1 pour la page finale
+              itemCount: _activePerspectives.length + 1, // +1 for final page
               itemBuilder: (context, index) {
-                // Dernière page : question "Ton regard a-t-il bougé ?"
-                if (index == widget.perspectives.length) {
+                // Last page: "Has your perspective shifted?"
+                if (index == _activePerspectives.length) {
                   return _FinalShiftPage(
                     breathController: _breathController,
                     onAnswer: (answer) {
@@ -360,7 +428,7 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
                   );
                 }
 
-                final perspective = widget.perspectives[index];
+                final perspective = _activePerspectives[index];
                 final profile = getLightingProfile(perspective.approachKey);
                 return _ImmersivePerspectivePage(
                   profile: profile,
@@ -468,10 +536,10 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
 
   Widget _buildFloatingHeader() {
     // Page finale : pas de header source
-    final bool isOnFinalPage = _currentIndex >= widget.perspectives.length;
+    final bool isOnFinalPage = _activePerspectives.isEmpty || _currentIndex >= _activePerspectives.length;
     final profile = isOnFinalPage
         ? kDefaultLightingProfile
-        : getLightingProfile(widget.perspectives[_currentIndex].approachKey);
+        : getLightingProfile(_activePerspectives[_currentIndex].approachKey);
     final accentColor = Color(profile.accentColor);
 
     return Positioned(
@@ -509,7 +577,7 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
                         ),
                       ),
                       child: Text(
-                        widget.perspectives[_currentIndex].approachName,
+                        _activePerspectives[_currentIndex].approachName,
                         style: TextStyle(
                           color: accentColor,
                           fontSize: 13,
@@ -599,8 +667,8 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
   }
 
   Widget _buildFloatingNavigation() {
-    final bool isOnFinalPage = _currentIndex >= widget.perspectives.length;
-    final currentKey = isOnFinalPage ? null : widget.perspectives[_currentIndex].approachKey;
+    final bool isOnFinalPage = _currentIndex >= _activePerspectives.length;
+    final currentKey = isOnFinalPage ? null : _activePerspectives[_currentIndex].approachKey;
     final isSaved = currentKey != null && _savedKeys.contains(currentKey);
     final isRejected = currentKey != null && _rejectedKeys.contains(currentKey);
 
@@ -674,9 +742,9 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
                         children: [
                           // Dots pour les perspectives
                           ...List.generate(
-                            widget.perspectives.length,
+                            _activePerspectives.length,
                             (index) {
-                              final key = widget.perspectives[index].approachKey;
+                              final key = _activePerspectives[index].approachKey;
                               final dotColor = _savedKeys.contains(key)
                                   ? const Color(0xFF10B981)
                                   : _rejectedKeys.contains(key)
@@ -693,14 +761,14 @@ class _PerspectiveRoomScreenState extends State<PerspectiveRoomScreen>
                           _PageDot(
                             isActive: isOnFinalPage,
                             accentColor: Colors.white70,
-                            onTap: () => _goToPage(widget.perspectives.length),
+                            onTap: () => _goToPage(_activePerspectives.length),
                           ),
                         ],
                       ),
                       const SizedBox(width: 16),
                       _NavArrow(
                         icon: Icons.arrow_forward_ios_rounded,
-                        enabled: _currentIndex < widget.perspectives.length, // inclut page finale
+                        enabled: _currentIndex < _activePerspectives.length, // includes final page
                         onTap: () => _goToPage(_currentIndex + 1),
                       ),
                     ],

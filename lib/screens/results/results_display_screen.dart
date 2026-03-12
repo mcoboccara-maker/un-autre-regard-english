@@ -525,9 +525,10 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
                     setState(() {
                       _evaluations[approach.key] = SourceEvaluation(
                         sourceKey: approach.key,
+                        sourceName: approach.name,
                         rating: value.toInt(),
                         comment: evaluation?.comment,
-                        createdAt: DateTime.now(),
+                        evaluatedAt: DateTime.now(),
                       );
                     });
                   },
@@ -575,9 +576,10 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
               setState(() {
                 _evaluations[approach.key] = SourceEvaluation(
                   sourceKey: approach.key,
+                  sourceName: approach.name,
                   rating: evaluation?.rating ?? 5,
                   comment: value,
-                  createdAt: DateTime.now(),
+                  evaluatedAt: DateTime.now(),
                 );
               });
             },
@@ -607,7 +609,7 @@ class _ResultsDisplayScreenState extends State<ResultsDisplayScreen> {
         figureNom = metaMatch.group(1)?.trim() ?? 'Figure';
       }
       
-      final deepenedResponse = await AiService.instance.generateDeepening(
+      final deepenedResponse = await AIService.instance.generateDeepening(
         penseeOriginale: widget.reflectionText,
         reponseCourte: shortResponse,
         sourceNom: approach.name,
