@@ -89,3 +89,11 @@ coverage/
 *.app
 *.dSYM.zip
 *.dSYM
+
+# CI/CD - Keystores & signing
+*.jks
+*.keystore
+android/key.properties
+ios/fastlane/report.xml
+ios/fastlane/README.md
+ios/AuthKey.p8
