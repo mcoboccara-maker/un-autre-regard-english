@@ -174,7 +174,11 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
 
     final iconFutures = paths.map((path) async {
       final img = await _loadSingleImage(path, targetWidth: 64);
-      if (img != null) _loadedImages[path] = img;
+      if (img != null) {
+        // Détourage blanc pour supprimer le fond blanc des icônes PNG
+        final detoured = await _removeWhiteBackground(img);
+        _loadedImages[path] = detoured;
+      }
     });
     await Future.wait(iconFutures);
 
