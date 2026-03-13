@@ -26,14 +26,15 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" | base64 --decode > ios/fastlane/AuthKey.p8
-          cat > ios/fastlane/api_key.json << APIEOF
+          KEY_CONTENT=$(cat ios/fastlane/AuthKey.p8 | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+          cat > ios/fastlane/api_key.json << EOF
           {
-            "key_id": "$APP_STORE_CONNECT_KEY_ID",
-            "issuer_id": "$APP_STORE_CONNECT_ISSUER_ID",
-            "key": "$(cat ios/fastlane/AuthKey.p8 | sed ':a;N;$!ba;s/\n/\\n/g')",
+            "key_id": "${APP_STORE_CONNECT_KEY_ID}",
+            "issuer_id": "${APP_STORE_CONNECT_ISSUER_ID}",
+            "key": ${KEY_CONTENT},
             "in_house": false
           }
-          APIEOF
+          EOF
 
       - name: Generate certificates and profiles with Match
         env:
