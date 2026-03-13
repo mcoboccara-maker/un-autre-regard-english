@@ -1,6 +1,6 @@
 name: un_autre_regard
 description: Application "Un Autre Regard" - Ecoute et connaissance de soi
-version: 2.3.1+17
+version: 2.3.1+18
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
