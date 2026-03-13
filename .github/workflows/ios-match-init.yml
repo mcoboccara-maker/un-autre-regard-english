@@ -22,13 +22,21 @@ jobs:
       - name: Decode App Store Connect API Key
         env:
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" | base64 --decode > ios/fastlane/AuthKey.p8
+          cat > ios/fastlane/api_key.json << APIEOF
+          {
+            "key_id": "$APP_STORE_CONNECT_KEY_ID",
+            "issuer_id": "$APP_STORE_CONNECT_ISSUER_ID",
+            "key": "$(cat ios/fastlane/AuthKey.p8 | sed ':a;N;$!ba;s/\n/\\n/g')",
+            "in_house": false
+          }
+          APIEOF
 
       - name: Generate certificates and profiles with Match
         env:
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           GH_PAT: ${{ secrets.GH_PAT }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
@@ -36,11 +44,13 @@ jobs:
           cd ios
           bundle exec fastlane run match type:appstore \
             git_basic_authorization:$(echo -n "${GH_PAT}:x-oauth-basic" | base64) \
-            api_key_path:fastlane/AuthKey.p8 \
+            api_key_path:fastlane/api_key.json \
             app_identifier:com.unautreregard.app.en \
             team_id:$APPLE_TEAM_ID \
             readonly:false
 
-      - name: Clean up API key
+      - name: Clean up
         if: always()
-        run: rm -f ios/fastlane/AuthKey.p8
+        run: |
+          rm -f ios/fastlane/AuthKey.p8
+          rm -f ios/fastlane/api_key.json
