@@ -1,31 +1,16 @@
-name: iOS Release (TestFlight)
+name: iOS Match Init (one-time setup)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build-ios:
+  init-match:
     runs-on: macos-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Get Flutter dependencies
-        run: flutter pub get
-
-      - name: Run Flutter analyze
-        run: flutter analyze --no-fatal-infos
-        continue-on-error: true
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -34,18 +19,13 @@ jobs:
           bundler-cache: true
           working-directory: ios
 
-      - name: Install CocoaPods
-        run: |
-          cd ios
-          pod install --repo-update
-
       - name: Decode App Store Connect API Key
         env:
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" | base64 --decode > ios/fastlane/AuthKey.p8
 
-      - name: Build and upload to TestFlight
+      - name: Generate certificates and profiles with Match
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -54,7 +34,12 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         run: |
           cd ios
-          bundle exec fastlane beta
+          bundle exec fastlane run match type:appstore \
+            git_basic_authorization:$(echo -n "${GH_PAT}:x-oauth-basic" | base64) \
+            api_key_path:fastlane/AuthKey.p8 \
+            app_identifier:com.unautreregard.app.en \
+            team_id:$APPLE_TEAM_ID \
+            readonly:false
 
       - name: Clean up API key
         if: always()
