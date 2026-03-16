@@ -56,6 +56,9 @@ jobs:
           }
           EOF
 
+      - name: Build Flutter iOS
+        run: flutter build ios --release --no-codesign --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+
       - name: Build and upload to TestFlight
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}

@@ -239,8 +239,14 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
         _loadSingleImage('$_kEssaiTestPath/${prefix}_0.png', targetWidth: 80),
         _loadSingleImage('$_kEssaiTestPath/${prefix}_0.png', targetWidth: 256),
       ]);
-      if (results[0] != null) _loadedImages['essai_petal_$prefix'] = results[0]!;
-      if (results[1] != null) _loadedImages['essai_center_${prefix}_0'] = results[1]!;
+      if (results[0] != null) {
+        final detoured = await _removeWhiteBackground(results[0]!);
+        _loadedImages['essai_petal_$prefix'] = detoured;
+      }
+      if (results[1] != null) {
+        final detoured = await _removeWhiteBackground(results[1]!);
+        _loadedImages['essai_center_${prefix}_0'] = detoured;
+      }
 
       // Intensités progressives en parallèle
       final maxLevel = _kEssaiMaxLevel[prefix] ?? 0;
@@ -248,7 +254,10 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
         final level = i + 1;
         final img = await _loadSingleImage(
           '$_kEssaiTestPath/${prefix}_$level.png', targetWidth: 256);
-        if (img != null) _loadedImages['essai_center_${prefix}_$level'] = img;
+        if (img != null) {
+          final detoured = await _removeWhiteBackground(img);
+          _loadedImages['essai_center_${prefix}_$level'] = detoured;
+        }
       });
       await Future.wait(levelFutures);
     });

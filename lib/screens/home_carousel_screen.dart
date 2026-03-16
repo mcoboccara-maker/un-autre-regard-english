@@ -99,6 +99,8 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
     'hannah_arendt': 'arendt',
     'foucault': 'foucault',
     'confucius': 'confucius',
+    'kafka': 'kafka',
+    'dostoievski': 'dostoievsky',
   };
 
   String _getIconPath(String key) {
@@ -121,7 +123,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
     super.dispose();
   }
 
-  /// Sources limitees (sans spirituelles, 6 par type)
+  /// Sources limitees (sans spirituelles, 6 par type + auteurs littéraires)
   List<ApproachConfig> _buildLimitedSources() {
     final List<ApproachConfig> limited = [];
 
@@ -130,9 +132,16 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
         .take(6)
         .toList();
 
+    // Auteurs individuels (kafka, dostoievski) séparés des courants
+    const authorKeys = {'kafka', 'dostoievski'};
     final literary = ApproachCategories.allApproaches
-        .where((a) => a.type == ApproachType.literary)
+        .where((a) => a.type == ApproachType.literary && !authorKeys.contains(a.key))
         .take(6)
+        .toList();
+
+    // Ajouter les auteurs littéraires explicitement
+    final authors = ApproachCategories.allApproaches
+        .where((a) => authorKeys.contains(a.key))
         .toList();
 
     final philosophical = ApproachCategories.allApproaches
@@ -147,6 +156,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
 
     limited.addAll(psychological);
     limited.addAll(literary);
+    limited.addAll(authors);
     limited.addAll(philosophical);
     limited.addAll(philosophers);
 

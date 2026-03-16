@@ -39,7 +39,7 @@ class AIService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   final String _baseUrl = 'https://api.anthropic.com/v1/messages';
-  String _apiKey = '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';
+  String _apiKey = const String.fromEnvironment('ANTHROPIC_API_KEY');
   
   // MODÈLES CLAUDE — Sonnet 4.6 partout (qualité max pour toutes les sources)
   final String _model = 'claude-sonnet-4-6';                  // Qualité (toutes sources + approfondissement)

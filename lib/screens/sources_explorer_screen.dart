@@ -108,12 +108,17 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
     'hannah_arendt': 'arendt',
     'foucault': 'foucault',
     'confucius': 'confucius',
+    'kafka': 'kafka',
+    'dostoievski': 'dostoievsky',
   };
 
   String _getIconPath(String key) {
     final mappedName = _iconMapping[key] ?? key;
     return 'assets/univers_visuel/$mappedName.png';
   }
+
+  // ── Literary authors (separate section) ──────────────────────────────────
+  static const Set<String> _authorKeys = {'kafka', 'dostoievski'};
 
   // ── Définition des sections ──────────────────────────────────────────────
   static const List<_SourceSection> _sections = [
@@ -251,8 +256,14 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
                       // 2. Quiz + Roue du hasard
                       _buildQuizAndWheelButtons(),
                       const SizedBox(height: 16),
-                      // 3-6. Autres sections
-                      for (int i = 1; i < _sections.length; i++) ...[
+                      // 3. Literary Sources (without individual authors)
+                      _buildSourceSection(_sections[1]),
+                      const SizedBox(height: 8),
+                      // 4. Authors (separate section at same level)
+                      _buildAuthorsSection(),
+                      const SizedBox(height: 8),
+                      // 5-7. Psychology, Philosophy, Philosophers
+                      for (int i = 2; i < _sections.length; i++) ...[
                         _buildSourceSection(_sections[i]),
                         if (i < _sections.length - 1) const SizedBox(height: 8),
                       ],
@@ -398,7 +409,11 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
 
   // ── Section dépliable ────────────────────────────────────────────────────
   Widget _buildSourceSection(_SourceSection section) {
-    final sources = ApproachCategories.getByType(section.type);
+    var sources = ApproachCategories.getByType(section.type);
+    // Filter individual authors from the literary section
+    if (section.type == ApproachType.literary) {
+      sources = sources.where((s) => !_authorKeys.contains(s.key)).toList();
+    }
     final selectedCount = sources.where((s) => _selectedSources.contains(s.key)).length;
 
     return Container(
@@ -466,6 +481,83 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
           iconColor: _textSecondary,
           collapsedIconColor: _textSecondary,
           children: sources.map((source) => _buildSourceTile(source, section.color)).toList(),
+        ),
+      ),
+    );
+  }
+
+  // ── Authors section (same style as other sections) ─────────────────────
+  Widget _buildAuthorsSection() {
+    final authors = ApproachCategories.allApproaches
+        .where((s) => _authorKeys.contains(s.key))
+        .toList();
+    final selectedCount = authors.where((s) => _selectedSources.contains(s.key)).length;
+    const sectionColor = Color(0xFF7C2D12);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: sectionColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(
+                'assets/univers_visuel/authors.png',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.menu_book, color: sectionColor, size: 22),
+              ),
+            ),
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Authors',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: selectedCount > 0
+                      ? sectionColor.withValues(alpha: 0.3)
+                      : Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  selectedCount > 0 ? '$selectedCount/${authors.length}' : '${authors.length}',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: selectedCount > 0 ? const Color(0xFFD97706) : _textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          iconColor: _textSecondary,
+          collapsedIconColor: _textSecondary,
+          children: authors.map((source) => _buildSourceTile(source, sectionColor)).toList(),
         ),
       ),
     );
