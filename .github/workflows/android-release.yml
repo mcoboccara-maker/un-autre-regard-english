@@ -66,12 +66,14 @@ jobs:
         run: flutter build appbundle --release --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
 
       - name: Upload APK artifact
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload AAB artifact
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: release-aab
