@@ -58,7 +58,5 @@
             android:name="com.facebook.sdk.ClientToken"
             android:value="@string/facebook_client_token" />
     </application>
-    
-    <!-- Requiert Android 6.0 minimum pour speech-to-text -->
-    <uses-sdk android:minSdkVersion="23"/>
+
 </manifest>
