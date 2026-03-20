@@ -33,32 +33,75 @@ import 'screens/eclairages_carousel_screen.dart';
 import 'screens/demo/carousel_demo_screen.dart';
 import 'screens/sources_explorer_screen.dart';
 import 'services/background_music_service.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Initialisation Facebook SDK pour le web
-  if (kIsWeb) {
-    await FacebookAuth.i.webAndDesktopInitialize(
-      appId: '4226291104278353',
-      cookie: true,
-      xfbml: true,
-      version: 'v19.0',
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    _crashError = 'FlutterError: ${details.exception}\n${details.stack}';
+  };
+
+  try {
+    // ✅ Initialisation Facebook SDK pour le web
+    if (kIsWeb) {
+      await FacebookAuth.i.webAndDesktopInitialize(
+        appId: '4226291104278353',
+        cookie: true,
+        xfbml: true,
+        version: 'v19.0',
+      );
+    }
+
+    // ✅ INITIALISATION UNIFIÉE - Un seul service
+    await PersistentStorageService.instance.initialize();
+
+    // ❌ SUPPRIMÉ - Service redondant :
+    // await HistoriqueEclairagesService.instance.initialize();
+
+    // ❌ SUPPRIMÉ - Commentaire obsolète :
+    // await PersistentStorageService.instance.initializeWithEmail(null);
+
+    runApp(const UnAutreRegardApp());
+  } catch (e, stack) {
+    _crashError = 'CRASH AT STARTUP:\n$e\n\nStack:\n$stack';
+    runApp(CrashReportApp(error: _crashError!));
+  }
+}
+
+String? _crashError;
+
+class CrashReportApp extends StatelessWidget {
+  final String error;
+  const CrashReportApp({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.red[900],
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 40),
+                const Text('CRASH REPORT', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('Send this screenshot to the developer', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                const SizedBox(height: 20),
+                SelectableText(error, style: const TextStyle(color: Colors.white, fontSize: 11, fontFamily: 'monospace')),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
-
-  // ✅ INITIALISATION UNIFIÉE - Un seul service
-  await PersistentStorageService.instance.initialize();
-  
-  // ❌ SUPPRIMÉ - Service redondant :
-  // await HistoriqueEclairagesService.instance.initialize();
-  
-  // ❌ SUPPRIMÉ - Commentaire obsolète :
-  // await PersistentStorageService.instance.initializeWithEmail(null);
-  
-  runApp(const UnAutreRegardApp());
 }
 
 class UnAutreRegardApp extends StatelessWidget {
