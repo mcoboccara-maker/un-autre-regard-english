@@ -123,7 +123,7 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
   }
 
   /// Détourage blanc : convertit les pixels blancs/quasi-blancs en transparent
-  static Future<ui.Image> _removeWhiteBackground(ui.Image source, {int threshold = 235}) async {
+  static Future<ui.Image> _removeWhiteBackground(ui.Image source, {int threshold = 220}) async {
     final byteData = await source.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (byteData == null) return source;
     final pixels = Uint8List.fromList(byteData.buffer.asUint8List());
