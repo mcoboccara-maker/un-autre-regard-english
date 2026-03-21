@@ -123,7 +123,7 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
   }
 
   /// Détourage blanc : convertit les pixels blancs/quasi-blancs en transparent
-  static Future<ui.Image> _removeWhiteBackground(ui.Image source, {int threshold = 220}) async {
+  static Future<ui.Image> _removeWhiteBackground(ui.Image source, {int threshold = 190}) async {
     final byteData = await source.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (byteData == null) return source;
     final pixels = Uint8List.fromList(byteData.buffer.asUint8List());
@@ -134,11 +134,13 @@ class _InteractivePlutchikWheelState extends State<InteractivePlutchikWheel>
       final r = pixels[i];
       final g = pixels[i + 1];
       final b = pixels[i + 2];
+      // Utilise le max des canaux pour détecter les pixels clairs (pas juste la moyenne)
+      final maxChannel = r > g ? (r > b ? r : b) : (g > b ? g : b);
       final brightness = (r + g + b) ~/ 3;
-      if (brightness > threshold) {
+      if (brightness > threshold || maxChannel > threshold + 30) {
         // Dégradé doux pour les bords (anti-aliasing)
-        final fade = ((threshold + 20) - brightness).clamp(0, 20);
-        pixels[i + 3] = (fade * 255 ~/ 20).clamp(0, 255);
+        final fade = ((threshold + 15) - brightness).clamp(0, 15);
+        pixels[i + 3] = (fade * 255 ~/ 15).clamp(0, 255);
       }
     }
 
@@ -1549,7 +1551,11 @@ class _MandalaWheelPainter extends CustomPainter {
           canvas.drawCircle(center, clipRadius, Paint()..color = emotion.color);
           final srcRect = Rect.fromLTWH(0, 0, centerImg.width.toDouble(), centerImg.height.toDouble());
           final dstRect = Rect.fromCenter(center: center, width: bgIconSize, height: bgIconSize);
-          canvas.drawImageRect(centerImg, srcRect, dstRect, Paint()..filterQuality = FilterQuality.high);
+          // BlendMode.srcATop : l'image s'affiche uniquement sur le fond coloré,
+          // les pixels semi-transparents blancs se fondent avec la couleur au lieu de créer un halo
+          canvas.drawImageRect(centerImg, srcRect, dstRect, Paint()
+            ..filterQuality = FilterQuality.high
+            ..blendMode = BlendMode.srcATop);
           canvas.restore();
         }
       }
