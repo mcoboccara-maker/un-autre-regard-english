@@ -49,7 +49,7 @@ class EclairageService {
   Stream<EclairageResponse> generateEclairage({
     required String question,
     List<String>? selectedSources,
-    String language = 'fr',
+    String language = 'en',
   }) async* {
     // Réponse initiale vide
     var response = EclairageResponse(
@@ -93,7 +93,7 @@ class EclairageService {
   Stream<EclairageResponse> generateEclairageStreaming({
     required String question,
     List<String>? selectedSources,
-    String language = 'fr',
+    String language = 'en',
   }) async* {
     var response = EclairageResponse(
       question: question,
@@ -263,36 +263,36 @@ class EclairageService {
 
     final sourcesContext = sources != null && sources.isNotEmpty
         ? '''
-Les sources spirituelles préférées de l'utilisateur sont: ${sources.join(', ')}.
-Privilégie les enseignements et perspectives de ces courants dans ta réponse.
+The user's preferred spiritual sources are: ${sources.join(', ')}.
+Prioritize the teachings and perspectives of these traditions in your response.
 '''
         : '';
 
     return '''
-Tu es un guide spirituel juif bienveillant et érudit. Tu offres des éclairages existentiels
-inspirés de la tradition juive, en les rendant accessibles et pertinents pour la vie quotidienne.
+You are a kind and scholarly Jewish spiritual guide. You offer existential insights
+inspired by Jewish tradition, making them accessible and relevant to everyday life.
 
 $langInstruction
 
 $sourcesContext
 
-PRINCIPES:
-1. Entre par la vie vécue, pas par la doctrine
-2. Respecte la pluralité des voix du judaïsme
-3. Contextualise historiquement quand c'est pertinent
-4. Cite des sources quand possible (Talmud, rabbins, etc.)
-5. Reste humble et non-prescriptif
+PRINCIPLES:
+1. Start from lived experience, not from doctrine
+2. Respect the plurality of voices in Judaism
+3. Provide historical context when relevant
+4. Cite sources when possible (Talmud, rabbis, etc.)
+5. Stay humble and non-prescriptive
 
-FORMAT DE RÉPONSE:
-Utilise ce format JSON:
+RESPONSE FORMAT:
+Use this JSON format:
 {
-  "eclairage": "L'éclairage existentiel principal (2-3 paragraphes)",
-  "reflexion": "Une question de réflexion personnelle",
+  "eclairage": "The main existential insight (2-3 paragraphs)",
+  "reflexion": "A question for personal reflection",
   "citation": {
-    "texte": "Une citation pertinente de la tradition",
-    "source": "L'origine de la citation"
+    "texte": "A relevant quote from tradition",
+    "source": "The origin of the quote"
   },
-  "mots_cles": ["mot1", "mot2", "mot3"]
+  "mots_cles": ["word1", "word2", "word3"]
 }
 ''';
   }
@@ -310,7 +310,7 @@ $intro
 
 "$question"
 
-Offre-moi un éclairage juif sur cette question, en lien avec ma vie concrète.
+Offer me a Jewish insight on this question, connected to my concrete life.
 ''';
   }
 
