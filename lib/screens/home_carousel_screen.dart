@@ -5,6 +5,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../config/approach_config.dart';
 import '../models/reflection.dart';
 import '../models/emotional_state.dart';
@@ -27,9 +28,12 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
   late List<CarouselCardData> _cards;
   final Carousel3DController _carouselController = Carousel3DController();
   final TextEditingController _thoughtController = TextEditingController();
+  final AudioPlayer _pageTurnPlayer = AudioPlayer();
   int _selectedIndex = 0;
   bool _isGenerating = false;
   String? _errorMessage;
+  late Map<String, int> _letterToIndex;
+  late List<String> _availableLetters;
 
   // Pastel version of a source color
   Color _pastelOf(Color c) {
@@ -111,15 +115,21 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
   @override
   void initState() {
     super.initState();
-    BackgroundMusicService.instance.play('sounds/the_journey_before_dawn.mp3');
     _sources = _buildLimitedSources()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     _cards = _buildCards();
+    _letterToIndex = {};
+    for (int i = 0; i < _sources.length; i++) {
+      final letter = _sources[i].name[0].toUpperCase();
+      _letterToIndex.putIfAbsent(letter, () => i);
+    }
+    _availableLetters = _letterToIndex.keys.toList()..sort();
   }
 
   @override
   void dispose() {
     _thoughtController.dispose();
+    _pageTurnPlayer.dispose();
     super.dispose();
   }
 
@@ -230,8 +240,16 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
     });
   }
 
+  void _playPageTurnSound() {
+    try {
+      _pageTurnPlayer.stop();
+      _pageTurnPlayer.play(AssetSource('sounds/page_turn.mp3'), volume: 0.8);
+    } catch (_) {}
+  }
+
   /// Spin roulette : plusieurs tours complets puis atterrissage aléatoire
   void _spinRandom() {
+    _playPageTurnSound();
     final random = Random();
     final targetIndex = random.nextInt(_sources.length);
     // Ajouter 2-3 tours complets avant d'arriver sur la cible
@@ -328,9 +346,11 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
             onCardChanged: _onCardChanged,
             controller: _carouselController,
             verticalOffset: -20,
+            onInteractionStart: _playPageTurnSound,
           ),
           _buildTitleOverlay(),
           _buildBottomSection(selectedSource),
+          _buildAlphabetRail(),
         ],
       ),
     );
@@ -353,10 +373,33 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
           onCardChanged: _onCardChanged,
           controller: _carouselController,
           verticalOffset: -40,
+          onInteractionStart: _playPageTurnSound,
         ),
         _buildTitleOverlay(),
         _buildBottomSection(selectedSource),
+        _buildAlphabetRail(),
       ],
+    );
+  }
+
+  Widget _buildAlphabetRail() {
+    final activeLetter = _selectedIndex < _sources.length
+        ? _sources[_selectedIndex].name[0].toUpperCase()
+        : '';
+    return Positioned(
+      right: 2,
+      top: MediaQuery.of(context).padding.top + 100,
+      bottom: 260,
+      child: _AlphabetIndexRail(
+        availableLetters: _availableLetters,
+        activeLetter: activeLetter,
+        onLetterSelected: (letter) {
+          final index = _letterToIndex[letter];
+          if (index != null) {
+            _carouselController.animateToIndex(index);
+          }
+        },
+      ),
     );
   }
 
@@ -382,7 +425,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'Un Autre Regard',
+                    'An Other Perspective',
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -721,6 +764,67 @@ class _ArcadeButtonState extends State<_ArcadeButton>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Rail alphabétique latéral (style contacts iPhone)
+class _AlphabetIndexRail extends StatelessWidget {
+  final List<String> availableLetters;
+  final String activeLetter;
+  final ValueChanged<String> onLetterSelected;
+
+  const _AlphabetIndexRail({
+    required this.availableLetters,
+    required this.activeLetter,
+    required this.onLetterSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: availableLetters.map((letter) {
+          final isActive = letter == activeLetter;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => onLetterSelected(letter),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: isActive
+                    ? const BoxDecoration(
+                        color: Color(0xFF2E8B7B),
+                        shape: BoxShape.circle,
+                      )
+                    : null,
+                alignment: Alignment.center,
+                child: Text(
+                  letter,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight:
+                        isActive ? FontWeight.bold : FontWeight.w500,
+                    color: isActive
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

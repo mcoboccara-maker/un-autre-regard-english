@@ -20,7 +20,6 @@ class BackgroundMusicService extends NavigatorObserver {
   // ── Mapping route → piste musicale ──────────────────────────────────────────
   static const Map<String, String> _routeTracks = {
     '/menu': 'sounds/the_journey_before_dawn.mp3',
-    '/home-carousel': 'sounds/the_journey_before_dawn.mp3',
     '/emotions': 'sounds/soulmusic-hare-krishna-relaxing-theme-4-114482.mp3',
     '/history': 'sounds/4379051-big-bad-wolf-on-a-stroll-119184.mp3',
   };

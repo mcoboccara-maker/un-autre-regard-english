@@ -680,7 +680,8 @@ class _MandalaWheelPainter extends CustomPainter {
     // En mode pieChart : PAS d'overlay — les tranches semi-transparentes laissent le mandala visible
     if (_useMasks) {
       if (pieChartMode) {
-        // Pas d'overlay : le mandala transparaît à travers les tranches colorées
+        // Overlay sombre pour que les couleurs du pie chart soient visibles
+        _drawDarkInterior(canvas, center, goldRingRadius * innerBreath);
       } else {
         _drawDarkInterior(canvas, center, goldRingRadius * innerBreath);
       }
@@ -1349,11 +1350,11 @@ class _MandalaWheelPainter extends CustomPainter {
         canvas.clipPath(Path()
           ..addOval(Rect.fromCircle(center: iconPos, radius: iconSize / 2)));
 
-        // Fond coloré sous le masque (blend multiply)
+        // Fond coloré sous le masque
         final petalHsl = HSLColor.fromColor(emotion.color);
         final petalBg = petalHsl
-            .withLightness(0.78)
-            .withSaturation((petalHsl.saturation * 0.6).clamp(0.0, 1.0))
+            .withLightness(0.55)
+            .withSaturation((petalHsl.saturation * 0.8).clamp(0.0, 1.0))
             .toColor();
         canvas.drawCircle(iconPos, iconSize / 2, Paint()..color = petalBg);
 

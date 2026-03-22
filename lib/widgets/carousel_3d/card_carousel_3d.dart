@@ -85,6 +85,9 @@ class CardCarousel3D extends StatefulWidget {
   /// (ex: bloquer pendant approfondissement)
   final bool Function()? canNavigate;
 
+  /// Callback quand l'utilisateur commence à interagir (drag/swipe)
+  final VoidCallback? onInteractionStart;
+
   const CardCarousel3D({
     super.key,
     required this.cards,
@@ -100,6 +103,7 @@ class CardCarousel3D extends StatefulWidget {
     this.controller,
     this.verticalOffset = 0,
     this.canNavigate,
+    this.onInteractionStart,
   });
 
   @override
@@ -450,6 +454,7 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     _isDragging = true;
     _dragStartX = details.globalPosition.dx;
     _rotationController.stop();
+    widget.onInteractionStart?.call();
   }
 
   void _onDragUpdate(DragUpdateDetails details) {
@@ -477,7 +482,15 @@ class _CardCarousel3DState extends State<CardCarousel3D>
           .clamp(0, widget.cards.length - 1);
       animateToIndex(targetIndex);
     } else {
-      _snapToNearest();
+      // Swipe lent : avancer d'une seule carte dans la direction du geste
+      if (_dragDeltaX.abs() > 20) {
+        final direction = _dragDeltaX > 0 ? -1 : 1;
+        final targetIndex = (_activeCardIndex + direction)
+            .clamp(0, widget.cards.length - 1);
+        animateToIndex(targetIndex);
+      } else {
+        _snapToNearest();
+      }
     }
   }
 
@@ -489,6 +502,7 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     _isDragging = true;
     _dragStartX = details.globalPosition.dy; // réutilise _dragStartX pour Y
     _rotationController.stop();
+    widget.onInteractionStart?.call();
   }
 
   void _onDragUpdateV(DragUpdateDetails details) {
@@ -514,7 +528,16 @@ class _CardCarousel3DState extends State<CardCarousel3D>
           .clamp(0, widget.cards.length - 1);
       animateToIndex(targetIndex);
     } else {
-      _snapToNearest();
+      // Swipe vertical lent : avancer d'une seule carte
+      final dragDeltaY = details.globalPosition.dy - _dragStartX;
+      if (dragDeltaY.abs() > 20) {
+        final direction = dragDeltaY < 0 ? 1 : -1;
+        final targetIndex = (_activeCardIndex + direction)
+            .clamp(0, widget.cards.length - 1);
+        animateToIndex(targetIndex);
+      } else {
+        _snapToNearest();
+      }
     }
   }
 

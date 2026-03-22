@@ -1066,16 +1066,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
   /// Convertir MoodEntry → confirmedIndices (Set<int> d'indices externes)
   Set<int> _moodToConfirmedIndices(MoodEntry moodEntry) {
     final indices = <int>{};
-    final negList = EmotionCategories.negativeEmotions;
     final posList = EmotionCategories.positiveEmotions;
+    final negList = EmotionCategories.negativeEmotions;
     for (final key in moodEntry.emotions.keys) {
-      final negIdx = negList.indexWhere((e) => e.key == key);
-      if (negIdx >= 0) {
-        indices.add(negIdx); // externe 0-8 = negative
+      // _allEmotions = [...positive (0-8), ...negative (9-17)]
+      final posIdx = posList.indexWhere((e) => e.key == key);
+      if (posIdx >= 0) {
+        indices.add(posIdx); // externe 0-8 = positive
       } else {
-        final posIdx = posList.indexWhere((e) => e.key == key);
-        if (posIdx >= 0) {
-          indices.add(9 + posIdx); // externe 9-17 = positive
+        final negIdx = negList.indexWhere((e) => e.key == key);
+        if (negIdx >= 0) {
+          indices.add(9 + negIdx); // externe 9-17 = negative
         }
       }
     }
@@ -1085,18 +1086,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
   /// Convertir MoodEntry → confirmedIntensities (Map<int,int> externe → 0-10)
   Map<int, int> _moodToConfirmedIntensities(MoodEntry moodEntry) {
     final result = <int, int>{};
-    final negList = EmotionCategories.negativeEmotions;
     final posList = EmotionCategories.positiveEmotions;
+    final negList = EmotionCategories.negativeEmotions;
     for (final entry in moodEntry.emotions.entries) {
       if (entry.value.intensity <= 0) continue;
-      final negIdx = negList.indexWhere((e) => e.key == entry.key);
+      // _allEmotions = [...positive (0-8), ...negative (9-17)]
       int externalIdx;
-      if (negIdx >= 0) {
-        externalIdx = negIdx;
+      final posIdx = posList.indexWhere((e) => e.key == entry.key);
+      if (posIdx >= 0) {
+        externalIdx = posIdx; // 0-8 = positive
       } else {
-        final posIdx = posList.indexWhere((e) => e.key == entry.key);
-        if (posIdx >= 0) {
-          externalIdx = 9 + posIdx;
+        final negIdx = negList.indexWhere((e) => e.key == entry.key);
+        if (negIdx >= 0) {
+          externalIdx = 9 + negIdx; // 9-17 = negative
         } else {
           continue;
         }
