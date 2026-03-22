@@ -2,9 +2,6 @@ name: iOS Release (TestFlight)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['lib/**', 'pubspec.yaml', 'ios/**', 'assets/**']
 
 jobs:
   build-ios:

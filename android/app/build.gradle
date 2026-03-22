@@ -27,8 +27,8 @@ android {
 
     defaultConfig {
         applicationId = "com.unautreregard.app.en"
-        minSdk = 23
-        targetSdk = 35
+        minSdkVersion = flutter.minSdkVersion
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
