@@ -88,6 +88,10 @@ class CardCarousel3D extends StatefulWidget {
   /// Callback quand l'utilisateur commence à interagir (drag/swipe)
   final VoidCallback? onInteractionStart;
 
+  /// Callback pour swipe rapide (vélocité > seuil) — si fourni,
+  /// remplace le comportement par défaut (avancer de N cartes)
+  final VoidCallback? onFastSwipe;
+
   const CardCarousel3D({
     super.key,
     required this.cards,
@@ -104,6 +108,7 @@ class CardCarousel3D extends StatefulWidget {
     this.verticalOffset = 0,
     this.canNavigate,
     this.onInteractionStart,
+    this.onFastSwipe,
   });
 
   @override
@@ -475,12 +480,17 @@ class _CardCarousel3DState extends State<CardCarousel3D>
     // Inertie basée sur la vélocité
     final velocity = details.primaryVelocity ?? 0;
     if (velocity.abs() > 500) {
-      // Swipe rapide : avancer/reculer d'une ou plusieurs cartes
-      final cardsToMove = (velocity.abs() / 1000).ceil();
-      final direction = velocity > 0 ? -1 : 1;
-      final targetIndex = (_activeCardIndex + direction * cardsToMove)
-          .clamp(0, widget.cards.length - 1);
-      animateToIndex(targetIndex);
+      if (widget.onFastSwipe != null) {
+        // Swipe rapide avec callback custom (ex: spin aléatoire)
+        widget.onFastSwipe!();
+      } else {
+        // Swipe rapide : avancer/reculer d'une ou plusieurs cartes
+        final cardsToMove = (velocity.abs() / 1000).ceil();
+        final direction = velocity > 0 ? -1 : 1;
+        final targetIndex = (_activeCardIndex + direction * cardsToMove)
+            .clamp(0, widget.cards.length - 1);
+        animateToIndex(targetIndex);
+      }
     } else {
       // Swipe lent : avancer d'une seule carte dans la direction du geste
       if (_dragDeltaX.abs() > 20) {

@@ -29,11 +29,14 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
   final Carousel3DController _carouselController = Carousel3DController();
   final TextEditingController _thoughtController = TextEditingController();
   final AudioPlayer _pageTurnPlayer = AudioPlayer();
+  final Random _random = Random();
   int _selectedIndex = 0;
   bool _isGenerating = false;
   String? _errorMessage;
   late Map<String, int> _letterToIndex;
   late List<String> _availableLetters;
+  // Shuffle bag : indices non encore visités pour éviter les répétitions
+  late List<int> _shuffleBag;
 
   // Pastel version of a source color
   Color _pastelOf(Color c) {
@@ -124,6 +127,11 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
       _letterToIndex.putIfAbsent(letter, () => i);
     }
     _availableLetters = _letterToIndex.keys.toList()..sort();
+    // Position initiale aléatoire (pas toujours "Absurdism")
+    final startIndex = _random.nextInt(_sources.length);
+    _selectedIndex = startIndex;
+    // Initialiser le shuffle bag
+    _shuffleBag = _buildShuffleBag(excludeIndex: startIndex);
   }
 
   @override
@@ -247,13 +255,30 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
     } catch (_) {}
   }
 
+  /// Construit un shuffle bag mélangé, en excluant un index optionnel
+  List<int> _buildShuffleBag({int? excludeIndex}) {
+    final indices = List<int>.generate(_sources.length, (i) => i);
+    if (excludeIndex != null) {
+      indices.remove(excludeIndex);
+    }
+    indices.shuffle(_random);
+    return indices;
+  }
+
+  /// Tire le prochain index du shuffle bag (sans répétition)
+  int _nextRandomIndex() {
+    if (_shuffleBag.isEmpty) {
+      _shuffleBag = _buildShuffleBag(excludeIndex: _selectedIndex);
+    }
+    return _shuffleBag.removeLast();
+  }
+
   /// Spin roulette : plusieurs tours complets puis atterrissage aléatoire
   void _spinRandom() {
     _playPageTurnSound();
-    final random = Random();
-    final targetIndex = random.nextInt(_sources.length);
+    final targetIndex = _nextRandomIndex();
     // Ajouter 2-3 tours complets avant d'arriver sur la cible
-    final extraTurns = (2 + random.nextInt(2)) * _sources.length;
+    final extraTurns = (2 + _random.nextInt(2)) * _sources.length;
     _carouselController.spinToIndex(targetIndex, extraCards: extraTurns);
   }
 
@@ -340,6 +365,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
           CardCarousel3D(
             cards: _cards,
             mode: CarouselMode.spine,
+            initialIndex: _selectedIndex,
             angleSpacing: 15,
             cardHeight: 260,
             cardWidth: 240,
@@ -347,6 +373,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
             controller: _carouselController,
             verticalOffset: -20,
             onInteractionStart: _playPageTurnSound,
+            onFastSwipe: _spinRandom,
           ),
           _buildTitleOverlay(),
           _buildBottomSection(selectedSource),
@@ -367,6 +394,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
         CardCarousel3D(
           cards: _cards,
           mode: CarouselMode.spine,
+          initialIndex: _selectedIndex,
           angleSpacing: 15,
           cardHeight: 300,
           cardWidth: 280,
@@ -374,6 +402,7 @@ class _HomeCarouselScreenState extends State<HomeCarouselScreen> {
           controller: _carouselController,
           verticalOffset: -40,
           onInteractionStart: _playPageTurnSound,
+          onFastSwipe: _spinRandom,
         ),
         _buildTitleOverlay(),
         _buildBottomSection(selectedSource),
