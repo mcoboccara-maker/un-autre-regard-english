@@ -1054,4 +1054,94 @@ class AIService {
     _sourceUsageHistory.clear();
     print('AIService: Données utilisateur effacées (logout)');
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AGENT GUIDE — Multi-tour conversationnel
+  // Utilisé par l'écran "Agent Guide" (bouton flottant permanent)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Envoyer un historique de conversation à Claude et récupérer la réponse.
+  /// [messages] : liste alternée user/assistant. Au minimum 1 message user.
+  ///   Chaque élément : { 'role': 'user' | 'assistant', 'content': '...' }
+  /// [systemPrompt] : identité/consignes de l'agent.
+  /// Retourne le texte de la réponse, ou une chaîne commençant par '[ERREUR_API]'
+  /// en cas d'erreur persistante (même logique que _callClaude).
+  Future<String> generateAgentReply({
+    required List<Map<String, String>> messages,
+    required String systemPrompt,
+    int maxTokens = 600,
+    double temperature = 0.5,
+  }) async {
+    if (messages.isEmpty) {
+      return '[ERREUR_API] Aucun message à envoyer.';
+    }
+
+    for (int attempt = 1; attempt <= _maxRetryAttempts; attempt++) {
+      try {
+        print('AIService[Agent]: Envoi tentative $attempt/$_maxRetryAttempts — ${messages.length} messages');
+
+        final response = await http.post(
+          Uri.parse(_baseUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': _apiKey,
+            'anthropic-version': _anthropicVersion,
+            if (kIsWeb) 'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: jsonEncode({
+            'model': _model,
+            'max_tokens': maxTokens,
+            'system': systemPrompt,
+            'messages': messages,
+            'temperature': temperature,
+          }),
+        ).timeout(
+          Duration(seconds: _requestTimeoutSeconds),
+          onTimeout: () {
+            throw TimeoutException('Timeout (>${_requestTimeoutSeconds}s)');
+          },
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final content = data['content']?[0]?['text'] ?? '';
+          return content.toString().trim();
+        }
+
+        if (response.statusCode == 429 || response.statusCode == 529) {
+          if (attempt < _maxRetryAttempts) {
+            final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
+            await Future.delayed(Duration(seconds: delaySeconds));
+            continue;
+          }
+          return '[ERREUR_API] ${_getErrorMessage(response.statusCode, response.body)}';
+        }
+
+        return '[ERREUR_API] ${_getErrorMessage(response.statusCode, response.body)}';
+      } on TimeoutException {
+        if (attempt < _maxRetryAttempts) {
+          final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
+          await Future.delayed(Duration(seconds: delaySeconds));
+          continue;
+        }
+        return '[ERREUR_API] The request timed out. Check your connection.';
+      } on FormatException {
+        return '[ERREUR_API] Malformed server response.';
+      } catch (e) {
+        final errorStr = e.toString().toLowerCase();
+        final isNetwork = errorStr.contains('socketexception') ||
+            errorStr.contains('clientexception') ||
+            errorStr.contains('connection') ||
+            errorStr.contains('network');
+        if (isNetwork && attempt < _maxRetryAttempts) {
+          final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
+          await Future.delayed(Duration(seconds: delaySeconds));
+          continue;
+        }
+        return '[ERREUR_API] I could not answer. Please try again in a moment.';
+      }
+    }
+
+    return '[ERREUR_API] Answer unavailable after $_maxRetryAttempts attempts.';
+  }
 }

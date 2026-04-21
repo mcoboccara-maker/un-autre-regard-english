@@ -32,6 +32,8 @@ import 'screens/thought_input_screen.dart';
 import 'screens/eclairages_carousel_screen.dart';
 import 'screens/demo/carousel_demo_screen.dart';
 import 'screens/sources_explorer_screen.dart';
+import 'screens/agent_guide_screen.dart';
+import 'widgets/agent_guide_fab.dart';
 import 'services/background_music_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
@@ -116,7 +118,19 @@ class UnAutreRegardApp extends StatelessWidget {
       // ═══════════════════════════════════════════════════════════════════════
       // Écran d'introduction — premier écran au lancement
       // ═══════════════════════════════════════════════════════════════════════
-      navigatorObservers: [BackgroundMusicService.instance],
+      navigatorKey: AgentGuideRouteTracker.rootNavigatorKey,
+      navigatorObservers: [
+        BackgroundMusicService.instance,
+        AgentGuideRouteTracker.instance,
+      ],
+      builder: (context, child) {
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            const AgentGuideFab(),
+          ],
+        );
+      },
       home: const IntroductionScreen(),
       routes: {
         '/welcome': (context) => const IntroductionScreen(),
@@ -143,6 +157,7 @@ class UnAutreRegardApp extends StatelessWidget {
         '/tutorial': (context) => const TutorialScreen(),
         '/sources-explorer': (context) => const SourcesExplorerScreen(),
         '/carousel-demo': (context) => const CarouselDemoScreen(),
+        '/agent-guide': (context) => const AgentGuideScreen(),
       },
     );
   }

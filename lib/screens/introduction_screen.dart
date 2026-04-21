@@ -157,7 +157,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   }
 
   void _playBackgroundMusic() {
-    BackgroundMusicService.instance.play('sounds/carousel_spin.mp3');
+    BackgroundMusicService.instance.play('sounds/universfield-silent-universe-351473.mp3');
   }
 
   // ── Bouton Continuer : dévoile la phrase suivante ────────────────────────
