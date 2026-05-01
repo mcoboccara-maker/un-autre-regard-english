@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'dart:math';
 import 'dart:async'; // AJOUT: Pour TimeoutException
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -10,6 +11,7 @@ import '../models/user_profile.dart';
 import '../services/persistent_storage_service.dart';
 import '../services/character_tracking_service.dart';
 import '../services/language_detector.dart'; // NOUVEAU: Détection de langue
+import '../services/email_service.dart';
 import '../config/approach_config.dart';
 // ═══════════════════════════════════════════════════════════════════════════════
 // IMPORTS PROMPTS MULTILINGUES
@@ -53,6 +55,61 @@ class AIService {
   // AJOUT: Configuration du retry automatique (erreurs 429/529)
   static const int _maxRetryAttempts = 3;           // Nombre max de tentatives
   static const int _initialRetryDelaySeconds = 2;   // Délai initial (2s, 4s, 8s)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ERROR HANDLING — single user-facing message + email report
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Message shown to the user when the API fails (any cause).
+  /// The [ERREUR_API] prefix is required: it acts as a marker so screens
+  /// recognise an error response (cf. eclairages_carousel_screen.dart).
+  static const String _userErrorMessage =
+      '[ERREUR_API] Oops! The app is having an issue, please accept my apologies. Quick fix coming. See you very soon!';
+
+  /// Throttle to avoid spamming the support inbox.
+  /// At most 1 report every 10 minutes.
+  static DateTime? _lastErrorEmailSent;
+  static const Duration _errorEmailThrottle = Duration(minutes: 10);
+
+  /// Sends an error report fire-and-forget, respecting the throttle.
+  /// Returns the user-facing message to display.
+  String _reportApiError({String? code, String? details, String? sourceKey}) {
+    final now = DateTime.now();
+    final canSend = _lastErrorEmailSent == null ||
+        now.difference(_lastErrorEmailSent!) >= _errorEmailThrottle;
+    if (canSend) {
+      _lastErrorEmailSent = now;
+      String? platform;
+      try {
+        if (kIsWeb) {
+          platform = 'Web';
+        } else if (Platform.isIOS) {
+          platform = 'iOS';
+        } else if (Platform.isAndroid) {
+          platform = 'Android';
+        } else if (Platform.isMacOS) {
+          platform = 'macOS';
+        } else if (Platform.isWindows) {
+          platform = 'Windows';
+        } else if (Platform.isLinux) {
+          platform = 'Linux';
+        }
+      } catch (_) {
+        platform = 'unknown';
+      }
+      EmailService.instance.sendApiErrorReport(
+        userEmail: PersistentStorageService.instance.currentUserEmail,
+        errorCode: code,
+        errorDetails: details,
+        platform: platform,
+        sourceKey: sourceKey,
+      ).catchError((e) {
+        print('AIService: ⚠️ Failed to send API error report: $e');
+        return EmailResult(success: false, message: 'Report failed: $e');
+      });
+    }
+    return _userErrorMessage;
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // NOUVEAU: SOURCES NÉCESSITANT LE MODÈLE DE QUALITÉ (SONNET)
@@ -320,19 +377,25 @@ class AIService {
             await Future.delayed(Duration(seconds: delaySeconds));
             continue; // Réessayer
           }
-          // Dernière tentative échouée
+          // Last attempt failed
           final errorMsg = _getErrorMessage(response.statusCode, response.body);
           print('AIService: ❌ Échec après $_maxRetryAttempts tentatives: $errorMsg');
-          return '[ERREUR_API] $errorMsg';
+          return _reportApiError(
+            code: '${response.statusCode}',
+            details: '$errorMsg\nBody: ${response.body}',
+          );
         }
-        
-        // ❌ ERREUR NON-RETRYABLE (400, 401, 403, 500, etc.)
+
+        // ❌ NON-RETRYABLE ERROR (400, 401, 403, 500, etc.)
         final errorMsg = _getErrorMessage(response.statusCode, response.body);
         print('AIService: ❌ Erreur API Claude: ${response.statusCode}');
         print('AIService: Body: ${response.body}');
         print('AIService: Message: $errorMsg');
-        return '[ERREUR_API] $errorMsg';
-        
+        return _reportApiError(
+          code: '${response.statusCode}',
+          details: '$errorMsg\nBody: ${response.body}',
+        );
+
       } on TimeoutException catch (e) {
         print('AIService: ❌ Timeout: $e');
         if (attempt < _maxRetryAttempts) {
@@ -341,16 +404,16 @@ class AIService {
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return '[ERREUR_API] Timeout exceeded after $_maxRetryAttempts attempts. Please check your internet connection.';
+        return _reportApiError(code: 'TIMEOUT', details: e.toString());
       } on FormatException catch (e) {
         print('AIService: ❌ Erreur parsing JSON: $e');
-        return '[ERREUR_API] Format error in the server response.';
+        return _reportApiError(code: 'FORMAT', details: e.toString());
       } catch (e) {
         print('AIService: ❌ Erreur requête Claude: $e');
-        
-        // Détecter les erreurs réseau courantes (incluant ClientException)
+
+        // Detect common network errors (incl. ClientException)
         final errorStr = e.toString().toLowerCase();
-        if (errorStr.contains('socketexception') || 
+        if (errorStr.contains('socketexception') ||
             errorStr.contains('connection refused') ||
             errorStr.contains('network is unreachable') ||
             errorStr.contains('clientexception') ||
@@ -362,19 +425,19 @@ class AIService {
             await Future.delayed(Duration(seconds: delaySeconds));
             continue;
           }
-          return '[ERREUR_API] This source could not respond. You can continue with the other perspectives or submit your thought again a bit later.';
+          return _reportApiError(code: 'NETWORK', details: e.toString());
         }
         if (errorStr.contains('handshake') || errorStr.contains('certificate')) {
-          return '[ERREUR_API] SSL security error. Please check the date/time on your device.';
+          return _reportApiError(code: 'SSL', details: e.toString());
         }
-        
-        // Message générique pour les autres erreurs (sans détails techniques)
-        return '[ERREUR_API] Cette source n\'a pas pu répondre. Tu peux continuer avec les autres perspectives ou soumettre à nouveau ta pensée un peu plus tard.';
+
+        // Generic message for other errors (no technical details)
+        return _reportApiError(code: 'UNKNOWN', details: e.toString());
       }
     }
-    
-    // Ne devrait jamais arriver, mais par sécurité
-    return '[ERREUR_API] Unexpected error after $_maxRetryAttempts attempts.';
+
+    // Should never happen, safety fallback
+    return _reportApiError(code: 'UNEXPECTED', details: 'Unexpected error after $_maxRetryAttempts attempts');
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1073,7 +1136,7 @@ class AIService {
     double temperature = 0.5,
   }) async {
     if (messages.isEmpty) {
-      return '[ERREUR_API] Aucun message à envoyer.';
+      return _reportApiError(code: 'EMPTY_MESSAGES', details: 'generateAgentReply called with empty messages list');
     }
 
     for (int attempt = 1; attempt <= _maxRetryAttempts; attempt++) {
@@ -1114,19 +1177,25 @@ class AIService {
             await Future.delayed(Duration(seconds: delaySeconds));
             continue;
           }
-          return '[ERREUR_API] ${_getErrorMessage(response.statusCode, response.body)}';
+          return _reportApiError(
+            code: '${response.statusCode}',
+            details: '${_getErrorMessage(response.statusCode, response.body)}\nBody: ${response.body}',
+          );
         }
 
-        return '[ERREUR_API] ${_getErrorMessage(response.statusCode, response.body)}';
-      } on TimeoutException {
+        return _reportApiError(
+          code: '${response.statusCode}',
+          details: '${_getErrorMessage(response.statusCode, response.body)}\nBody: ${response.body}',
+        );
+      } on TimeoutException catch (e) {
         if (attempt < _maxRetryAttempts) {
           final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return '[ERREUR_API] The request timed out. Check your connection.';
-      } on FormatException {
-        return '[ERREUR_API] Malformed server response.';
+        return _reportApiError(code: 'TIMEOUT_AGENT', details: e.toString());
+      } on FormatException catch (e) {
+        return _reportApiError(code: 'FORMAT_AGENT', details: e.toString());
       } catch (e) {
         final errorStr = e.toString().toLowerCase();
         final isNetwork = errorStr.contains('socketexception') ||
@@ -1138,10 +1207,10 @@ class AIService {
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return '[ERREUR_API] I could not answer. Please try again in a moment.';
+        return _reportApiError(code: 'UNKNOWN_AGENT', details: e.toString());
       }
     }
 
-    return '[ERREUR_API] Answer unavailable after $_maxRetryAttempts attempts.';
+    return _reportApiError(code: 'UNEXPECTED_AGENT', details: 'Answer unavailable after $_maxRetryAttempts attempts');
   }
 }

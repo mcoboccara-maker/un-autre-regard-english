@@ -451,6 +451,72 @@ class EmailService {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // RAPPORT D'ERREUR API (envoyé à appunautreregard@gmail.com)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Sends an API error report to the support team.
+  /// Should be called fire-and-forget — awaiting the response is not useful.
+  Future<EmailResult> sendApiErrorReport({
+    String? userEmail,
+    String? errorCode,
+    String? errorDetails,
+    String? appVersion,
+    String? platform,
+    String? sourceKey,
+  }) async {
+    try {
+      final timestamp = DateTime.now().toIso8601String();
+      final htmlContent = '''
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, sans-serif; padding: 20px; color: #1E293B;">
+  <h2 style="color: #DC2626;">🔴 API error detected</h2>
+  <table style="border-collapse: collapse;">
+    <tr><td><strong>Date:</strong></td><td>$timestamp</td></tr>
+    <tr><td><strong>Application:</strong></td><td>An Other Perspective (EN)</td></tr>
+    <tr><td><strong>Version:</strong></td><td>${appVersion ?? 'unknown'}</td></tr>
+    <tr><td><strong>Platform:</strong></td><td>${platform ?? 'unknown'}</td></tr>
+    <tr><td><strong>User:</strong></td><td>${userEmail ?? 'not signed in'}</td></tr>
+    <tr><td><strong>AI source:</strong></td><td>${sourceKey ?? 'unknown'}</td></tr>
+    <tr><td><strong>Error code:</strong></td><td>${errorCode ?? 'N/A'}</td></tr>
+  </table>
+  <h3>Technical details</h3>
+  <pre style="background:#F1F5F9; padding:12px; border-radius:8px; overflow:auto;">${_escapeHtml(errorDetails ?? 'no details')}</pre>
+</body>
+</html>
+''';
+
+      final body = jsonEncode({
+        'from': '$_senderName <$_senderEmail>',
+        'to': [_destinataireEmail],
+        'subject': '🔴 API error ${errorCode ?? ''} - An Other Perspective',
+        'html': htmlContent,
+      });
+
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        print('✅ API error report sent to $_destinataireEmail');
+        return EmailResult(success: true, message: 'Report sent');
+      } else {
+        print('❌ Failed to send API error report: ${response.statusCode}');
+        return EmailResult(success: false, message: 'Error ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Exception sending API error report: $e');
+      return EmailResult(success: false, message: 'Error: $e');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TEST DE CONNEXION
   // ═══════════════════════════════════════════════════════════════════════════
 
