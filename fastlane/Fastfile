@@ -1,0 +1,159 @@
+default_platform(:ios)
+
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: "V8DCBT64PJ",
+    issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
+    key_filepath: "./fastlane/AuthKey_V8DCBT64PJ.p8",
+    duration: 1200,
+    in_house: false
+  )
+end
+
+platform :ios do
+
+  desc "Uploade les metadonnees seulement (textes FR/EN sans vocabulaire therapeutique)"
+  lane :upload_meta do
+    deliver(
+      api_key: asc_api_key,
+      app_identifier: "com.unautreregard.app.en",
+      submit_for_review: false,
+      automatic_release: false,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: true,
+      force: true,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Uploade tout (textes + captures), sans soumettre"
+  lane :upload_all do
+    deliver(
+      api_key: asc_api_key,
+      app_identifier: "com.unautreregard.app.en",
+      submit_for_review: false,
+      automatic_release: false,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      force: true,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Soumet la version a la review Apple"
+  lane :submit do
+    deliver(
+      api_key: asc_api_key,
+      app_identifier: "com.unautreregard.app.en",
+      submit_for_review: true,
+      automatic_release: false,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      force: true,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false,
+        export_compliance_is_exempt: false,
+        export_compliance_contains_third_party_cryptography: false,
+        export_compliance_contains_proprietary_cryptography: false,
+        export_compliance_available_on_french_store: true,
+        content_rights_contains_third_party_content: true,
+        content_rights_has_rights: true
+      },
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  # ============================================================
+  # Lane : remove_locale
+  # Supprime une localisation (version + app info) de la fiche.
+  # Usage : fastlane remove_locale locale:fr-FR
+  # ============================================================
+  desc "Supprime une localisation de la fiche (texte version + texte app info)"
+  lane :remove_locale do |options|
+    locale = options[:locale] || "fr-FR"
+    require "spaceship"
+    key_path = File.join(__dir__, "AuthKey_V8DCBT64PJ.p8")
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: "V8DCBT64PJ",
+      issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
+      filepath: key_path
+    )
+
+    app = Spaceship::ConnectAPI::App.find("com.unautreregard.app.en")
+    UI.user_error!("App com.unautreregard.app.en introuvable") unless app
+
+    # 1. Localisation de la version en preparation
+    version = app.get_edit_app_store_version
+    if version
+      version_locs = version.get_app_store_version_localizations
+      target = version_locs.find { |l| l.locale == locale }
+      if target
+        target.delete!
+        UI.success("Localisation version #{locale} supprimee")
+      else
+        UI.message("Localisation version #{locale} deja absente")
+      end
+    else
+      UI.message("Pas de version editable")
+    end
+
+    # 2. Localisation de l'app info (le bloc Informations sur l'app)
+    edit_info = app.fetch_edit_app_info
+    if edit_info
+      info_locs = edit_info.get_app_info_localizations
+      found = info_locs.find { |l| l.locale == locale }
+      if found
+        found.delete!
+        UI.success("Localisation app info (edit) #{locale} supprimee")
+      else
+        UI.message("Localisation app info (edit) #{locale} deja absente")
+      end
+    end
+
+    # 3. Localisation de l'app info LIVE (si app deja publiee)
+    live_info = app.fetch_live_app_info
+    if live_info
+      info_locs = live_info.get_app_info_localizations
+      found = info_locs.find { |l| l.locale == locale }
+      if found
+        found.delete!
+        UI.success("Localisation app info (live) #{locale} supprimee")
+      end
+    end
+  end
+
+  desc "Liste les builds TestFlight disponibles"
+  lane :list_builds do
+    require "spaceship"
+    key_path = File.join(__dir__, "AuthKey_V8DCBT64PJ.p8")
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: "V8DCBT64PJ",
+      issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
+      filepath: key_path
+    )
+
+    app = Spaceship::ConnectAPI::App.find("com.unautreregard.app.en")
+    UI.user_error!("App com.unautreregard.app.en introuvable") unless app
+
+    builds = app.get_builds(includes: "preReleaseVersion",
+                            sort: "-uploadedDate",
+                            limit: 20)
+
+    UI.message("====== BUILDS TESTFLIGHT — An Other Perspective ======")
+    builds.each do |b|
+      ver = b.pre_release_version&.version || "?"
+      UI.message("  version=#{ver}  build=#{b.version}  state=#{b.processing_state}  uploaded=#{b.uploaded_date}")
+    end
+    UI.success("======================================================")
+  end
+
+end

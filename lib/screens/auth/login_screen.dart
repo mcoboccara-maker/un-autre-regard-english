@@ -198,30 +198,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   // ════════════════════════════════════════
                   _buildSocialLoginSection(),
 
-                  const SizedBox(height: 20),
-
-                  // Options 2 & 3 : INSCRIPTION et CONNEXION (côte à côte)
-                  Row(
-                    children: [
-                      Expanded(child: _buildCreateAccountCard()),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildLoginCard()),
-                    ],
-                  ),
-
                   // ════════════════════════════════════════
-                  // FORMULAIRE (apparaît si inscription ou connexion sélectionné)
+                  // Carte "Create an account" + formulaire email/password
+                  // retires (conformite App Store Guideline 5.1.1(v) :
+                  // si creation de compte alors suppression in-app obligatoire).
+                  // Les helpers _buildCreateAccountCard, _buildLoginCard,
+                  // _buildFormSection, _buildExistingAccountsSection sont
+                  // conserves plus bas comme code dormant. Pour reactiver,
+                  // ajouter d'abord un bouton "Delete my account" dans le
+                  // profil puis re-inserer ici les appels.
                   // ════════════════════════════════════════
-                  if (_showForm) ...[
-                    const SizedBox(height: 32),
-                    _buildFormSection(),
-                  ],
-
-                  // Comptes existants
-                  if (_showExistingAccounts && !_isNewUser && _showForm) ...[
-                    const SizedBox(height: 32),
-                    _buildExistingAccountsSection(),
-                  ],
 
                   const SizedBox(height: 32),
                 ],
@@ -356,10 +342,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
 
-        const SizedBox(height: 16),
-
-        // Divider "or with an email"
-        _buildDividerWithText('or with an email'),
+        // Divider "or with an email" retire (plus d'option email/password).
       ],
     ).animate().fadeIn(delay: 550.ms);
   }

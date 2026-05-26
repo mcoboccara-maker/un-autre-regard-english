@@ -1,0 +1,25 @@
+An Other Perspective is a CULTURAL READING AND REFLECTION app, NOT a therapy or medical app.
+
+CLARIFICATIONS REGARDING YOUR PREVIOUS REVIEW (Submission afd23919-ec49-4a7c-b6b9-807c6bb908cb):
+
+1) The description has been updated to remove all therapeutic vocabulary (ACT, transactional analysis, Gestalt, humanistic approach, systemic approach). These were source labels, never a therapeutic offering. The app presents excerpts and reflections inspired by philosophical, literary and spiritual texts only.
+
+2) The app does NOT provide AI-generated psychotherapy. The AI rephrases or extracts citations from public-domain or classical texts of philosophy, literature and spirituality. No diagnostic, no treatment plan, no therapeutic relationship.
+
+3) The app was developed by a single individual (Marco Boccara) without partnership with a licensed mental health professional. The disclaimer in the new description makes this clear and directs users to qualified professionals for any psychological care.
+
+TO TEST THE APP:
+- On the login screen, tap "Guest mode" at the top.
+- All features accessible without sign-in.
+- Type a thought, pick a source (philosopher, eastern wisdom, spiritual tradition), receive a reflection.
+
+NOTE ON ACCOUNT DELETION (Guideline 5.1.1(v)):
+- The account creation card (email/password) is being removed in the next build.
+- Sign in with Google/Apple/Facebook will keep being available.
+- An in-app "Delete my account" option will be added to the profile screen in the next build.
+
+The French sister app "Un Autre Regard" (com.unautreregard.app) was approved by the App Store team. Both apps share the same architecture and content philosophy.
+
+CONTACT: appunautreregard@gmail.com
+WEBSITE: https://unautreregard.binaiskit.com/en/index.html
+PRIVACY: https://unautreregard.binaiskit.com/en/privacy.html
