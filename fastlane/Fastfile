@@ -131,6 +131,148 @@ platform :ios do
     end
   end
 
+  # ============================================================
+  # Lane : cm_list_apps
+  # Liste les apps Codemagic accessibles avec leur API token.
+  # Sert a recuperer l'appId et workflowId a configurer.
+  # Pre-requis : variable d'env CODEMAGIC_API_TOKEN
+  # Usage : fastlane cm_list_apps
+  # ============================================================
+  desc "Liste les apps Codemagic accessibles via l'API token"
+  lane :cm_list_apps do
+    require "net/http"
+    require "json"
+
+    token = ENV["CODEMAGIC_API_TOKEN"]
+    UI.user_error!("CODEMAGIC_API_TOKEN manquant. Cree-en un sur https://codemagic.io/teams (User settings > Integrations > API tokens), puis dans PowerShell : $env:CODEMAGIC_API_TOKEN='xxx'") if token.nil? || token.empty?
+
+    uri = URI("https://api.codemagic.io/apps")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    req = Net::HTTP::Get.new(uri.path)
+    req["x-auth-token"] = token
+
+    resp = http.request(req)
+    UI.user_error!("Codemagic API a repondu #{resp.code} : #{resp.body}") unless resp.code.to_i.between?(200, 299)
+
+    data = JSON.parse(resp.body)
+    apps = data["applications"] || data
+    UI.message("====== APPS CODEMAGIC ======")
+    apps.each do |app|
+      UI.message("  #{app['appName']}")
+      UI.message("    _id           : #{app['_id']}")
+      UI.message("    repository    : #{app.dig('repository', 'htmlUrl') || app.dig('repository', 'gitUrl')}")
+      workflows = app["workflows"] || {}
+      if workflows.is_a?(Hash)
+        workflows.each do |wf_id, wf|
+          name = wf.is_a?(Hash) ? (wf["name"] || wf_id) : wf_id
+          UI.message("    workflow      : #{wf_id}  (#{name})")
+        end
+      end
+      UI.message("")
+    end
+    UI.success("============================")
+  end
+
+  # ============================================================
+  # Lane : cm_build
+  # Declenche un build Codemagic via API.
+  # Pre-requis ENV : CODEMAGIC_API_TOKEN, CODEMAGIC_APP_ID
+  # Optionnel ENV : CODEMAGIC_WORKFLOW_ID (sinon "default-workflow")
+  # Usage : fastlane cm_build              (branche par defaut : main)
+  #         fastlane cm_build branch:dev   (autre branche)
+  # ============================================================
+  desc "Declenche un build Codemagic via API (auto-merge metadata sans saisie UI)"
+  lane :cm_build do |options|
+    require "net/http"
+    require "json"
+
+    token = ENV["CODEMAGIC_API_TOKEN"]
+    UI.user_error!("CODEMAGIC_API_TOKEN manquant") if token.nil? || token.empty?
+
+    app_id = options[:app_id] || ENV["CODEMAGIC_APP_ID"]
+    UI.user_error!("CODEMAGIC_APP_ID manquant (env var ou param app_id:xxx)") if app_id.nil? || app_id.empty?
+
+    workflow_id = options[:workflow_id] || ENV["CODEMAGIC_WORKFLOW_ID"] || "default-workflow"
+    branch = options[:branch] || "main"
+
+    uri = URI("https://api.codemagic.io/builds")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    req = Net::HTTP::Post.new(uri.path)
+    req["Content-Type"] = "application/json"
+    req["x-auth-token"] = token
+    req.body = {
+      appId: app_id,
+      workflowId: workflow_id,
+      branch: branch
+    }.to_json
+
+    UI.message("Declenche build Codemagic : app=#{app_id}, workflow=#{workflow_id}, branche=#{branch}")
+    resp = http.request(req)
+
+    if resp.code.to_i.between?(200, 299)
+      body = JSON.parse(resp.body)
+      build_id = body["buildId"]
+      UI.success("Build declenche : buildId=#{build_id}")
+      UI.success("Suivi : https://codemagic.io/app/#{app_id}/build/#{build_id}")
+    else
+      UI.error("Codemagic a repondu #{resp.code}")
+      UI.error(resp.body.to_s)
+      UI.user_error!("Echec du declenchement Codemagic")
+    end
+  end
+
+  # ============================================================
+  # Lane : cancel_pending
+  # Annule la submission en cours (si elle existe) pour permettre
+  # de soumettre une nouvelle version. Necessaire quand Apple
+  # repond "A review submission is already in progress".
+  # Usage : fastlane cancel_pending
+  # ============================================================
+  desc "Annule la submission en cours (state non terminal)"
+  lane :cancel_pending do
+    require "spaceship"
+    key_path = File.join(__dir__, "AuthKey_V8DCBT64PJ.p8")
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: "V8DCBT64PJ",
+      issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
+      filepath: key_path
+    )
+
+    app = Spaceship::ConnectAPI::App.find("com.unautreregard.app.en")
+    UI.user_error!("App com.unautreregard.app.en introuvable") unless app
+
+    in_progress = app.get_in_progress_review_submission(platform: "IOS")
+
+    if in_progress.nil?
+      UI.message("Aucune submission en cours, rien a annuler")
+    else
+      UI.message("Submission en cours : id=#{in_progress.id}, state=#{in_progress.state}")
+      # Tentative 1 : cancel_submission (API Spaceship recente)
+      begin
+        in_progress.cancel_submission
+        UI.success("Submission #{in_progress.id} annulee via cancel_submission")
+      rescue NoMethodError, StandardError => e
+        UI.message("cancel_submission a echoue (#{e.message}), tentative via suppression des items...")
+        # Tentative 2 : supprimer les ReviewSubmissionItems
+        items = in_progress.review_submission_items rescue nil
+        if items && !items.empty?
+          items.each do |item|
+            begin
+              item.delete!
+              UI.success("Item de submission supprime : #{item.id}")
+            rescue => err
+              UI.error("Erreur suppression item #{item.id} : #{err.message}")
+            end
+          end
+        else
+          UI.error("Impossible de recuperer ou supprimer les items, l'API a renvoye une erreur. Voir ci-dessus.")
+        end
+      end
+    end
+  end
+
   desc "Liste les builds TestFlight disponibles"
   lane :list_builds do
     require "spaceship"

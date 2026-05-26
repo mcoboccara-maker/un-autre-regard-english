@@ -47,6 +47,30 @@ Soumet la version a la review Apple
 
 Supprime une localisation de la fiche (texte version + texte app info)
 
+### ios cm_list_apps
+
+```sh
+[bundle exec] fastlane ios cm_list_apps
+```
+
+Liste les apps Codemagic accessibles via l'API token
+
+### ios cm_build
+
+```sh
+[bundle exec] fastlane ios cm_build
+```
+
+Declenche un build Codemagic via API (auto-merge metadata sans saisie UI)
+
+### ios cancel_pending
+
+```sh
+[bundle exec] fastlane ios cancel_pending
+```
+
+Annule la submission en cours (state non terminal)
+
 ### ios list_builds
 
 ```sh
