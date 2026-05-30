@@ -5,7 +5,9 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-latest
+    # macos-26 fournit Xcode 26 (SDK iOS 26), exige par Apple depuis fin mai 2026.
+    # macos-latest pointe encore vers macOS 15 (Xcode 16 / SDK iOS 18.5) => upload refuse (409).
+    runs-on: macos-26
     timeout-minutes: 60
 
     steps:
