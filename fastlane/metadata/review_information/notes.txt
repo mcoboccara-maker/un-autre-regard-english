@@ -1,22 +1,22 @@
 An Other Perspective is a CULTURAL READING AND REFLECTION app, NOT a therapy or medical app.
 
-CLARIFICATIONS REGARDING YOUR PREVIOUS REVIEW (Submission afd23919-ec49-4a7c-b6b9-807c6bb908cb):
+GUIDELINE 2.1 - INFORMATION NEEDED (answers):
 
-1) The description has been updated to remove all therapeutic vocabulary (ACT, transactional analysis, Gestalt, humanistic approach, systemic approach). These were source labels, never a therapeutic offering. The app presents excerpts and reflections inspired by philosophical, literary and spiritual texts only.
+1) Therapeutic vocabulary: the description has been updated to remove all therapeutic terms (ACT, transactional analysis, Gestalt, humanistic approach, systemic approach). These were only source labels, never a therapeutic offering. The app presents excerpts and reflections inspired by philosophical, literary and spiritual texts only.
 
-2) The app does NOT provide AI-generated psychotherapy. The AI rephrases or extracts citations from public-domain or classical texts of philosophy, literature and spirituality. No diagnostic, no treatment plan, no therapeutic relationship.
+2) AI-generated psychotherapy: NO. The app does not provide psychotherapy. The AI rephrases or extracts citations from public-domain or classical texts of philosophy, literature and spirituality. No diagnosis, no treatment plan, no therapeutic relationship.
 
-3) The app was developed by a single individual (Marco Boccara) without partnership with a licensed mental health professional. The disclaimer in the new description makes this clear and directs users to qualified professionals for any psychological care.
+3) Licensed professional: the app was developed by a single individual (Marco Boccara), without partnership with a licensed mental health professional. The disclaimer in the description makes this clear and directs users to qualified professionals for any psychological care.
+
+GUIDELINE 5.1.1(v) - ACCOUNT DELETION (resolved in this build):
+- Email/password account creation has been REMOVED from the app.
+- Sign in with Google / Apple / Facebook remains available, and an in-app account deletion flow is now provided.
+- HOW TO DELETE AN ACCOUNT: on the login screen, tap "Delete my account" (link below the sign-in buttons). A sheet lists the accounts stored on the device; tap "Delete" next to an account, then confirm. This permanently deletes the profile, saved values and reflections. All account data is stored locally on the device; there is no server-side account to keep.
+- A screen recording of the full deletion flow is attached to this submission.
 
 TO TEST THE APP:
-- On the login screen, tap "Guest mode" at the top.
-- All features accessible without sign-in.
+- On the login screen, tap "Enter as guest" to access all features without signing in.
 - Type a thought, pick a source (philosopher, eastern wisdom, spiritual tradition), receive a reflection.
-
-NOTE ON ACCOUNT DELETION (Guideline 5.1.1(v)):
-- The account creation card (email/password) is being removed in the next build.
-- Sign in with Google/Apple/Facebook will keep being available.
-- An in-app "Delete my account" option will be added to the profile screen in the next build.
 
 The French sister app "Un Autre Regard" (com.unautreregard.app) was approved by the App Store team. Both apps share the same architecture and content philosophy.
 
