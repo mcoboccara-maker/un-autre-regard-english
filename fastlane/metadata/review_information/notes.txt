@@ -8,11 +8,16 @@ GUIDELINE 2.1 - INFORMATION NEEDED (answers):
 
 3) Licensed professional: the app was developed by a single individual (Marco Boccara), without partnership with a licensed mental health professional. The disclaimer in the description makes this clear and directs users to qualified professionals for any psychological care.
 
-GUIDELINE 5.1.1(v) - ACCOUNT DELETION (resolved in this build):
+GUIDELINE 5.1.1(v) - ACCOUNT DELETION (implemented in this build):
 - Email/password account creation has been REMOVED from the app.
 - Sign in with Google / Apple / Facebook remains available, and an in-app account deletion flow is now provided.
-- HOW TO DELETE AN ACCOUNT: on the login screen, tap "Delete my account" (link below the sign-in buttons). A sheet lists the accounts stored on the device; tap "Delete" next to an account, then confirm. This permanently deletes the profile, saved values and reflections. All account data is stored locally on the device; there is no server-side account to keep.
-- A screen recording of the full deletion flow is attached to this submission.
+- WHERE: on the login screen, a "Delete my account" link is shown below the sign-in buttons.
+- HOW TO TEST (important - the list only shows accounts that have signed in on this device):
+  1) On the login screen, sign in once with Apple, Google or Facebook.
+  2) Log out (logout icon at the top-right of the main menu) to return to the login screen.
+  3) Tap "Delete my account": the account you just used is now listed.
+  4) Tap "Delete" next to it, then confirm in the dialog.
+- This permanently deletes the profile, saved values and reflections. All account data is stored locally on the device; there is no server-side account to keep.
 
 TO TEST THE APP:
 - On the login screen, tap "Enter as guest" to access all features without signing in.
