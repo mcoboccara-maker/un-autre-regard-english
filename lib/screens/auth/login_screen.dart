@@ -53,6 +53,188 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // ════════════════════════════════════════
+  // SUPPRESSION DE COMPTE (App Store 5.1.1(v))
+  // ════════════════════════════════════════
+
+  /// Affiche la liste des comptes enregistres sur cet appareil,
+  /// chacun supprimable definitivement.
+  Future<void> _showDeleteAccountSheet() async {
+    List<String> accounts;
+    try {
+      accounts = await CompleteAuthService.instance.getAllUsers();
+      accounts.remove(guestEmail);
+    } catch (e) {
+      accounts = [];
+    }
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (sheetCtx, setSheetState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Accounts on this device',
+                    style: GoogleFonts.inter(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Deleting an account permanently removes its profile, '
+                    'saved values and reflections from this device. '
+                    'This cannot be undone.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: const Color(0xFF64748B),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (accounts.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(
+                        'No account is registered on this device.',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    )
+                  else
+                    ...accounts.map(
+                      (email) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                email,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            TextButton(
+                              onPressed: () async {
+                                final confirmed =
+                                    await _confirmDeleteAccount(email);
+                                if (confirmed != true) return;
+                                try {
+                                  await CompleteAuthService.instance
+                                      .clearUserData(email);
+                                } catch (_) {}
+                                // Hygiene : couper la session sociale pour
+                                // que la prochaine connexion repropose le choix.
+                                await SocialAuthService.instance.signOutGoogle();
+                                await SocialAuthService.instance
+                                    .signOutFacebook();
+                                accounts.remove(email);
+                                setSheetState(() {});
+                                if (!mounted) return;
+                                setState(() {
+                                  _existingEmails.remove(email);
+                                  _showExistingAccounts =
+                                      _existingEmails.isNotEmpty;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Account deleted',
+                                      style: GoogleFonts.inter(),
+                                    ),
+                                    backgroundColor: const Color(0xFF10B981),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFE53935),
+                              ),
+                              child: Text(
+                                'Delete',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Dialogue de confirmation avant suppression definitive.
+  Future<bool?> _confirmDeleteAccount(String email) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete your account?',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'This will permanently delete the account "$email", including '
+          'your profile, saved values and reflections. '
+          'This action cannot be undone.',
+          style: GoogleFonts.inter(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text('Delete', style: GoogleFonts.inter(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Connexion en mode invité
   Future<void> _loginAsGuest() async {
     setState(() => _isLoadingGuest = true);
@@ -204,10 +386,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   // si creation de compte alors suppression in-app obligatoire).
                   // Les helpers _buildCreateAccountCard, _buildLoginCard,
                   // _buildFormSection, _buildExistingAccountsSection sont
-                  // conserves plus bas comme code dormant. Pour reactiver,
-                  // ajouter d'abord un bouton "Delete my account" dans le
-                  // profil puis re-inserer ici les appels.
+                  // conserves plus bas comme code dormant.
                   // ════════════════════════════════════════
+
+                  const SizedBox(height: 28),
+
+                  // ════════════════════════════════════════
+                  // Suppression de compte (conformite App Store 5.1.1(v)).
+                  // Accessible avant connexion : liste les comptes locaux
+                  // enregistres sur cet appareil, chacun supprimable.
+                  // ════════════════════════════════════════
+                  Center(
+                    child: TextButton(
+                      onPressed: _showDeleteAccountSheet,
+                      child: Text(
+                        'Delete my account',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ),
+                  ),
 
                   const SizedBox(height: 32),
                 ],
