@@ -170,6 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const SizedBox(height: 32),
                   _buildSaveButton(),
+                  _buildDeleteAccountButton(),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -771,6 +772,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  // Compte invité : pas de suppression de compte proposée.
+  static const String _guestEmail = 'invite@unautreregard.app';
+
+  /// Bouton de suppression de compte (App Store Guideline 5.1.1(v)).
+  /// Visible uniquement pour un compte réel connecté (pas le mode invité).
+  Widget _buildDeleteAccountButton() {
+    if (_currentUser == null || _currentUser == _guestEmail) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Center(
+        child: TextButton(
+          onPressed: _deleteCurrentAccount,
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFE53935),
+          ),
+          child: Text(
+            'Delete my account',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              decoration: TextDecoration.underline,
+              decorationColor: const Color(0xFFE53935),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Dialogue de confirmation avant suppression definitive.
+  Future<bool?> _confirmDeleteAccount(String email) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete your account?',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'This will permanently delete the account "$email", including '
+          'your profile, saved values and reflections. '
+          'This action cannot be undone.',
+          style: GoogleFonts.inter(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text('Delete', style: GoogleFonts.inter(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Supprime définitivement le compte actuellement connecté, puis renvoie
+  /// vers l'écran d'accueil. Réutilise CompleteAuthService.clearUserData,
+  /// qui efface profil/réflexions/réglages et déconnecte l'utilisateur.
+  Future<void> _deleteCurrentAccount() async {
+    final email = _currentUser;
+    if (email == null || email == _guestEmail) return;
+
+    final confirmed = await _confirmDeleteAccount(email);
+    if (confirmed != true) return;
+
+    try {
+      await CompleteAuthService.instance.clearUserData(email);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error while deleting account', style: GoogleFonts.inter()),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Account deleted', style: GoogleFonts.inter()),
+        backgroundColor: const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    // Retour à l'accueil, pile de navigation vidée (utilisateur déconnecté).
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil('/welcome', (route) => false);
   }
 
   void _saveProfile() async {
