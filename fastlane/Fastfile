@@ -273,6 +273,42 @@ platform :ios do
     end
   end
 
+  # ============================================================
+  # Lane : show_meta
+  # Affiche la description ACTUELLEMENT en ligne sur App Store Connect
+  # (version editable + version live) pour comparer avec le local et
+  # detecter un desync (metadata locale jamais uploadee).
+  # Usage : fastlane show_meta
+  # ============================================================
+  desc "Affiche la description en ligne sur ASC (edit + live) pour detecter un desync"
+  lane :show_meta do
+    require "spaceship"
+    key_path = File.join(__dir__, "AuthKey_V8DCBT64PJ.p8")
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: "V8DCBT64PJ",
+      issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
+      filepath: key_path
+    )
+    app = Spaceship::ConnectAPI::App.find("com.unautreregard.app.en")
+    UI.user_error!("App introuvable") unless app
+
+    edit = app.get_edit_app_store_version
+    if edit
+      loc = edit.get_app_store_version_localizations.find { |l| l.locale == "en-US" }
+      UI.message("===== VERSION EDITABLE (#{edit.version_string} / #{edit.app_store_state}) =====")
+      UI.message("DESC (300 premiers car.):\n#{(loc&.description || '(vide)')[0,300]}")
+    else
+      UI.message("Aucune version editable.")
+    end
+
+    live = app.get_live_app_store_version rescue nil
+    if live
+      loc = live.get_app_store_version_localizations.find { |l| l.locale == "en-US" }
+      UI.message("===== VERSION LIVE (#{live.version_string}) =====")
+      UI.message("DESC (300 premiers car.):\n#{(loc&.description || '(vide)')[0,300]}")
+    end
+  end
+
   desc "Liste les builds TestFlight disponibles"
   lane :list_builds do
     require "spaceship"

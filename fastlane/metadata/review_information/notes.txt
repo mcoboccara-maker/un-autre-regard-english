@@ -2,26 +2,28 @@ An Other Perspective is a CULTURAL READING AND REFLECTION app, NOT a therapy or 
 
 GUIDELINE 2.1 - INFORMATION NEEDED (answers):
 
-1) Therapeutic vocabulary: the description has been updated to remove all therapeutic terms (ACT, transactional analysis, Gestalt, humanistic approach, systemic approach). These were only source labels, never a therapeutic offering. The app presents excerpts and reflections inspired by philosophical, literary and spiritual texts only.
+1) "Therapeutic approaches" wording: the app does NOT offer therapy. The labels that could be read as clinical have been reworded in this build. The category previously shown as "Psychological Approaches" is now "Approaches to the Inner Life"; entries no longer use the word "therapy" (e.g. "Schema Therapy" -> "Schemas", "Logotherapy" -> "Search for Meaning (Frankl)"). These are intellectual/cultural lenses through which a reflection is written, on the same footing as a philosopher, a spiritual tradition or a literary movement. The user picks a lens; the app returns a written perspective inspired by that school of thought.
 
-2) AI-generated psychotherapy: NO. The app does not provide psychotherapy. The AI rephrases or extracts citations from public-domain or classical texts of philosophy, literature and spirituality. No diagnosis, no treatment plan, no therapeutic relationship.
+2) Does the app provide AI-generated psychotherapy? NO. There is no diagnosis, no treatment plan, no clinical evaluation, no therapeutic relationship, no follow-up. The AI does not treat the user. When a psychological lens is chosen, the response may cite a REAL, PUBLISHED, DOCUMENTED clinical case from the specialized literature (e.g. Anna O. or Dora in Freud's published work) as a CULTURAL/LITERARY REFERENCE illustrating a human situation analogous to the user's - exactly as the app cites a novel's character or a philosopher's argument. These are bibliographic references to existing published material, not a consultation. The app's own generation rules explicitly state: "You do not do therapy. You do not normalize. You do not seek to reassure."
 
-3) Licensed professional: the app was developed by a single individual (Marco Boccara), without partnership with a licensed mental health professional. The disclaimer in the description makes this clear and directs users to qualified professionals for any psychological care.
+3) Was the app developed in partnership with a licensed professional? NO. It was developed by a single individual (Marco Boccara). The in-app and store disclaimer states this clearly and directs users to qualified professionals (doctor, psychologist, psychiatrist) and to emergency services for any psychological care or crisis. The app is positioned as cultural reading, not as a substitute for psychological care or medical advice.
 
 GUIDELINE 5.1.1(v) - ACCOUNT DELETION (implemented in this build):
-- Email/password account creation has been REMOVED from the app.
-- Sign in with Google / Apple / Facebook remains available, and an in-app account deletion flow is now provided.
-- WHERE: on the login screen, a "Delete my account" link is shown below the sign-in buttons.
-- HOW TO TEST (important - the list only shows accounts that have signed in on this device):
-  1) On the login screen, sign in once with Apple, Google or Facebook.
-  2) Log out (logout icon at the top-right of the main menu) to return to the login screen.
-  3) Tap "Delete my account": the account you just used is now listed.
-  4) Tap "Delete" next to it, then confirm in the dialog.
-- This permanently deletes the profile, saved values and reflections. All account data is stored locally on the device; there is no server-side account to keep.
+- Email/password account creation has been REMOVED. Sign in with Google / Apple / Facebook remains, plus a guest mode.
+- Account deletion is now available IN TWO PLACES:
+  A) WHILE SIGNED IN: open the Profile screen ("My Profile"), scroll to the bottom -> red "Delete my account" link -> confirm in the dialog. This permanently deletes the current account.
+  B) FROM THE LOGIN SCREEN (before signing in): a "Delete my account" link below the sign-in buttons lists the accounts known on this device, each with a "Delete" button.
+- In both cases this permanently deletes the profile, saved values and reflections. All account data is stored LOCALLY on the device; there is no server-side account.
+
+HOW TO TEST ACCOUNT DELETION (recommended path A):
+  1) On the login screen, sign in with Apple, Google or Facebook.
+  2) Open "My Profile" from the home screen.
+  3) Scroll to the bottom and tap "Delete my account".
+  4) Confirm in the dialog. You are returned to the welcome screen and the account is gone.
 
 TO TEST THE APP:
 - On the login screen, tap "Enter as guest" to access all features without signing in.
-- Type a thought, pick a source (philosopher, eastern wisdom, spiritual tradition), receive a reflection.
+- Type a thought, pick a source (philosopher, eastern wisdom, spiritual tradition, inner-life approach), receive a reflection.
 
 The French sister app "Un Autre Regard" (com.unautreregard.app) was approved by the App Store team. Both apps share the same architecture and content philosophy.
 
