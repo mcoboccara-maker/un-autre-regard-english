@@ -60,7 +60,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
   // NOUVEAU: Limite de sagesses (1 a 4)
   static const int _maxSagesses = 4;
   
-  static const _categoryNames = ['Literature', 'Psychology', 'Philosophers', 'Phil. Schools'];
+  static const _categoryNames = ['Literature', 'Inner Life', 'Philosophers', 'Phil. Schools'];
   static const _categoryEmojis = ['📚', '🧠', '👤', '🏛️'];
   
   // ═══════════════════════════════════════════════════════════════════════════
@@ -84,7 +84,7 @@ class _WisdomWheelDialogState extends State<WisdomWheelDialog> with TickerProvid
     [
       WheelSource(id: 'jungienne', name: 'Jungian', iconPath: 'assets/univers_visuel/jungienne.png'),
       WheelSource(id: 'tcc', name: 'CBT', iconPath: 'assets/univers_visuel/TCC.png'),
-      WheelSource(id: 'logotherapie', name: 'Logotherapy', iconPath: 'assets/univers_visuel/logotherapie_frankl.png'),
+      WheelSource(id: 'logotherapie', name: 'Meaning (Frankl)', iconPath: 'assets/univers_visuel/logotherapie_frankl.png'),
       WheelSource(id: 'act', name: 'ACT', iconPath: 'assets/univers_visuel/pleine_conscience.png'),
       WheelSource(id: 'the_work', name: 'The Work', iconPath: 'assets/univers_visuel/theworkkb.png'),
       WheelSource(id: 'schemas_young', name: 'Schemas', iconPath: 'assets/univers_visuel/schemas_young.png'),

@@ -35,23 +35,23 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
   final List<PsychologicalSource> _sources = [
     PsychologicalSource(
       id: 'act',
-      name: 'ACT (Acceptance & Commitment)',
+      name: 'Acceptance & Commitment (ACT)',
       iconPath: 'assets/univers_visuel/act.png',
-      description: 'Therapy based on acceptance and value-aligned action.',
+      description: 'An approach based on acceptance and value-aligned action.',
       modeOfThought: 'Acceptance, cognitive defusion, value-driven actions.',
       worldView: 'Suffering is part of life, but commitment gives it meaning.',
     ),
     PsychologicalSource(
       id: 'tcc',
-      name: 'CBT (Cognitive Behavioral Therapy)',
+      name: 'Cognitive & Behavioral (CBT)',
       iconPath: 'assets/univers_visuel/TCC.png',
-      description: 'Therapy focused on identifying and modifying dysfunctional thoughts.',
+      description: 'An approach to identifying and reframing unhelpful thoughts.',
       modeOfThought: 'Cognitive restructuring, behavioral experiments.',
       worldView: 'Thoughts influence emotions and behaviors.',
     ),
     PsychologicalSource(
       id: 'jungienne',
-      name: 'Jungian Psychology',
+      name: 'Jungian (symbols & archetypes)',
       iconPath: 'assets/univers_visuel/jungienne.png',
       description: 'Approach based on archetypes, symbolism and the collective unconscious.',
       modeOfThought: 'Dreams, myths, symbols, individuation.',
@@ -59,15 +59,15 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
     ),
     PsychologicalSource(
       id: 'logotherapie',
-      name: 'Logotherapy (Frankl)',
+      name: 'Search for Meaning (Frankl)',
       iconPath: 'assets/univers_visuel/logotherapie_frankl.png',
-      description: 'Therapy centered on the quest for meaning as an existential driver.',
+      description: 'A perspective centered on the quest for meaning as an existential driver.',
       modeOfThought: 'Value orientation, responsibility, personal meaning.',
       worldView: 'Meaning can be found in any situation, even suffering.',
     ),
     PsychologicalSource(
       id: 'schemas_young',
-      name: 'Schema Therapy (Young)',
+      name: 'Schemas (Young)',
       iconPath: 'assets/univers_visuel/schemas_young.png',
       description: 'Identifies early schemas that influence present reactions.',
       modeOfThought: 'Reparenting, dialogues, deep emotional work.',
@@ -83,7 +83,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
     ),
     PsychologicalSource(
       id: 'humaniste_rogers',
-      name: 'Humanistic Approach (Rogers)',
+      name: 'Humanistic (Rogers)',
       iconPath: 'assets/univers_visuel/approche_humaniste.png',
       description: 'Person-centered approach based on benevolence.',
       modeOfThought: 'Empathy, authenticity, non-judgment.',
@@ -91,7 +91,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
     ),
     PsychologicalSource(
       id: 'psychanalyse',
-      name: 'Psychoanalysis',
+      name: 'Psychoanalytic reading (Freud)',
       iconPath: 'assets/univers_visuel/psychanalyse.png',
       description: 'Exploration of the unconscious, drives and internal conflicts.',
       modeOfThought: 'Free association, dream analysis, transference, interpretation.',
@@ -152,7 +152,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_selectedSources.length} psychological approach(es) saved'),
+            content: Text('${_selectedSources.length} approaches saved'),
             backgroundColor: const Color(0xFF10B981),
           ),
         );
@@ -174,7 +174,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Psychological Approaches',
+      title: 'Approaches to the Inner Life',
       showMenuButton: true,
       showPositiveButton: true,
       showBackButton: true,
@@ -285,7 +285,7 @@ class _SourcesPsychologiquesScreenState extends State<SourcesPsychologiquesScree
           const SizedBox(height: 16),
 
           Text(
-            'Psychological Approaches',
+            'Approaches to the Inner Life',
             style: GoogleFonts.inter(
               fontSize: 24,
               fontWeight: FontWeight.bold,

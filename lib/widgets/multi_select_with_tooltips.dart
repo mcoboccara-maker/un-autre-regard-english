@@ -78,11 +78,11 @@ class ProfileChoicesWithTooltips {
 
   static const List<Map<String, String>> approchesPsychologiques = [
     {
-      "label": "Logotherapy (Frankl)",
+      "label": "Search for Meaning (Frankl)",
       "tooltip": "An approach centered on the search for meaning: every challenge becomes an opportunity for a free and meaningful response."
     },
     {
-      "label": "Schema Therapy (Young)",
+      "label": "Schemas (Young)",
       "tooltip": "A process to identify and transform early emotional schemas that condition our reactions."
     },
     {
@@ -95,7 +95,7 @@ class ProfileChoicesWithTooltips {
     },
     {
       "label": "CBT (Cognitive-Behavioral)",
-      "tooltip": "A practical therapy based on modifying limiting thoughts and behaviors through concrete exercises."
+      "tooltip": "A practical approach based on reframing limiting thoughts and behaviors through concrete exercises."
     },
     {
       "label": "Jungian (symbolism, archetypes)",

@@ -1825,14 +1825,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       'mystique': {'name': 'Mysticism', 'category': 'Literary Movement'},
       'symboliste_moderne': {'name': 'Modern Symbolism', 'category': 'Literary Movement'},
 
-      // Psychological approaches
-      'schemas_young': {'name': 'Young\'s Schemas', 'category': 'Psychological Approach'},
-      'jungienne': {'name': 'Jungian Psychology', 'category': 'Psychological Approach'},
-      'tcc': {'name': 'CBT', 'category': 'Psychological Approach'},
-      'logotherapie': {'name': 'Logotherapy', 'category': 'Psychological Approach'},
-      'act': {'name': 'ACT', 'category': 'Psychological Approach'},
-      'the_work': {'name': 'The Work', 'category': 'Psychological Approach'},
-      'humaniste_rogers': {'name': 'Rogerian Humanism', 'category': 'Psychological Approach'},
+      // Inner-life approaches
+      'schemas_young': {'name': 'Schemas (Young)', 'category': 'Inner-Life Approach'},
+      'jungienne': {'name': 'Jungian (symbols & archetypes)', 'category': 'Inner-Life Approach'},
+      'tcc': {'name': 'Cognitive & Behavioral (CBT)', 'category': 'Inner-Life Approach'},
+      'logotherapie': {'name': 'Search for Meaning (Frankl)', 'category': 'Inner-Life Approach'},
+      'act': {'name': 'Acceptance & Commitment (ACT)', 'category': 'Inner-Life Approach'},
+      'the_work': {'name': 'The Work (Byron Katie)', 'category': 'Inner-Life Approach'},
+      'humaniste_rogers': {'name': 'Humanistic (Rogers)', 'category': 'Inner-Life Approach'},
 
       // Religions/Spiritualities
       'judaisme': {'name': 'Judaism', 'category': 'Spirituality'},

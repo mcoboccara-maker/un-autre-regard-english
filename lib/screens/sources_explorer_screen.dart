@@ -139,7 +139,7 @@ class _SourcesExplorerScreenState extends State<SourcesExplorerScreen> {
     ),
     _SourceSection(
       type: ApproachType.psychological,
-      title: 'Psychological Sources',
+      title: 'Inner-Life Approaches',
       imagePath: 'assets/univers_visuel/psychologie.png',
       fallbackIcon: Icons.psychology,
       color: Color(0xFF0EA5E9),

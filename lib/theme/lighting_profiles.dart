@@ -491,7 +491,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'tcc': LightingProfile(
     id: 'tcc',
-    label: 'TCC',
+    label: 'CBT',
     group: 'psychological',
     backgroundColor: 0xFFEEF6FF,
     animatedGradient: [0xFFEEF6FF, 0xFFDCEBFF],
@@ -504,7 +504,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'jungienne': LightingProfile(
     id: 'jungienne',
-    label: 'Jungienne',
+    label: 'Jungian',
     group: 'psychological',
     backgroundColor: 0xFF1B1526,
     animatedGradient: [0xFF1B1526, 0xFF2F2450],
@@ -517,7 +517,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'logotherapie': LightingProfile(
     id: 'logotherapie',
-    label: 'Logothérapie',
+    label: 'Meaning (Frankl)',
     group: 'psychological',
     backgroundColor: 0xFF0B1E2D,
     animatedGradient: [0xFF0B1E2D, 0xFF123B55],
@@ -530,7 +530,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'schemas_young': LightingProfile(
     id: 'schemas_young',
-    label: 'Schémas (Young)',
+    label: 'Schemas (Young)',
     group: 'psychological',
     backgroundColor: 0xFFF7F1FF,
     animatedGradient: [0xFFF7F1FF, 0xFFE9D5FF],
@@ -556,7 +556,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'humaniste_rogers': LightingProfile(
     id: 'humaniste_rogers',
-    label: 'Humaniste (Rogers)',
+    label: 'Humanistic (Rogers)',
     group: 'psychological',
     backgroundColor: 0xFFFFF7ED,
     animatedGradient: [0xFFFFF7ED, 0xFFFFE4C7],
@@ -569,7 +569,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'psychanalyse': LightingProfile(
     id: 'psychanalyse',
-    label: 'Psychanalyse',
+    label: 'Psychoanalytic',
     group: 'psychological',
     backgroundColor: 0xFF2B1D1A,
     animatedGradient: [0xFF2B1D1A, 0xFF120C10],
@@ -582,7 +582,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'analyse_transactionnelle': LightingProfile(
     id: 'analyse_transactionnelle',
-    label: 'Analyse Transactionnelle',
+    label: 'Transactional Analysis',
     group: 'psychological',
     backgroundColor: 0xFFF0F9FF,
     animatedGradient: [0xFFF0F9FF, 0xFFD9F2FF],
@@ -595,7 +595,7 @@ const Map<String, LightingProfile> kLightingProfilesMap = {
   ),
   'systemique': LightingProfile(
     id: 'systemique',
-    label: 'Systémique',
+    label: 'Systemic',
     group: 'psychological',
     backgroundColor: 0xFFE7F6FF,
     animatedGradient: [0xFFE7F6FF, 0xFFCDEBFF],

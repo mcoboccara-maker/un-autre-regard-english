@@ -1016,14 +1016,14 @@ class OrientationConfig {
     'fantasy': SourceInfo(id: 'fantasy', name: 'Fantasy', category: 'litteraire'),
 
     // SOURCES PSYCHOLOGIQUES (10)
-    'act': SourceInfo(id: 'act', name: 'ACT', category: 'psychologique'),
-    'tcc': SourceInfo(id: 'tcc', name: 'CBT', category: 'psychologique'),
-    'jungienne': SourceInfo(id: 'jungienne', name: 'Jungian Psychology', category: 'psychologique'),
-    'logotherapie': SourceInfo(id: 'logotherapie', name: 'Logotherapy', category: 'psychologique'),
-    'schemas_young': SourceInfo(id: 'schemas_young', name: 'Young Schema Therapy', category: 'psychologique'),
-    'the_work': SourceInfo(id: 'the_work', name: 'The Work', category: 'psychologique'),
-    'humaniste_rogers': SourceInfo(id: 'humaniste_rogers', name: 'Humanistic Approach', category: 'psychologique'),
-    'psychanalyse': SourceInfo(id: 'psychanalyse', name: 'Psychoanalysis', category: 'psychologique'),
+    'act': SourceInfo(id: 'act', name: 'Acceptance & Commitment (ACT)', category: 'psychologique'),
+    'tcc': SourceInfo(id: 'tcc', name: 'Cognitive & Behavioral (CBT)', category: 'psychologique'),
+    'jungienne': SourceInfo(id: 'jungienne', name: 'Jungian (symbols & archetypes)', category: 'psychologique'),
+    'logotherapie': SourceInfo(id: 'logotherapie', name: 'Search for Meaning (Frankl)', category: 'psychologique'),
+    'schemas_young': SourceInfo(id: 'schemas_young', name: 'Schemas (Young)', category: 'psychologique'),
+    'the_work': SourceInfo(id: 'the_work', name: 'The Work (Byron Katie)', category: 'psychologique'),
+    'humaniste_rogers': SourceInfo(id: 'humaniste_rogers', name: 'Humanistic (Rogers)', category: 'psychologique'),
+    'psychanalyse': SourceInfo(id: 'psychanalyse', name: 'Psychoanalytic reading (Freud)', category: 'psychologique'),
     'analyse_transactionnelle': SourceInfo(id: 'analyse_transactionnelle', name: 'Transactional Analysis', category: 'psychologique'),
     'systemique': SourceInfo(id: 'systemique', name: 'Systemic Approach', category: 'psychologique'),
   };
