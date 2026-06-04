@@ -4,7 +4,7 @@ def asc_api_key
   app_store_connect_api_key(
     key_id: "V8DCBT64PJ",
     issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
-    key_filepath: "./fastlane/AuthKey_V8DCBT64PJ.p8",
+    key_filepath: File.join(__dir__, "AuthKey_V8DCBT64PJ.p8"),
     duration: 1200,
     in_house: false
   )
@@ -307,6 +307,197 @@ platform :ios do
       UI.message("===== VERSION LIVE (#{live.version_string}) =====")
       UI.message("DESC (300 premiers car.):\n#{(loc&.description || '(vide)')[0,300]}")
     end
+  end
+
+  # ============================================================
+  # Lane : resubmit46
+  # Annule une submission en cours, attache le build 46 a la version
+  # editable, puis soumet a la review (declarations legales incluses).
+  # Usage : fastlane resubmit46
+  # ============================================================
+  desc "Attache le build 46 a la version et soumet a la review"
+  lane :resubmit46 do
+    require "spaceship"
+    key_path = File.join(__dir__, "AuthKey_V8DCBT64PJ.p8")
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: "V8DCBT64PJ",
+      issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
+      filepath: key_path
+    )
+    app = Spaceship::ConnectAPI::App.find("com.unautreregard.app.en")
+    UI.user_error!("App introuvable") unless app
+
+    # 1. Annuler une eventuelle submission en cours
+    ip = app.get_in_progress_review_submission(platform: "IOS") rescue nil
+    if ip
+      UI.message("Submission en cours #{ip.id} (#{ip.state}) -> annulation")
+      begin
+        ip.cancel_submission
+      rescue => e
+        UI.error("cancel echoue: #{e.message}")
+      end
+    else
+      UI.message("Aucune submission en cours a annuler")
+    end
+
+    # 2. Attacher le build 46 a la version editable
+    version = app.get_edit_app_store_version(platform: "IOS")
+    UI.user_error!("Pas de version editable") unless version
+    UI.message("Version editable #{version.version_string} state=#{version.app_store_state}")
+    builds = app.get_builds(includes: "preReleaseVersion", sort: "-uploadedDate", limit: 30)
+    b46 = builds.find { |b| b.version == "46" && b.pre_release_version&.version == version.version_string }
+    b46 ||= builds.find { |b| b.version == "46" }
+    UI.user_error!("Build 46 introuvable sur TestFlight") unless b46
+    UI.message("Attache build 46 (id=#{b46.id}) a la version...")
+    version.select_build(build_id: b46.id)
+    UI.success("Build 46 attache.")
+
+    # 3. Soumettre a la review
+    deliver(
+      api_key: asc_api_key,
+      app_identifier: "com.unautreregard.app.en",
+      submit_for_review: true,
+      automatic_release: false,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      force: true,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false,
+        export_compliance_is_exempt: false,
+        export_compliance_contains_third_party_cryptography: false,
+        export_compliance_contains_proprietary_cryptography: false,
+        export_compliance_available_on_french_store: true,
+        content_rights_contains_third_party_content: true,
+        content_rights_has_rights: true
+      },
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  # ============================================================
+  # Lane : submit_sp
+  # Soumission 100% Spaceship (contourne deliver qui echoue en
+  # "Authentication credentials missing or invalid" sur ce poste).
+  # Annule les submissions ouvertes, attache le build 46, pose les
+  # declarations legales (chiffrement non exempt = non, droits de
+  # contenu tiers = oui), cree une reviewSubmission moderne et soumet.
+  # Pre-requis : metadata deja a jour sur ASC (upload_meta du 02/06).
+  # Usage : fastlane submit_sp
+  # ============================================================
+  desc "Soumet a la review via Spaceship (attache build 46 + declarations legales)"
+  lane :submit_sp do
+    require "spaceship"
+    key_path = File.join(__dir__, "AuthKey_V8DCBT64PJ.p8")
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: "V8DCBT64PJ",
+      issuer_id: "62613a44-8050-4453-95ca-bcb8a0dcd21e",
+      filepath: key_path
+    )
+    app = Spaceship::ConnectAPI::App.find("com.unautreregard.app.en")
+    UI.user_error!("App introuvable") unless app
+    req = Spaceship::ConnectAPI.client.tunes_request_client
+
+    open_states = %w[READY_FOR_REVIEW WAITING_FOR_REVIEW IN_REVIEW UNRESOLVED_ISSUES CANCELING]
+
+    # 1. Annuler toutes les submissions ouvertes
+    resp = req.get("v1/apps/#{app.id}/reviewSubmissions", { "filter[platform]" => "IOS" })
+    (resp.body["data"] || []).each do |s|
+      st = s.dig("attributes", "state")
+      next unless open_states.include?(st)
+      UI.message("Annulation de #{s['id']} (etat=#{st})...")
+      begin
+        req.patch("v1/reviewSubmissions/#{s['id']}", {
+          "data" => { "type" => "reviewSubmissions", "id" => s['id'],
+                      "attributes" => { "canceled" => true } }
+        })
+      rescue => e
+        UI.error("  echec annulation: #{e.message}")
+      end
+    end
+
+    # 2. Attendre qu'il n'y ait plus de submission ouverte
+    cleared = false
+    20.times do
+      r = req.get("v1/apps/#{app.id}/reviewSubmissions", { "filter[platform]" => "IOS" })
+      still_open = (r.body["data"] || []).any? { |s| open_states.include?(s.dig("attributes", "state")) }
+      unless still_open
+        cleared = true
+        break
+      end
+      sleep 6
+    end
+    UI.message(cleared ? "Plus aucune submission ouverte." : "ATTENTION: une submission semble encore ouverte.")
+
+    # 3. Version editable prete
+    version = app.get_edit_app_store_version(platform: "IOS")
+    UI.user_error!("Pas de version editable") unless version
+    UI.message("Version a soumettre: #{version.version_string} (#{version.app_store_state}) id=#{version.id}")
+
+    # 4. Attacher le build 46
+    builds = app.get_builds(includes: "preReleaseVersion", sort: "-uploadedDate", limit: 30)
+    b46 = builds.find { |b| b.version == "46" && b.pre_release_version&.version == version.version_string }
+    b46 ||= builds.find { |b| b.version == "46" }
+    UI.user_error!("Build 46 introuvable sur TestFlight") unless b46
+    UI.message("Attache build 46 (id=#{b46.id})...")
+    version.select_build(build_id: b46.id)
+
+    # 5. Declaration de chiffrement non exempt = non
+    begin
+      req.patch("v1/builds/#{b46.id}", {
+        "data" => { "type" => "builds", "id" => b46.id,
+                    "attributes" => { "usesNonExemptEncryption" => false } }
+      })
+      UI.message("Chiffrement non exempt = false pose sur build 46.")
+    rescue => e
+      UI.error("  declaration chiffrement: #{e.message}")
+    end
+
+    # 6. Droits de contenu tiers = oui (l'app cite des references publiees)
+    begin
+      req.patch("v1/apps/#{app.id}", {
+        "data" => { "type" => "apps", "id" => app.id,
+                    "attributes" => { "contentRightsDeclaration" => "USES_THIRD_PARTY_CONTENT" } }
+      })
+      UI.message("Droits de contenu tiers = USES_THIRD_PARTY_CONTENT.")
+    rescue => e
+      UI.error("  declaration droits de contenu: #{e.message}")
+    end
+
+    # 7. Creer une nouvelle reviewSubmission
+    cresp = req.post("v1/reviewSubmissions", {
+      "data" => {
+        "type" => "reviewSubmissions",
+        "attributes" => { "platform" => "IOS" },
+        "relationships" => { "app" => { "data" => { "type" => "apps", "id" => app.id } } }
+      }
+    })
+    new_sub_id = cresp.body.dig("data", "id")
+    UI.user_error!("Creation submission echouee") unless new_sub_id
+    UI.message("Nouvelle submission creee: #{new_sub_id}")
+
+    # 8. Attacher la version comme item
+    req.post("v1/reviewSubmissionItems", {
+      "data" => {
+        "type" => "reviewSubmissionItems",
+        "relationships" => {
+          "reviewSubmission" => { "data" => { "type" => "reviewSubmissions", "id" => new_sub_id } },
+          "appStoreVersion" => { "data" => { "type" => "appStoreVersions", "id" => version.id } }
+        }
+      }
+    })
+    UI.message("Version attachee a la submission.")
+
+    # 9. Soumettre
+    psresp = req.patch("v1/reviewSubmissions/#{new_sub_id}", {
+      "data" => { "type" => "reviewSubmissions", "id" => new_sub_id,
+                  "attributes" => { "submitted" => true } }
+    })
+    final_state = psresp.body.dig("data", "attributes", "state")
+    UI.success("SOUMIS A LA REVIEW — HTTP #{psresp.status} — etat=#{final_state}")
   end
 
   desc "Liste les builds TestFlight disponibles"
