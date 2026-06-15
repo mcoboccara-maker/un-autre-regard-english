@@ -27,6 +27,21 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
+// Aligne le JVM target des plugins (ex: flutter_facebook_auth) sur Java 17
+// pour eviter l'erreur "Inconsistent JVM-target compatibility" (Java 1.8 vs Kotlin 17).
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
+}
+
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
