@@ -39,6 +39,12 @@ subprojects {
                 }
             }
         }
+        // compileOptions ne regle que la cible Java ; il faut aussi aligner la
+        // cible Kotlin (sinon "Inconsistent JVM-target : Java 17 vs Kotlin 1.8"
+        // sur des plugins comme audioplayers_android ou flutter_facebook_auth).
+        proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            kotlinOptions.jvmTarget = "17"
+        }
     }
     // evaluationDependsOn(':app') ci-dessus force l'evaluation de certains
     // sous-projets : on ne peut plus y enregistrer afterEvaluate (sinon
