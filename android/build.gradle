@@ -30,15 +30,24 @@ subprojects {
 // Aligne le JVM target des plugins (ex: flutter_facebook_auth) sur Java 17
 // pour eviter l'erreur "Inconsistent JVM-target compatibility" (Java 1.8 vs Kotlin 17).
 subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            project.android {
+    def configureJava17 = { proj ->
+        if (proj.hasProperty("android")) {
+            proj.android {
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
             }
         }
+    }
+    // evaluationDependsOn(':app') ci-dessus force l'evaluation de certains
+    // sous-projets : on ne peut plus y enregistrer afterEvaluate (sinon
+    // "Cannot run Project.afterEvaluate(Closure) when the project is already
+    // evaluated"). On configure alors directement les projets deja evalues.
+    if (project.state.executed) {
+        configureJava17(project)
+    } else {
+        afterEvaluate { configureJava17(project) }
     }
 }
 
