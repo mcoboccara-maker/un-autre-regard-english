@@ -34,7 +34,9 @@ dependencies:
   # Utilitaires
   uuid: ^4.2.1
   intl: ^0.18.1
-  
+  # Version de l'app (diagnostic des rapports d'erreur API)
+  package_info_plus: '>=4.2.0 <9.0.0'
+
   # Audio - Lecture vocale TTS
   flutter_tts: ^3.8.5
   

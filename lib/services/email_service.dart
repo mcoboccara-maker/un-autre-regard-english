@@ -463,6 +463,7 @@ class EmailService {
     String? appVersion,
     String? platform,
     String? sourceKey,
+    String? requestId,
   }) async {
     try {
       final timestamp = DateTime.now().toIso8601String();
@@ -480,6 +481,7 @@ class EmailService {
     <tr><td><strong>User:</strong></td><td>${userEmail ?? 'not signed in'}</td></tr>
     <tr><td><strong>AI source:</strong></td><td>${sourceKey ?? 'unknown'}</td></tr>
     <tr><td><strong>Error code:</strong></td><td>${errorCode ?? 'N/A'}</td></tr>
+    <tr><td><strong>Request ID:</strong></td><td>${requestId ?? 'none (request never reached Claude — likely network/connection)'}</td></tr>
   </table>
   <h3>Technical details</h3>
   <pre style="background:#F1F5F9; padding:12px; border-radius:8px; overflow:auto;">${_escapeHtml(errorDetails ?? 'no details')}</pre>

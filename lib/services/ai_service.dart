@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:async'; // AJOUT: Pour TimeoutException
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/material.dart';
 import '../models/reflection.dart';
 import '../models/emotional_state.dart';
@@ -73,7 +74,7 @@ class AIService {
 
   /// Sends an error report fire-and-forget, respecting the throttle.
   /// Returns the user-facing message to display.
-  String _reportApiError({String? code, String? details, String? sourceKey}) {
+  String _reportApiError({String? code, String? details, String? sourceKey, String? requestId}) {
     final now = DateTime.now();
     final canSend = _lastErrorEmailSent == null ||
         now.difference(_lastErrorEmailSent!) >= _errorEmailThrottle;
@@ -97,18 +98,36 @@ class AIService {
       } catch (_) {
         platform = 'unknown';
       }
-      EmailService.instance.sendApiErrorReport(
-        userEmail: PersistentStorageService.instance.currentUserEmail,
-        errorCode: code,
-        errorDetails: details,
-        platform: platform,
-        sourceKey: sourceKey,
-      ).catchError((e) {
+      // Fire-and-forget : on récupère la version de l'app puis on envoie le rapport.
+      () async {
+        final appVersion = await _getAppVersion();
+        await EmailService.instance.sendApiErrorReport(
+          userEmail: PersistentStorageService.instance.currentUserEmail,
+          errorCode: code,
+          errorDetails: details,
+          appVersion: appVersion,
+          platform: platform,
+          sourceKey: sourceKey,
+          requestId: requestId,
+        );
+      }().catchError((e) {
         print('AIService: ⚠️ Failed to send API error report: $e');
-        return EmailResult(success: false, message: 'Report failed: $e');
       });
     }
     return _userErrorMessage;
+  }
+
+  /// Version de l'app (lue une fois depuis le bundle, puis mise en cache).
+  static String? _cachedAppVersion;
+  Future<String> _getAppVersion() async {
+    if (_cachedAppVersion != null) return _cachedAppVersion!;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      _cachedAppVersion = '${info.version}+${info.buildNumber}';
+    } catch (_) {
+      _cachedAppVersion = 'unknown';
+    }
+    return _cachedAppVersion!;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -314,6 +333,7 @@ class AIService {
     int maxTokens = 800,              // MODIFIÉ: 800 au lieu de 4096
     double temperature = 0.7,
     bool useQualityModel = false,     // NOUVEAU: choix du modèle
+    String? sourceKey,                // NOUVEAU: source IA (diagnostic des erreurs API)
   }) async {
     final effectiveSystemPrompt = systemPrompt ?? PromptSystemUnifie.content;
     final effectiveModel = useQualityModel ? _model : _modelFast;  // NOUVEAU
@@ -361,6 +381,10 @@ class AIService {
 
         print('AIService: Status code: ${response.statusCode}');
 
+        // NOUVEAU: identifiant de requête Anthropic (diagnostic réseau vs plateforme)
+        final requestId =
+            response.headers['request-id'] ?? response.headers['x-request-id'];
+
         // ✅ SUCCÈS
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -383,6 +407,8 @@ class AIService {
           return _reportApiError(
             code: '${response.statusCode}',
             details: '$errorMsg\nBody: ${response.body}',
+            sourceKey: sourceKey,
+            requestId: requestId,
           );
         }
 
@@ -394,6 +420,8 @@ class AIService {
         return _reportApiError(
           code: '${response.statusCode}',
           details: '$errorMsg\nBody: ${response.body}',
+          sourceKey: sourceKey,
+          requestId: requestId,
         );
 
       } on TimeoutException catch (e) {
@@ -404,10 +432,10 @@ class AIService {
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return _reportApiError(code: 'TIMEOUT', details: e.toString());
+        return _reportApiError(code: 'TIMEOUT', details: e.toString(), sourceKey: sourceKey);
       } on FormatException catch (e) {
         print('AIService: ❌ Erreur parsing JSON: $e');
-        return _reportApiError(code: 'FORMAT', details: e.toString());
+        return _reportApiError(code: 'FORMAT', details: e.toString(), sourceKey: sourceKey);
       } catch (e) {
         print('AIService: ❌ Erreur requête Claude: $e');
 
@@ -425,19 +453,19 @@ class AIService {
             await Future.delayed(Duration(seconds: delaySeconds));
             continue;
           }
-          return _reportApiError(code: 'NETWORK', details: e.toString());
+          return _reportApiError(code: 'NETWORK', details: e.toString(), sourceKey: sourceKey);
         }
         if (errorStr.contains('handshake') || errorStr.contains('certificate')) {
-          return _reportApiError(code: 'SSL', details: e.toString());
+          return _reportApiError(code: 'SSL', details: e.toString(), sourceKey: sourceKey);
         }
 
         // Generic message for other errors (no technical details)
-        return _reportApiError(code: 'UNKNOWN', details: e.toString());
+        return _reportApiError(code: 'UNKNOWN', details: e.toString(), sourceKey: sourceKey);
       }
     }
 
     // Should never happen, safety fallback
-    return _reportApiError(code: 'UNEXPECTED', details: 'Unexpected error after $_maxRetryAttempts attempts');
+    return _reportApiError(code: 'UNEXPECTED', details: 'Unexpected error after $_maxRetryAttempts attempts', sourceKey: sourceKey);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -722,6 +750,7 @@ class AIService {
         systemPrompt: systemPrompt,  // NOUVEAU: system prompt multilingue
         maxTokens: 800,
         useQualityModel: useQuality,
+        sourceKey: approach,
       );
       
       // MODIFIÉ: Vérifier si c'est une erreur API
@@ -785,6 +814,7 @@ class AIService {
         systemPrompt: systemPrompt,  // NOUVEAU: system prompt multilingue
         maxTokens: 1500,           // Plus long pour l'approfondissement
         useQualityModel: true,     // Toujours Sonnet pour la qualité
+        sourceKey: sourceNom,
       );
       
       // Vérifier si c'est une erreur API
@@ -890,6 +920,7 @@ class AIService {
         systemPrompt: systemPrompt,  // NOUVEAU: system prompt multilingue
         maxTokens: 500,
         useQualityModel: _requiresQualityModel(selectedSource),
+        sourceKey: selectedSource,
       );
       
       // MODIFIÉ: Vérifier si c'est une erreur API
@@ -1165,6 +1196,10 @@ class AIService {
           },
         );
 
+        // NOUVEAU: identifiant de requête Anthropic (diagnostic réseau vs plateforme)
+        final requestId =
+            response.headers['request-id'] ?? response.headers['x-request-id'];
+
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final content = data['content']?[0]?['text'] ?? '';
@@ -1180,12 +1215,16 @@ class AIService {
           return _reportApiError(
             code: '${response.statusCode}',
             details: '${_getErrorMessage(response.statusCode, response.body)}\nBody: ${response.body}',
+            sourceKey: 'agent',
+            requestId: requestId,
           );
         }
 
         return _reportApiError(
           code: '${response.statusCode}',
           details: '${_getErrorMessage(response.statusCode, response.body)}\nBody: ${response.body}',
+          sourceKey: 'agent',
+          requestId: requestId,
         );
       } on TimeoutException catch (e) {
         if (attempt < _maxRetryAttempts) {
@@ -1193,9 +1232,9 @@ class AIService {
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return _reportApiError(code: 'TIMEOUT_AGENT', details: e.toString());
+        return _reportApiError(code: 'TIMEOUT_AGENT', details: e.toString(), sourceKey: 'agent');
       } on FormatException catch (e) {
-        return _reportApiError(code: 'FORMAT_AGENT', details: e.toString());
+        return _reportApiError(code: 'FORMAT_AGENT', details: e.toString(), sourceKey: 'agent');
       } catch (e) {
         final errorStr = e.toString().toLowerCase();
         final isNetwork = errorStr.contains('socketexception') ||
@@ -1207,10 +1246,10 @@ class AIService {
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return _reportApiError(code: 'UNKNOWN_AGENT', details: e.toString());
+        return _reportApiError(code: 'UNKNOWN_AGENT', details: e.toString(), sourceKey: 'agent');
       }
     }
 
-    return _reportApiError(code: 'UNEXPECTED_AGENT', details: 'Answer unavailable after $_maxRetryAttempts attempts');
+    return _reportApiError(code: 'UNEXPECTED_AGENT', details: 'Answer unavailable after $_maxRetryAttempts attempts', sourceKey: 'agent');
   }
 }
