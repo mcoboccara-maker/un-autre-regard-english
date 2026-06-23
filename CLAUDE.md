@@ -19,7 +19,36 @@
 - Bundle ID : `com.unautreregard.app.en`
 - Version francaise : `C:\Users\mcopc\Documents\un_autre_regard_francais\`
 
-## Deploiement
+## Deploiement (CI/CD au moindre cout)
 
-- **Android** : deploiement automatique sur Google Play (internal + closed testing) a chaque push sur main.
-- **iOS** : deploiement **manuel uniquement** (workflow_dispatch). Le build iOS sur macOS consomme 10x les minutes GitHub Actions. Apres un push, rappeler a l'utilisateur de lancer manuellement le workflow iOS sur GitHub Actions si necessaire (onglet Actions > iOS Release > Run workflow).
+Strategie : **chaque plateforme est buildee la ou elle coute le moins cher**. Android sur GitHub Actions (runner Linux x1), iOS sur Codemagic (minutes macOS non multipliees vs x10 chez GitHub).
+
+### Repartition
+
+- **Android -> GitHub Actions** (workflow `.github/workflows/android-release.yml`).
+  - Declencheur : **automatique a chaque push sur main** (filtre paths : `lib/**`, `pubspec.yaml`, `android/**`, `assets/**`).
+  - Build AAB sur `ubuntu-latest`, puis **publication automatique sur Google Play track `production`** (action `r0adkll/upload-google-play`).
+  - Cout : runner Linux (x1), tres bon marche. Rien a lancer manuellement.
+
+- **iOS -> Codemagic** (configure dans l'UI web Codemagic, PAS via codemagic.yaml).
+  - Declencheur : **automatique a chaque push sur main** ("Trigger on push", branche main).
+  - Workflow Codemagic **iOS uniquement** (ne pas builder Android sur Codemagic : doublon inutile et plus cher).
+  - Build .ipa signe + **upload App Store Connect / TestFlight**, puis soumission/mise en ligne (cf. regle de publication automatique du CLAUDE.md global + `tools/asc_submit.py`).
+  - Cout : minutes macOS Codemagic (500 gratuites/mois, non multipliees) au lieu du x10 GitHub.
+
+- **Fallback iOS GitHub** : le workflow `.github/workflows/ios-release.yml` (macos, `workflow_dispatch` manuel) est **conserve mais NON utilise en routine** (coute x10). Ne sert que de secours si Codemagic est indisponible. Ne pas le declencher par defaut.
+
+### Processus a CHAQUE modification
+
+1. **Bumper la version dans `pubspec.yaml`** (`version: X.Y.Z+N`) : incrementer le build `+N` a tous les coups ; et **incrementer aussi la version marketing `X.Y.Z`** si la version precedente est deja en ligne sur un store (sinon Apple ferme le train et refuse l'upload, et Google rejette le doublon de versionCode). Cf. "PIEGE RECURRENT" du CLAUDE.md global.
+2. `git push origin main` -> declenche **en parallele** : Android (GitHub -> Google Play production) **et** iOS (Codemagic -> App Store Connect).
+3. **Publication** : Android part en production automatiquement. iOS -> une fois approuve par Apple (`PENDING_DEVELOPER_RELEASE`), **mettre en ligne automatiquement** (`python tools/asc_submit.py release --version X.Y.Z`) sans attendre, conformement a la regle de publication automatique du CLAUDE.md global.
+
+### Setup Codemagic iOS (une fois par app, dans l'UI web)
+
+A faire par l'utilisateur dans codemagic.io (je ne peux pas le faire par le code) :
+- Connecter le repo GitHub (`un-autre-regard-english`).
+- Integration App Store Connect (cle API .p8 + Issuer ID + Key ID) ; code signing automatique pour le bundle `com.unautreregard.app.en`.
+- Un seul workflow actif, "Trigger on push" sur main, **build iOS seul**, publication App Store Connect activee.
+- `--dart-define=ANTHROPIC_API_KEY=...` a renseigner dans les variables d'environnement Codemagic.
+- Ne jamais avoir deux workflows actifs (doublons de build number).
