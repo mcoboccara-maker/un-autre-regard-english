@@ -15,10 +15,17 @@ class EmailService {
   // CONFIGURATION RESEND
   // ═══════════════════════════════════════════════════════════════════════════
 
-  static const String _apiUrl = 'https://api.resend.com/emails';
-
-  // Clé API Resend — remplacer par ta clé (re_xxxxxxxx)
-  static const String _apiKey = 're_H4hAZrL8_29xCXFzyBVThnJNiNbZrL1XU';
+  // SECURITE (cf. C:\Users\mcopc\SECURISATION_CLES_API.md, regles 13 & 21) :
+  // plus AUCUNE cle Resend cote client. On passe par le proxy Cloudflare partage
+  // (binaiskit-proxy) qui detient la vraie cle cote serveur. Le client n'envoie
+  // qu'un jeton d'app bas de gamme (rotatable). Surchargeables au build :
+  //   --dart-define=PROXY_URL=... --dart-define=PROXY_APP_TOKEN=...
+  static const String _proxyBaseUrl = String.fromEnvironment(
+    'PROXY_URL',
+    defaultValue: 'https://binaiskit-proxy.binaiskit.workers.dev',
+  );
+  static const String _apiUrl = '$_proxyBaseUrl/email';
+  static const String _appToken = String.fromEnvironment('PROXY_APP_TOKEN');
 
   // Expéditeur — utiliser onboarding@resend.dev en test,
   // ou ton domaine vérifié en production (ex: noreply@unautreregard.app)
@@ -73,7 +80,7 @@ class EmailService {
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {
-          'Authorization': 'Bearer $_apiKey',
+          'x-app-token': _appToken,
           'Content-Type': 'application/json',
         },
         body: body,
@@ -413,7 +420,7 @@ class EmailService {
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {
-          'Authorization': 'Bearer $_apiKey',
+          'x-app-token': _appToken,
           'Content-Type': 'application/json',
         },
         body: body,
@@ -499,7 +506,7 @@ class EmailService {
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {
-          'Authorization': 'Bearer $_apiKey',
+          'x-app-token': _appToken,
           'Content-Type': 'application/json',
         },
         body: body,
@@ -526,21 +533,18 @@ class EmailService {
   Future<bool> testConnection() async {
     try {
       final response = await http.get(
-        Uri.parse('https://api.resend.com/domains'),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-        },
+        Uri.parse('$_proxyBaseUrl/health'),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        print('✅ Connexion Resend OK');
+        print('✅ Connexion proxy OK');
         return true;
       } else {
-        print('❌ Erreur connexion Resend: ${response.statusCode}');
+        print('❌ Erreur connexion proxy: ${response.statusCode}');
         return false;
       }
     } catch (e) {
-      print('❌ Exception test Resend: $e');
+      print('❌ Exception test proxy: $e');
       return false;
     }
   }

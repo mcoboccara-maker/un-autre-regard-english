@@ -41,9 +41,20 @@ class AIService {
   // CONFIGURATION API CLAUDE (ANTHROPIC)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  final String _baseUrl = 'https://api.anthropic.com/v1/messages';
-  String _apiKey = const String.fromEnvironment('ANTHROPIC_API_KEY');
-  
+  // SECURITE (cf. C:\Users\mcopc\SECURISATION_CLES_API.md, regles 13 & 21) :
+  // plus AUCUNE cle Anthropic cote client. Le client appelle le proxy Cloudflare
+  // partage (binaiskit-proxy) qui detient la vraie cle cote serveur. On n'envoie
+  // qu'un jeton d'app bas de gamme (rotatable sans republier de vraie cle).
+  // Surchargeables au build :
+  //   --dart-define=PROXY_URL=https://binaiskit-proxy.<sous-domaine>.workers.dev
+  //   --dart-define=PROXY_APP_TOKEN=uar-en-XXXX
+  static const String _proxyBaseUrl = String.fromEnvironment(
+    'PROXY_URL',
+    defaultValue: 'https://binaiskit-proxy.binaiskit.workers.dev',
+  );
+  final String _baseUrl = '$_proxyBaseUrl/v1/messages';
+  String _appToken = const String.fromEnvironment('PROXY_APP_TOKEN');
+
   // MODÈLES CLAUDE — Sonnet 4.6 partout (qualité max pour toutes les sources)
   final String _model = 'claude-sonnet-4-6';                  // Qualité (toutes sources + approfondissement)
   final String _modelFast = 'claude-sonnet-4-6';              // Idem — plus de distinction rapide/qualité
@@ -354,11 +365,9 @@ class AIService {
           Uri.parse(_baseUrl),
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': _apiKey,
+            // Jeton d'app pour le proxy (plus de cle Anthropic cote client).
+            'x-app-token': _appToken,
             'anthropic-version': _anthropicVersion,
-            // Header requis pour les appels depuis le navigateur (Flutter Web)
-            // Permet a l'API Anthropic de retourner les headers CORS
-            if (kIsWeb) 'anthropic-dangerous-direct-browser-access': 'true',
           },
           body: jsonEncode({
             'model': effectiveModel,  // MODIFIÉ: utilise le modèle effectif
@@ -1116,14 +1125,14 @@ class AIService {
     return sources[0];
   }
 
-  /// Valider la configuration de l'API
+  /// Valider la configuration (jeton d'app pour le proxy present)
   bool isConfigured() {
-    return _apiKey != 'VOTRE_CLE_API_ANTHROPIC' && _apiKey.isNotEmpty;
+    return _appToken.isNotEmpty;
   }
 
-  /// Mettre à jour la clé API
-  void setApiKey(String apiKey) {
-    _apiKey = apiKey;
+  /// Mettre à jour le jeton d'app (proxy). Conservé pour compat ; non utilisé en prod.
+  void setApiKey(String appToken) {
+    _appToken = appToken;
   }
 
   /// Récupérer l'historique d'utilisation des sources
@@ -1178,9 +1187,8 @@ class AIService {
           Uri.parse(_baseUrl),
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': _apiKey,
+            'x-app-token': _appToken,
             'anthropic-version': _anthropicVersion,
-            if (kIsWeb) 'anthropic-dangerous-direct-browser-access': 'true',
           },
           body: jsonEncode({
             'model': _model,

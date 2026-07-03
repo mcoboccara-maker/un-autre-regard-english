@@ -57,7 +57,7 @@ jobs:
           EOF
 
       - name: Build Flutter iOS
-        run: flutter build ios --release --no-codesign --dart-define=ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+        run: flutter build ios --release --no-codesign --dart-define=PROXY_URL=${{ secrets.PROXY_URL }} --dart-define=PROXY_APP_TOKEN=${{ secrets.PROXY_APP_TOKEN }}
 
       - name: Build and upload to TestFlight
         env:
