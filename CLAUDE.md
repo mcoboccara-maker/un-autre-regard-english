@@ -44,6 +44,16 @@ Strategie : **chaque plateforme est buildee la ou elle coute le moins cher**. An
 2. `git push origin main` -> declenche **en parallele** : Android (GitHub -> Google Play production) **et** iOS (Codemagic -> App Store Connect).
 3. **Publication** : Android part en production automatiquement. iOS -> une fois approuve par Apple (`PENDING_DEVELOPER_RELEASE`), **mettre en ligne automatiquement** (`python tools/asc_submit.py release --version X.Y.Z`) sans attendre, conformement a la regle de publication automatique du CLAUDE.md global.
 
+### Pilotage Google Play depuis le terminal (`tools/play.py`)
+
+`tools/play.py` pilote la Play Console via l'API Play Developer v3 (statut des tracks, promotion, rollout) sans passer par l'UI web. La cle du compte de service N'EST PAS dans le depot : lue depuis `C:\Users\mcopc\.secrets\play-service-account.json` (hors repo, jamais commite ; surchargeable par la variable d'env `GOOGLE_PLAY_JSON`). Le package est auto-detecte depuis `android/app/build.gradle`.
+
+- `python tools/play.py status` : etat de tous les tracks (production/beta/alpha/internal) — versionCodes, statut, ciblage pays, rollout.
+- `python tools/play.py promote --to production [--from internal] [--rollout 1.0]` : promeut la release au versionCode le plus haut du track source vers la cible (commit envoye en revue Google).
+- `python tools/play.py rollout --fraction 0.5 [--track production]` : ajuste le deploiement progressif (`--fraction 1.0` finalise a 100 %).
+
+Pre-requis : `pip install pyjwt cryptography`.
+
 ### Setup Codemagic iOS (une fois par app, dans l'UI web)
 
 A faire par l'utilisateur dans codemagic.io (je ne peux pas le faire par le code) :
