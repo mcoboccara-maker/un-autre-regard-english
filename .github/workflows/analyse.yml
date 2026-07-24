@@ -1,0 +1,46 @@
+name: Analyse
+
+# Filet de verification automatique, a chaque push et a chaque pull request.
+# Ce workflow ne construit rien et ne signe rien : le build, la signature et la
+# publication restent geres par Codemagic (cf. module /cicd-flutter). Il ne fait
+# QUE verifier, donc il est rapide et gratuit.
+#
+# Etat au 2026-07-24, mesure en local sur Flutter 3.38.7 :
+#   erreurs 0 · avertissements 83 · infos 798
+# L'analyse ne bloque donc que sur les ERREURS. Les avertissements existants
+# (imports et code mort, essentiellement) sont une dette connue a resorber
+# progressivement ; les transformer en blocage aujourd'hui rendrait la CI rouge
+# en permanence, ce qui revient a ne pas en avoir.
+#
+# `flutter test` ne couvre pour l'instant qu'un test placeholder
+# (test/widget_test.dart, qui verifie que true vaut true). Il est deja branche
+# ici pour que la couverture reelle demarre automatiquement des le premier vrai
+# test ecrit dans test/regles/ (cf. module /tests-vivants).
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.7'
+          channel: stable
+          cache: true
+
+      - name: Dependances
+        run: flutter pub get
+
+      - name: Analyse statique (erreurs seulement)
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Tests
+        run: flutter test --reporter expanded
