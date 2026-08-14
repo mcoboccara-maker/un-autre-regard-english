@@ -62,21 +62,46 @@ class AIService {
   final String _anthropicVersion = '2023-06-01';
   
   // AJOUT: Timeout pour les requêtes (en secondes)
-  static const int _requestTimeoutSeconds = 60;
-  
+  // AUGMENTÉ: 60s → 120s pour éviter les timeouts prématurés
+  // Les appels Claude via le proxy peuvent être lents si le proxy est sous charge
+  static const int _requestTimeoutSeconds = 120;
+
   // AJOUT: Configuration du retry automatique (erreurs 429/529)
-  static const int _maxRetryAttempts = 3;           // Nombre max de tentatives
-  static const int _initialRetryDelaySeconds = 2;   // Délai initial (2s, 4s, 8s)
+  static const int _maxRetryAttempts = 4;           // Nombre max de tentatives (augmenté de 3 à 4)
+  static const int _initialRetryDelaySeconds = 3;   // Délai initial (3s, 6s, 12s, 24s)
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ERROR HANDLING — single user-facing message + email report
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// Message shown to the user when the API fails (any cause).
+  /// Default message shown to the user when the API fails.
   /// The [ERREUR_API] prefix is required: it acts as a marker so screens
   /// recognise an error response (cf. eclairages_carousel_screen.dart).
   static const String _userErrorMessage =
       '[ERREUR_API] Oops! The app is having an issue, please accept my apologies. Quick fix coming. See you very soon!';
+
+  /// Build error message for user based on error code
+  String _getUserErrorMessage(String code) {
+    switch (code) {
+      case 'TIMEOUT':
+        return '[ERREUR_API] The request took too long to complete. This may mean the server is overloaded or your internet connection is slow. Please try again in a few seconds.';
+      case 'NETWORK_ERROR':
+        return '[ERREUR_API] Unable to connect to the service. Please check your internet connection and try again.';
+      case 'SSL_ERROR':
+        return '[ERREUR_API] A security error occurred while connecting. Please try again or contact support if the problem persists.';
+      case '429':
+        return '[ERREUR_API] The service is receiving too many requests. Please wait a moment and try again.';
+      case '529':
+        return '[ERREUR_API] The service is temporarily overloaded. Please wait a moment and try again.';
+      case '401':
+      case '403':
+        return '[ERREUR_API] There is a configuration issue with the app. Please contact support.';
+      case '500':
+        return '[ERREUR_API] The server encountered an error. Please try again in a few moments.';
+      default:
+        return _userErrorMessage;
+    }
+  }
 
   /// Throttle to avoid spamming the support inbox.
   /// At most 1 report every 10 minutes.
@@ -84,7 +109,7 @@ class AIService {
   static const Duration _errorEmailThrottle = Duration(minutes: 10);
 
   /// Sends an error report fire-and-forget, respecting the throttle.
-  /// Returns the user-facing message to display.
+  /// Returns the user-facing message to display (context-aware based on error code).
   String _reportApiError({String? code, String? details, String? sourceKey, String? requestId}) {
     final now = DateTime.now();
     final canSend = _lastErrorEmailSent == null ||
@@ -125,7 +150,8 @@ class AIService {
         print('AIService: ⚠️ Failed to send API error report: $e');
       });
     }
-    return _userErrorMessage;
+    // Return context-aware message based on error code
+    return code != null ? _getUserErrorMessage(code) : _userErrorMessage;
   }
 
   /// Version de l'app (lue une fois depuis le bundle, puis mise en cache).
@@ -356,10 +382,14 @@ class AIService {
     
     for (int attempt = 1; attempt <= _maxRetryAttempts; attempt++) {
       try {
-        print('AIService: Envoi requête Claude (tentative $attempt/$_maxRetryAttempts)...');
-        print('AIService: Model: $effectiveModel');  // MODIFIÉ: affiche le modèle effectif
+        print('AIService: ═══════════════════════════════════════════════════');
+        print('AIService: 📤 Calling Claude API (attempt $attempt/$_maxRetryAttempts)');
+        print('AIService: Endpoint: $_baseUrl');
+        print('AIService: Model: $effectiveModel');
+        print('AIService: Timeout: ${_requestTimeoutSeconds}s');
         print('AIService: MaxTokens: $maxTokens');
         print('AIService: Prompt length: ${userPrompt.length} chars');
+        print('AIService: ═══════════════════════════════════════════════════');
         
         final response = await http.post(
           Uri.parse(_baseUrl),
@@ -434,42 +464,66 @@ class AIService {
         );
 
       } on TimeoutException catch (e) {
-        print('AIService: ❌ Timeout: $e');
+        print('AIService: ⏱️ Timeout after ${_requestTimeoutSeconds}s: $e');
         if (attempt < _maxRetryAttempts) {
           final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
-          print('AIService: ⏳ Timeout - Retry dans ${delaySeconds}s (tentative $attempt/$_maxRetryAttempts)');
+          print('AIService: ⏳ Timeout (attempt $attempt/$_maxRetryAttempts) - Retry in ${delaySeconds}s...');
           await Future.delayed(Duration(seconds: delaySeconds));
           continue;
         }
-        return _reportApiError(code: 'TIMEOUT', details: e.toString(), sourceKey: sourceKey);
+        print('AIService: ❌ Timeout after all $_maxRetryAttempts attempts. This may indicate a network issue or the proxy is overloaded.');
+        return _reportApiError(
+          code: 'TIMEOUT',
+          details: 'Request took longer than ${_requestTimeoutSeconds}s even after $_maxRetryAttempts retries: $e',
+          sourceKey: sourceKey,
+        );
       } on FormatException catch (e) {
         print('AIService: ❌ Erreur parsing JSON: $e');
         return _reportApiError(code: 'FORMAT', details: e.toString(), sourceKey: sourceKey);
       } catch (e) {
-        print('AIService: ❌ Erreur requête Claude: $e');
+        print('AIService: ❌ Request error (attempt $attempt/$_maxRetryAttempts): $e');
 
         // Detect common network errors (incl. ClientException)
         final errorStr = e.toString().toLowerCase();
-        if (errorStr.contains('socketexception') ||
+        final isNetworkError = errorStr.contains('socketexception') ||
             errorStr.contains('connection refused') ||
             errorStr.contains('network is unreachable') ||
             errorStr.contains('clientexception') ||
             errorStr.contains('connection abort') ||
-            errorStr.contains('connection reset')) {
+            errorStr.contains('connection reset') ||
+            errorStr.contains('os error');
+
+        if (isNetworkError) {
           if (attempt < _maxRetryAttempts) {
             final delaySeconds = _initialRetryDelaySeconds * (1 << (attempt - 1));
-            print('AIService: ⏳ Erreur réseau - Retry dans ${delaySeconds}s (tentative $attempt/$_maxRetryAttempts)');
+            print('AIService: 🌐 Network error detected - Retry in ${delaySeconds}s (attempt $attempt/$_maxRetryAttempts)');
             await Future.delayed(Duration(seconds: delaySeconds));
             continue;
           }
-          return _reportApiError(code: 'NETWORK', details: e.toString(), sourceKey: sourceKey);
+          print('AIService: ❌ Network error persists after $_maxRetryAttempts attempts. Check your internet connection or the proxy endpoint.');
+          return _reportApiError(
+            code: 'NETWORK_ERROR',
+            details: 'Unable to connect to the API service after $_maxRetryAttempts attempts. This may indicate: (1) No internet connection, (2) DNS resolution failure, (3) Proxy unreachable, or (4) Network firewall blocking the connection.',
+            sourceKey: sourceKey,
+          );
         }
+
         if (errorStr.contains('handshake') || errorStr.contains('certificate')) {
-          return _reportApiError(code: 'SSL', details: e.toString(), sourceKey: sourceKey);
+          print('AIService: 🔒 SSL/Certificate error: $e');
+          return _reportApiError(
+            code: 'SSL_ERROR',
+            details: 'SSL certificate verification failed. This may indicate a MITM (Man-in-the-Middle) attack or misconfigured proxy certificate.',
+            sourceKey: sourceKey,
+          );
         }
 
         // Generic message for other errors (no technical details)
-        return _reportApiError(code: 'UNKNOWN', details: e.toString(), sourceKey: sourceKey);
+        print('AIService: ❓ Unknown error: $e');
+        return _reportApiError(
+          code: 'UNKNOWN_ERROR',
+          details: 'An unexpected error occurred: $e',
+          sourceKey: sourceKey,
+        );
       }
     }
 
